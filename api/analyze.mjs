@@ -143,7 +143,7 @@ export default {
         body:JSON.stringify({
           systemInstruction:{parts:[{text:SYSTEM}]},
           contents:[{role:"user",parts}],
-          generationConfig:{temperature:0.45,responseMimeType:"application/json",responseSchema:FREE_SCHEMA,maxOutputTokens:1300}
+          generationConfig:{temperature:0.45,thinkingConfig:{thinkingBudget:0},responseMimeType:"application/json",responseSchema:FREE_SCHEMA,maxOutputTokens:1700}
         }),
         signal:AbortSignal.timeout(28000)
       });
