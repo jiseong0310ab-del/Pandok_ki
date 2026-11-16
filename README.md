@@ -1,6 +1,6 @@
 # SAYNUE · Read Between the Lines
 
-스마트폰에서 관리하는 **SAYNUE** Vercel MVP. 기존 Pandok_ki GitHub 저장소와 Vercel 배포 연결은 유지합니다.
+스마트폰에서 관리하는 **SAYNUE** Vercel MVP. 기존 Pandok_ki GitHub 저장소와 Vercel 배포 연결은 유지합니다.\n\n**실서비스 주소: https://saynue.vercel.app** · 이전 주소 `https://pandokki.vercel.app`도 유지합니다.
 
 - **assets/site.css** / **assets/saynue-mark.svg** / **favicon.svg** — 절제된 Midnight/Lavender UI, 모바일 로고, 브라우저 아이콘\n- **index.html** — 모바일 UI, 한국어/일본어/영어/중국어 간체/번체, 메신저 7종, 텍스트/이미지 입력, 개인 정보 없는 결과 공유, 유료 기능 소개
 - **api/analyze.mjs** — 서버에서만 Gemini 호출; 대화 입력 검증, 무료 결과만 반환, 속도 제한, API 오류 처리
@@ -66,4 +66,4 @@ GitHub Actions가 main의 모든 푸시와 PR에 Node.js 22 환경으로 smoke t
 - 깊은 네이비(#0B1020)와 절제된 라벤더, 오프화이트를 사용하는 에디토리얼 스타일로 교체. 네온·홀로그램·왕관 장식 배제.
 - SVG 심벌, favicon, 모바일 반응형 CSS, 다섯 언어의 히어로 카피 및 CTA, 미리보기 리포트(명시적 예시 수치) 추가.
 - 기존 GitHub 저장소 `Pandok_ki`, 서버 Gemini 키, 데이터 검증, 무료 분석 및 유료 비활성화 정책 유지.
-- 새로운 무료 `*.vercel.app` 서비스 도메인 연결 여부는 Vercel 프로젝트 Domains에서 확인. `saynue.app`/`saynue.ai` 등 유료 독립 도메인은 **구매하지 않았고 보유를 보장하지 않습니다**.
+- 새 무료 도메인 `saynue.vercel.app`은 Vercel 프로젝트에 연결되었고 인증되었습니다. `saynue.app`/`saynue.ai` 등 유료 독립 도메인은 **구매하지 않았고 보유를 보장하지 않습니다**.
