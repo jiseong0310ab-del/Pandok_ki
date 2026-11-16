@@ -85,3 +85,12 @@ GitHub Actions가 main의 모든 푸시와 PR에 Node.js 22 환경으로 smoke t
 - 실서비스 Gemini 6개 합성 사례를 확인. 첫 일본어 사례에서 드물게 형식 오류가 발생해 **제한적 자동 재시도 + 예비 모델 전환**을 추가했으며, 거절 상황에서 **답장하지 않는 조언**도 허용.
 - 테스트 범위와 평가 척도: [docs/quality-and-privacy.md](docs/quality-and-privacy.md).
 - 공식 GitHub CI가 실행됐는지는 이 문서만으로 확정할 수 없음. `node --test tests/smoke.mjs tests/quality.test.mjs tests/feedback.test.mjs` 명령으로 재검증 가능.
+
+## 9. 개인 개발자 수익화 준비 (2026-11-17)
+
+- **Free + Plus 구독(예정) + 공개 가이드 광고(장래)**. 가격·결제·광고는 **실행되지 않음**.
+- `/plans.html`: Free/Plus 제안 기능 비교(한국어, 일본어, 영어, 중국어 간체·번체), 결제 불가 및 미확정 가격 명시.
+- `/guide.html`: 사용자가 공개적으로 읽는 독창적인 커뮤니케이션 가이드. AdSense 스크립트를 넣지 않았으며, 사적 대화 분석 페이지에는 광고를 넣지 않음.
+- 사이트 심사·판매자 실명·법적 이용약관/개인정보처리방침/환불·해지 조건·계정 심사·비밀키·웹훅·DB가 완료되기 전까지 실제 고객에게 과금하지 않는다.
+- `tests/monetization.test.mjs`: 5개 언어 정보성 페이지 및 결제 기능이 비활성 상태인지 테스트.
+- 개인 판매자 Paddle/Stripe 일본 자격, AdSense, 개발 로드맵: [docs/individual-monetization-onboarding.md](docs/individual-monetization-onboarding.md).
