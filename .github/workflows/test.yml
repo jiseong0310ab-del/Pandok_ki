@@ -1,17 +1,20 @@
-name: PANDOK smoke tests
+name: SAYNUE quality and privacy checks
 on:
   push:
     branches: [main]
   pull_request:
+permissions:
+  contents: read
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - run: node --check api/analyze.mjs
-      - run: node --test tests/smoke.mjs
+      - run: node --check api/feedback.mjs
+      - run: node --check tests/quality.test.mjs
+      - run: node --check tests/feedback.test.mjs
+      - run: node --test tests/smoke.mjs tests/quality.test.mjs tests/feedback.test.mjs
