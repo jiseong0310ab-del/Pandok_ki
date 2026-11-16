@@ -33,7 +33,7 @@ test("all monetization informational pages translate their visible labels into f
     const page=load(path),code=codeFrom(page);
     const marker=code.indexOf("const I="),end=code.indexOf("\nconst l=",marker);
     assert.ok(marker>=0&&end>marker,path);
-    const dict=vm.runInNewContext(code.slice(marker+8,end).trim().replace(/;\s*$/,""));
+    const dict=vm.runInNewContext("("+code.slice(marker+8,end).trim().replace(/;\s*$/,"")+")");
     const wanted=[...new Set([...page.matchAll(/data-i="([^"]+)"/g)].map(x=>x[1]))];
     for(const loc of ["ko","ja","en","zh-CN","zh-TW"]){
       assert.ok(dict[loc],loc);
