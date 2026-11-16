@@ -8,8 +8,8 @@ function req(body,extra={}){
   const headers={"content-type":"application/json","x-vercel-forwarded-for":"198.51.100.31",...extra.headers};
   return new Request("https://saynue.test/api/analyze",{method:extra.method||"POST",headers,body:(extra.method||"POST")==="POST"?(typeof body==="string"?body:JSON.stringify(body)):undefined});
 }
-const valid={platform:"line",relation:"talking",locale:"ja",chatText:"Me: Can we meet next week? Them: I'll check my schedule and let you know."};
-const mock={verdict:"A polite but undecided response",warmthScore:57,reciprocityScore:48,evidenceLevel:"medium",keySignal:"A reply but no date agreed.",evidence:"They said they will check their schedule.",alternative:"They may genuinely be busy.",nextStep:"Give them time and respect the boundary."};
+const valid={platform:"line",relation:"talking",goal:"reply",locale:"ja",chatText:"Me: Can we meet next week? Them: I'll check my schedule and let you know."};
+const mock={verdict:"A polite but undecided response",warmthScore:57,reciprocityScore:48,evidenceLevel:"medium",keySignal:"A reply but no date agreed.",evidence:"They said they will check their schedule.",alternative:"They may genuinely be busy.",nextStep:"Give them time and respect the boundary.",replyDraft:"No rush, let me know when you know your schedule.",replyWhy:"It acknowledges their busy schedule without pressuring them."};
 
 test("index HTML has a script with valid JavaScript syntax",()=>{
   const page=fs.readFileSync(new URL("../index.html",import.meta.url),"utf8");
@@ -21,6 +21,10 @@ test("index HTML has a script with valid JavaScript syntax",()=>{
   assert.match(page,/assets\/saynue-mark\.svg/);
   assert.match(page,/Read Between the Lines/);
   assert.doesNotMatch(page,/PANDOK|PAN<b>DOK/);
+  assert.match(page,/id="goals"/);
+  assert.match(page,/id="replyCard"/);
+  assert.match(page,/id="maskText"/);
+  assert.match(page,/goal:goal/);
   assert.doesNotMatch(page,/LOVE2026|YOUR_GEMINI_API_KEY|getMockResult/);
 });
 test("GET is rejected",async()=>{assert.equal((await app.fetch(req(valid,{method:"GET"}))).status,405)});
@@ -30,6 +34,21 @@ test("bad JSON and insufficient chat return 400",async()=>{
   process.env.GEMINI_API_KEY="test-key";
   assert.equal((await app.fetch(req("{bad"))).status,400);
   assert.equal((await app.fetch(req({...valid,chatText:"hi"}))).status,400);
+});
+test("goal values are strictly validated while older clients keep a safe default",async()=>{
+  process.env.GEMINI_API_KEY="test-key";
+  assert.equal((await app.fetch(req({...valid,goal:"hidden-admin"}))).status,400);
+  const old=global.fetch;let seen="";
+  global.fetch=async(_url,options)=>{
+    const payload=JSON.parse(options.body);
+    seen=payload.contents[0].parts[0].text;
+    return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(mock)}]}}]}),{status:200});
+  };
+  try {
+    const r=await app.fetch(req({...valid,goal:undefined},{headers:{"x-vercel-forwarded-for":"198.51.100.49"}}));
+    assert.equal(r.status,200);
+    assert.match(seen,/User goal: understand/);
+  }finally{global.fetch=old}
 });
 test("unsupported mime and extra image text are rejected",async()=>{
   process.env.GEMINI_API_KEY="test-key";
@@ -46,6 +65,7 @@ test("response is free-only and not cached, with Gemini called from server",asyn
     assert.ok(sent.systemInstruction);
     assert.equal(sent.generationConfig.responseMimeType,"application/json");
     assert.ok(sent.generationConfig.responseSchema);
+    assert.equal(sent.contents[0].parts[0].text.includes("User goal: reply"),true);
     return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify({...mock,deepMindAnalysis:"SECRET",recommendedReplies:["SECRET"]})}]}}]}),{status:200});
   };
   try{
@@ -54,6 +74,8 @@ test("response is free-only and not cached, with Gemini called from server",asyn
     assert.match(r.headers.get("Cache-Control"),/no-store/);
     const output=await r.json();
     assert.equal(output.verdict,mock.verdict);
+    assert.equal(output.replyDraft,mock.replyDraft);
+    assert.equal(output.replyWhy,mock.replyWhy);
     assert.equal(Object.hasOwn(output,"deepMindAnalysis"),false);
     assert.equal(Object.hasOwn(output,"recommendedReplies"),false);
     assert.equal(calls,1);
