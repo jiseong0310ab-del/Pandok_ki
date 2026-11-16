@@ -55,10 +55,33 @@ test("response is free-only and not cached, with Gemini called from server",asyn
     assert.equal(calls,1);
   }finally{global.fetch=old}
 });
-test("upstream errors never substitute mock analysis",async()=>{
+test("retries transient Gemini 503 then falls back to 3.1 Flash-Lite",async()=>{
   process.env.GEMINI_API_KEY="test-key";
-  const old=global.fetch;global.fetch=async()=>new Response("Bad model",{status:503});
-  try{const r=await app.fetch(req(valid,{headers:{"x-vercel-forwarded-for":"198.51.100.43"}}));assert.equal(r.status,502);assert.equal((await r.json()).code,"AI_UNAVAILABLE")}finally{global.fetch=old}
+  const old=global.fetch;const urls=[];
+  global.fetch=async(url)=>{
+    urls.push(String(url));
+    if(urls.length<3)return new Response(JSON.stringify({error:{status:"UNAVAILABLE"}}),{status:503});
+    return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(mock)}]}}]}),{status:200});
+  };
+  try{
+    const r=await app.fetch(req(valid,{headers:{"x-vercel-forwarded-for":"198.51.100.43"}}));
+    assert.equal(r.status,200);
+    assert.equal((await r.json()).verdict,mock.verdict);
+    assert.equal(urls.length,3);
+    assert.match(urls[0],/gemini-3.5-flash-lite/);
+    assert.match(urls[2],/gemini-3.1-flash-lite/);
+  }finally{global.fetch=old}
+});
+test("when all models are overloaded, return AI_BUSY rather than fake report",async()=>{
+  process.env.GEMINI_API_KEY="test-key";
+  const old=global.fetch;let count=0;
+  global.fetch=async()=>{count++;return new Response(JSON.stringify({error:{status:"UNAVAILABLE"}}),{status:503})};
+  try{
+    const r=await app.fetch(req(valid,{headers:{"x-vercel-forwarded-for":"198.51.100.44"}}));
+    assert.equal(r.status,503);
+    assert.equal((await r.json()).code,"AI_BUSY");
+    assert.equal(count,3);
+  }finally{global.fetch=old}
 });
 test("unconfigured local limiter throttles repeated calls",async()=>{
   process.env.GEMINI_API_KEY="test-key";
