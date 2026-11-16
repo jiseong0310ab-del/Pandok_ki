@@ -14,16 +14,16 @@ const RESP_HEADERS = {
   "X-Robots-Tag": "noindex"
 };
 const FREE_SCHEMA = {
-  type: "object",
+  type: "OBJECT",
   properties: {
-    verdict: {type:"string",description:"One crisp, careful summary, at most 90 characters"},
-    warmthScore: {type:"integer",description:"0-100 qualitative positive engagement signal; NOT someone's real affection probability"},
-    reciprocityScore: {type:"integer",description:"0-100 observational two-way communication balance"},
-    evidenceLevel: {type:"string",enum:["low","medium","high"]},
-    keySignal: {type:"string",description:"Specific important pattern and its limits, 1-3 sentences"},
-    evidence: {type:"string",description:"One or two short concrete examples from chat, without personal identifiers"},
-    alternative: {type:"string",description:"Plausible alternative explanation, not an assumption"},
-    nextStep: {type:"string",description:"A respectful, non-manipulative practical next step"}
+    verdict: {type:"STRING",description:"One crisp, careful summary, at most 90 characters"},
+    warmthScore: {type:"INTEGER",description:"0-100 qualitative positive engagement signal; NOT someone's real affection probability"},
+    reciprocityScore: {type:"INTEGER",description:"0-100 observational two-way communication balance"},
+    evidenceLevel: {type:"STRING",enum:["low","medium","high"]},
+    keySignal: {type:"STRING",description:"Specific important pattern and its limits, 1-3 sentences"},
+    evidence: {type:"STRING",description:"One or two short concrete examples from chat, without personal identifiers"},
+    alternative: {type:"STRING",description:"Plausible alternative explanation, not an assumption"},
+    nextStep: {type:"STRING",description:"A respectful, non-manipulative practical next step"}
   },
   required:["verdict","warmthScore","reciprocityScore","evidenceLevel","keySignal","evidence","alternative","nextStep"]
 };
