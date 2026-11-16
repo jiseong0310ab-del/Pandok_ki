@@ -28,6 +28,7 @@ Paddle/Stripe 모두 개인 자격 수용 ≠ 심사/정산/세금 의무가 자
 - Google AdSense 정책상 사적 대화가 주 콘텐츠인 화면에 Google 광고 금지. 메인 입력·결과 화면에는 광고 코드를 넣지 않음. guide.html 같은 실제 읽을 가치가 있는 공개 교육 콘텐츠로 광고 영역을 한정.
 - 실제 광고 승인이 나기 전 광고 코드나 수익 수치·가상 광고를 띄우지 않음. EEA/영국/스위스 방문자의 광고 동의 관리에는 Google 인증 CMP 및 지역별 법 검토.
 - 가이드 문서 하나만으로 AdSense 승인 기대는 금물. 다양한 독창적 글과 정식 법적 안내 페이지가 더 필요하다.
+- **AdSense 도메인 주의:** 일반 하위도메인은 사이트로 등록되지 않으며, Google은 자체 도메인이나 Public Suffix List에 등록된 호스팅 플랫폼 하위도메인 등의 예외를 안내한다. 무료 saynue.vercel.app의 심사 대상 적합성은 AdSense 계정에서 직접 확인할 것. 승인·검색 노출·자산 소유권을 생각하면 향후 자체 도메인 구입이 권장된다. 자체 도메인 가격·보유 여부는 조사 및 구매 전에는 보장하지 않는다.
 
 ## 상품 가설 (판매가 아님)
 | 사용자 | 혜택 | 가격 실험 가설 |
@@ -86,5 +87,6 @@ Paddle/Stripe 모두 개인 자격 수용 ≠ 심사/정산/세금 의무가 자
 - Stripe 일본 법적 자격: https://stripe.com/jp/legal/ssa-service-terms
 - Stripe 지원 국가: https://stripe.com/global
 - AdSense 개인 계정: https://support.google.com/adsense/answer/10163
+- AdSense 가입 시 사이트 도메인 규칙: https://support.google.com/adsense/answer/2784438
 - 광고 사적 대화 제한: https://support.google.com/adsense/answer/1346295
 - 광고 유럽 동의: https://support.google.com/adsense/answer/13554116
