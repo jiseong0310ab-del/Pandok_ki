@@ -234,3 +234,8 @@ textarea::placeholder{color:#9299ae}
 .feedback-status:empty{display:none}
 
 .reply-unavailable{margin-top:18px;padding:13px 15px;background:#22273b;border:1px solid #50546e;color:#b9bed3;border-radius:12px;font-size:12px;line-height:1.75}
+
+/* Pre-launch commercial information: informational only, no checkout or ads */
+.prelaunch-link{display:inline-block;margin-top:13px;color:#d6c7fa;text-decoration:underline;text-underline-offset:4px;font-weight:720;font-size:12px}
+.prelaunch-footer{display:flex;justify-content:center;gap:21px;flex-wrap:wrap;padding-bottom:15px}
+.prelaunch-footer a{color:#d6c7fa;font-size:12px;text-underline-offset:4px}
