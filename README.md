@@ -75,3 +75,13 @@ GitHub Actions가 main의 모든 푸시와 PR에 Node.js 22 환경으로 smoke t
 - `assets/site.css`: 기존 SAYNUE 다크 에디토리얼 디자인 안에 위 기능을 반응형으로 통합.
 - 검증: 일본어 LINE의 답장 작성, 한국어 카카오톡의 경계 표현을 **합성 가상 대화**로 실제 배포 Gemini에서 테스트하여 HTTP 200 및 10개 필드 반환 확인. 개인정보를 포함한 사용자 대화는 테스트하지 않았음. 임시 테스트 경로 제거.
 - 가치/수익 계획: [`docs/product-strategy.md`](docs/product-strategy.md). 가격, 코칭 패키지, 구매 버튼은 아직 출시한 기능이 아님.
+
+## 8. 품질 평가·명시적 피드백 패치 (2026-11-17)
+
+- `api/feedback.mjs` — **명시적 선택 이후에만** 평가(도움됨/아쉬움), 언어, 분석 목표를 받아 처리. 입력의 자유 텍스트·대화·답장·점수·원본 IP는 저장하지 않음. 미허용 필드는 거절.
+- `index.html` — 리포트 아래에 익명 범주형 피드백 버튼과 처리 성공/실패 안내. 다른 대화로 다시 시작할 때 평가 UI도 초기화.
+- 단기 로깅만 가능한 현재 설정에서는 통계의 지속 보존이 불가능. 장기 집계를 원하면 Vercel 환경변수에 **UPSTASH_REDIS_REST_URL**과 **UPSTASH_REDIS_REST_TOKEN**을 직접 연결하고, Redis 만료 정책을 검토해야 함.
+- `tests/quality-cases.mjs` 합성 대화 **30개**(5언어×6); `tests/quality.test.mjs` 모의 Gemini 요청 계약 30건, `tests/feedback.test.mjs` 개인정보·출처·횟수 검증. 실제 모델의 의미적 정확도를 증명하지는 않음.
+- 실서비스 Gemini 6개 합성 사례를 확인. 첫 일본어 사례에서 드물게 형식 오류가 발생해 **제한적 자동 재시도 + 예비 모델 전환**을 추가했으며, 거절 상황에서 **답장하지 않는 조언**도 허용.
+- 테스트 범위와 평가 척도: [docs/quality-and-privacy.md](docs/quality-and-privacy.md).
+- 공식 GitHub CI가 실행됐는지는 이 문서만으로 확정할 수 없음. `node --test tests/smoke.mjs tests/quality.test.mjs tests/feedback.test.mjs` 명령으로 재검증 가능.
