@@ -98,6 +98,32 @@ test("retries transient Gemini 503 then falls back to 3.1 Flash-Lite",async()=>{
     assert.match(urls[2],/gemini-3.1-flash-lite/);
   }finally{global.fetch=old}
 });
+test("recovers from transient malformed Gemini output without inventing a report",async()=>{
+  process.env.GEMINI_API_KEY="test-key";
+  const old=global.fetch;let count=0;
+  global.fetch=async()=>{
+    count++;
+    if(count===1)return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify({verdict:"Incomplete"})}]}}]}),{status:200});
+    return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(mock)}]}}]}),{status:200});
+  };
+  try{
+    const r=await app.fetch(req(valid,{headers:{"x-vercel-forwarded-for":"198.51.100.46"}}));
+    assert.equal(r.status,200);
+    assert.equal((await r.json()).replyDraft,mock.replyDraft);
+    assert.equal(count,2);
+  }finally{global.fetch=old}
+});
+test("fully malformed model responses fail without false positive success",async()=>{
+  process.env.GEMINI_API_KEY="test-key";
+  const old=global.fetch;let count=0;
+  global.fetch=async()=>{count++;return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify({verdict:"Incomplete"})}]}}]}),{status:200})};
+  try{
+    const r=await app.fetch(req(valid,{headers:{"x-vercel-forwarded-for":"198.51.100.47"}}));
+    assert.equal(r.status,502);
+    assert.equal((await r.json()).code,"AI_INVALID_OUTPUT");
+    assert.equal(count,3);
+  }finally{global.fetch=old}
+});
 test("when all models are overloaded, return AI_BUSY rather than fake report",async()=>{
   process.env.GEMINI_API_KEY="test-key";
   const old=global.fetch;let count=0;
