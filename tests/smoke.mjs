@@ -98,6 +98,23 @@ test("retries transient Gemini 503 then falls back to 3.1 Flash-Lite",async()=>{
     assert.match(urls[2],/gemini-3.1-flash-lite/);
   }finally{global.fetch=old}
 });
+test("missing or blank optional reply does not erase a valid core report",async()=>{
+  process.env.GEMINI_API_KEY="test-key";
+  const old=global.fetch;let calls=0;
+  global.fetch=async()=>{
+    calls++;
+    return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify({...mock,replyDraft:"",replyWhy:""})}]}}]}),{status:200});
+  };
+  try{
+    const r=await app.fetch(req(valid,{headers:{"x-vercel-forwarded-for":"198.51.100.48"}}));
+    assert.equal(r.status,200);
+    const report=await r.json();
+    assert.equal(report.verdict,mock.verdict);
+    assert.equal(report.replyDraft,"");
+    assert.equal(report.replyWhy,"");
+    assert.equal(calls,1);
+  }finally{global.fetch=old}
+});
 test("recovers from transient malformed Gemini output without inventing a report",async()=>{
   process.env.GEMINI_API_KEY="test-key";
   const old=global.fetch;let count=0;
