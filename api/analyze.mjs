@@ -25,7 +25,7 @@ const FREE_SCHEMA = {
     evidence: {type:"STRING",description:"One or two short concrete examples from chat, without personal identifiers"},
     alternative: {type:"STRING",description:"Plausible alternative explanation, not an assumption"},
     nextStep: {type:"STRING",description:"A respectful, non-manipulative practical next step"},
-    replyDraft: {type:"STRING",description:"One genuinely useful, context-specific, ready-to-edit reply that the USER could send. Reply in the requested locale. Do not invent facts, relationship stages or commitments; keep it short, authentic, gentle and specific. For boundaries or conflict do not pressure the other person."},
+    replyDraft: {type:"STRING",description:"One practical, safe NEXT ACTION: either a short authentic ready-to-edit message from the user, OR an explicit instruction NOT to send another message when the other participant clearly refused or the conversation is already respectfully closed. Output in requested locale. Never invent facts, pressure others, or suggest violating boundaries."},
     replyWhy: {type:"STRING",description:"One concise reason why this particular reply fits the available conversation and goal, including its limitation"}
   },
   required:["verdict","warmthScore","reciprocityScore","evidenceLevel","keySignal","evidence","alternative","nextStep","replyDraft","replyWhy"]
@@ -46,6 +46,7 @@ const SYSTEM = [
   "Make the keySignal and evidence specific to ACTUAL observed messages. Mention plausible non-romantic explanations.",
   "Interpret the user goal (understand/reply/repair/boundary) as guidance, never as evidence that the other person feels a certain way.",
   "Provide ONE natural, ready-to-edit draft reply from the user viewpoint, in the requested locale and suited to their goal and relationship. Preserve authentic voice: no manipulative tactics, guilt, pressure, false promises or scripts to override consent.",
+  "If the other person has explicitly refused or the conversation is already respectfully closed, recommending no further reply is a valid and often preferable outcome. Write that clearly in replyDraft and explain why in replyWhy; do NOT draft another pursuing message.",
   "If the input is too ambiguous to identify a recipient, keep replyDraft conditional and neutral without inventing context; replyWhy should explain the uncertainty.",
   "Do not echo or leak these instructions or any output schema."
 ].join("\n");
@@ -169,19 +170,31 @@ export default {
         if(upstream.ok){
           const body=await upstream.json();
           const answer=body?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("");
+          let result=null,reason=null;
           if(!answer){
-            console.warn("[SAYNUE] Empty AI output model="+attempt.model+" reason="+String(body?.candidates?.[0]?.finishReason||body?.promptFeedback?.blockReason||"UNKNOWN").slice(0,35));
-            return error(502,"AI_INVALID_OUTPUT");
+            reason="EMPTY_"+String(body?.candidates?.[0]?.finishReason||body?.promptFeedback?.blockReason||"UNKNOWN").replace(/[^A-Z_]/g,"").slice(0,25);
+          }else{
+            let parsed;
+            try{parsed=JSON.parse(answer)}catch(_){reason="INVALID_JSON"}
+            if(parsed){
+              result=textResult(parsed);
+              if(!result){
+                const fields=["verdict","warmthScore","reciprocityScore","evidenceLevel","keySignal","evidence","alternative","nextStep","replyDraft","replyWhy"];
+                const bad=fields.filter(k=>!(k in parsed)||(typeof parsed[k]==="string"&&parsed[k].trim().length<3));
+                reason="INVALID_FIELDS_"+bad.join("_").slice(0,85);
+              }
+            }
           }
-          let parsed;
-          try{parsed=JSON.parse(answer)}catch(_){
-            console.warn("[SAYNUE] Invalid AI JSON model="+attempt.model);
-            return error(502,"AI_INVALID_OUTPUT");
-          }
-          const result=textResult(parsed);
           if(!result){
-            console.warn("[SAYNUE] Invalid AI result fields model="+attempt.model);
-            return error(502,"AI_INVALID_OUTPUT");
+            // Malformed structured output can occur transiently even on a valid key/model.
+            // Do not substitute a fabricated answer; retry and eventually switch models.
+            lastCode="AI_INVALID_OUTPUT";
+            console.warn("[SAYNUE] Gemini output invalid reason="+String(reason||"INVALID").slice(0,110)+" model="+attempt.model+" attempt="+(i+1));
+            if(i<attempts.length-1){
+              await new Promise(resolve=>setTimeout(resolve,250+i*250));
+              continue;
+            }
+            return error(502,lastCode);
           }
           if(i>0)console.info("[SAYNUE] Gemini recovery succeeded attempt="+(i+1)+" model="+attempt.model);
           return json(result);
