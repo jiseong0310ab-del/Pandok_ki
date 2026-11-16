@@ -232,3 +232,5 @@ textarea::placeholder{color:#9299ae}
 .feedback-note{font-size:10px;line-height:1.7;color:#a2a9c0;margin-top:12px}
 .feedback-status{font-size:11px;line-height:1.6;color:#c8baef;margin-top:8px;min-height:0}
 .feedback-status:empty{display:none}
+
+.reply-unavailable{margin-top:18px;padding:13px 15px;background:#22273b;border:1px solid #50546e;color:#b9bed3;border-radius:12px;font-size:12px;line-height:1.75}
