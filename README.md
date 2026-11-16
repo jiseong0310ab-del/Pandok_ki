@@ -12,7 +12,7 @@
 2. **Framework Preset: Other**, **Root Directory: ./** 을 선택하고 Build Command는 비워 두기.
 3. **Settings → Environment Variables**에서 다음을 추가:
    - **GEMINI_API_KEY**: [Google AI Studio](https://aistudio.google.com/apikey) 발급 키 (필수). 코드/GitHub에는 절대 입력 금지.
-   - **GEMINI_MODEL**: gemini-2.5-flash (선택; 기본값)
+   - **GEMINI_MODEL**: gemini-3.5-flash-lite (선택; 기본값, 고급 모델 gemini-3.8-flash도 지원)
 4. **Deploy**. 이후 GitHub main에 푸시할 때 자동 재배포.
 5. 환경변수 수정 후 **Redeploy**. 앱에서 테스트 대화로 분석이 되는지 확인.
 
@@ -51,3 +51,11 @@ GitHub Actions가 main의 모든 푸시와 PR에 Node.js 22 환경으로 smoke t
 - [Gemini terms of service](https://ai.google.dev/gemini-api/terms)
 - [Vercel Functions](https://vercel.com/docs/functions)
 - [Vercel 4.5MB body limit](https://vercel.com/docs/functions/limitations)
+
+## 5. 2026-11-17 실제 연동 테스트
+
+새 AI Studio 프로젝트에서 gemini-2.5-flash는 모델 메타데이터 조회에는 성공하더라도 generateContent에서 404가 날 수 있습니다. Google은 새 프로젝트에 최신 3.x 모델 사용을 권장합니다. 기본 모델을 gemini-3.5-flash-lite로 교체하고, 이전 버전에서 사용한 thinkingBudget: 0 설정도 제거했습니다.
+
+서버 키를 사용한 합성 예시 대화 분석에서 **HTTP 200**과 무료 리포트 8개 필드 반환을 확인했습니다. 테스트 중 사용한 임시 진단 API는 제거했습니다. 실사용자가 입력하는 개인정보는 테스트에 사용하지 않았습니다.
+
+모델과 무료 API 정책은 변할 수 있습니다: [Gemini deprecations](https://ai.google.dev/gemini-api/docs/deprecations), [pricing](https://ai.google.dev/gemini-api/docs/pricing).
