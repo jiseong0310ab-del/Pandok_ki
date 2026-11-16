@@ -60,9 +60,12 @@ function asText(v,max) { return typeof v==="string"?v.slice(0,max).trim():""; }
 function inRange(v){return Number.isInteger(v)&&v>=0&&v<=100}
 function textResult(parsed){
   if(!parsed||typeof parsed!=="object"||!inRange(parsed.warmthScore)||!inRange(parsed.reciprocityScore)||!["low","medium","high"].includes(parsed.evidenceLevel))return null;
-  const names=["verdict","keySignal","evidence","alternative","nextStep","replyDraft","replyWhy"];
+  // The report is useful even when a respectful "do not reply" answer leads
+  // Gemini to leave an optional draft blank. Never fabricate a draft.
+  const names=["verdict","keySignal","evidence","alternative","nextStep"];
   if(names.some(k=>typeof parsed[k]!=="string"||parsed[k].trim().length<3))return null;
-  return {verdict:asText(parsed.verdict,220),warmthScore:parsed.warmthScore,reciprocityScore:parsed.reciprocityScore,evidenceLevel:parsed.evidenceLevel,keySignal:asText(parsed.keySignal,850),evidence:asText(parsed.evidence,950),alternative:asText(parsed.alternative,700),nextStep:asText(parsed.nextStep,750),replyDraft:asText(parsed.replyDraft,480),replyWhy:asText(parsed.replyWhy,520)};
+  const draft=asText(parsed.replyDraft,480);
+  return {verdict:asText(parsed.verdict,220),warmthScore:parsed.warmthScore,reciprocityScore:parsed.reciprocityScore,evidenceLevel:parsed.evidenceLevel,keySignal:asText(parsed.keySignal,850),evidence:asText(parsed.evidence,950),alternative:asText(parsed.alternative,700),nextStep:asText(parsed.nextStep,750),replyDraft:draft.length>=3?draft:"",replyWhy:draft.length>=3?asText(parsed.replyWhy,520):""};
 }
 function clientHash(request){
   const ip=request.headers.get("x-vercel-forwarded-for")||request.headers.get("x-forwarded-for")||"unknown";
