@@ -148,16 +148,47 @@ export default {
         signal:AbortSignal.timeout(28000)
       });
       if(!upstream.ok){
-        // No upstream payload, token, input, or stack trace returned to the client.
-        return error(upstream.status===429?429:502,upstream.status===429?"AI_RATE_LIMITED":"AI_UNAVAILABLE");
+        // Log only provider status and a small, allowlisted error category.
+        // Never log API keys, provider messages, user input, or model output.
+        let reason="UNKNOWN";
+        try {
+          const failure=await upstream.json();
+          const providerStatus=String(failure?.error?.status||"");
+          const providerMessage=String(failure?.error?.message||"");
+          reason=/quota|rate limit|resource exhausted/i.test(providerMessage)?"QUOTA":
+            /API key|invalid key|key not valid/i.test(providerMessage)?"KEY":
+            /schema|thinkingBudget|generationConfig|responseMimeType/i.test(providerMessage)?"CONFIG":
+            /model|not found|unsupported/i.test(providerMessage)?"MODEL":
+            /^[A-Z_]{2,40}$/.test(providerStatus)?providerStatus:"UNKNOWN";
+        } catch (_) {}
+        console.warn("[PANDOK] Gemini status="+upstream.status+" reason="+reason+" model="+model);
+        const code=upstream.status===429?"AI_RATE_LIMITED":
+          (upstream.status===401||reason==="KEY")?"AI_KEY_INVALID":
+          upstream.status===403?"AI_PERMISSION":
+          upstream.status===404?"AI_MODEL_UNAVAILABLE":
+          upstream.status===400?"AI_REQUEST_REJECTED":"AI_UNAVAILABLE";
+        return error(upstream.status===429?429:upstream.status===400?422:502,code);
       }
       const body=await upstream.json();
-      const answer=body&&body.candidates&&body.candidates[0]&&body.candidates[0].content&&body.candidates[0].content.parts&&body.candidates[0].content.parts.map(p=>p.text||"").join("");
-      if(!answer)return error(502,"AI_INVALID_OUTPUT");
-      let parsed;try{parsed=JSON.parse(answer)}catch(_){return error(502,"AI_INVALID_OUTPUT")}
+      const answer=body?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("");
+      if(!answer){
+        console.warn("[PANDOK] Gemini empty output reason="+String(body?.candidates?.[0]?.finishReason||body?.promptFeedback?.blockReason||"UNKNOWN").slice(0,40));
+        return error(502,"AI_INVALID_OUTPUT");
+      }
+      let parsed;try{parsed=JSON.parse(answer)}catch(_){
+        console.warn("[PANDOK] Gemini response is not valid JSON");
+        return error(502,"AI_INVALID_OUTPUT");
+      }
       const result=textResult(parsed);
-      if(!result)return error(502,"AI_INVALID_OUTPUT");
+      if(!result){
+        console.warn("[PANDOK] Gemini response does not match free report schema");
+        return error(502,"AI_INVALID_OUTPUT");
+      }
       return json(result);
-    }catch(_){return error(502,"AI_UNAVAILABLE")}
+    }catch(e){
+      const code=e?.name==="TimeoutError"||e?.name==="AbortError"?"AI_TIMEOUT":"AI_UNAVAILABLE";
+      console.warn("[PANDOK] Gemini request failed type="+(code==="AI_TIMEOUT"?"TIMEOUT":"NETWORK"));
+      return error(502,code);
+    }
   }
 };
