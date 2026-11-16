@@ -6,7 +6,7 @@ import app from "../api/analyze.mjs";
 
 function req(body,extra={}){
   const headers={"content-type":"application/json","x-vercel-forwarded-for":"198.51.100.31",...extra.headers};
-  return new Request("https://pandok.test/api/analyze",{method:extra.method||"POST",headers,body:(extra.method||"POST")==="POST"?(typeof body==="string"?body:JSON.stringify(body)):undefined});
+  return new Request("https://saynue.test/api/analyze",{method:extra.method||"POST",headers,body:(extra.method||"POST")==="POST"?(typeof body==="string"?body:JSON.stringify(body)):undefined});
 }
 const valid={platform:"line",relation:"talking",locale:"ja",chatText:"Me: Can we meet next week? Them: I'll check my schedule and let you know."};
 const mock={verdict:"A polite but undecided response",warmthScore:57,reciprocityScore:48,evidenceLevel:"medium",keySignal:"A reply but no date agreed.",evidence:"They said they will check their schedule.",alternative:"They may genuinely be busy.",nextStep:"Give them time and respect the boundary."};
@@ -16,7 +16,11 @@ test("index HTML has a script with valid JavaScript syntax",()=>{
   const match=page.match(/<script>([\s\S]*?)<\/script>/);
   assert.ok(match,"Inline script must exist");
   assert.doesNotThrow(()=>new vm.Script(match[1]));
-  assert.match(page,/PANDOK/);
+  assert.match(page,/SAYNUE/);
+  assert.match(page,/assets\/site\.css/);
+  assert.match(page,/assets\/saynue-mark\.svg/);
+  assert.match(page,/Read Between the Lines/);
+  assert.doesNotMatch(page,/PANDOK|PAN<b>DOK/);
   assert.doesNotMatch(page,/LOVE2026|YOUR_GEMINI_API_KEY|getMockResult/);
 });
 test("GET is rejected",async()=>{assert.equal((await app.fetch(req(valid,{method:"GET"}))).status,405)});
@@ -45,7 +49,7 @@ test("response is free-only and not cached, with Gemini called from server",asyn
     return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify({...mock,deepMindAnalysis:"SECRET",recommendedReplies:["SECRET"]})}]}}]}),{status:200});
   };
   try{
-    const r=await app.fetch(req(valid,{headers:{"x-vercel-forwarded-for":"198.51.100.42",origin:"https://pandok.test"}}));
+    const r=await app.fetch(req(valid,{headers:{"x-vercel-forwarded-for":"198.51.100.42",origin:"https://saynue.test"}}));
     assert.equal(r.status,200);
     assert.match(r.headers.get("Cache-Control"),/no-store/);
     const output=await r.json();
