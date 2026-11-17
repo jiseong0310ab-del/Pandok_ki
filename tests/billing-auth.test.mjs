@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHmac} from "node:crypto";
 import {verifyPaddleSignature,parsePaddleSubscriptionEvent,parsePaddleAdjustmentEvent,activeSubscription} from "../lib/paddle-billing.mjs";
-import {validEmail,validOTP,checkSameOrigin,setSessionCookies,clearSessionCookies} from "../lib/saynue-auth.mjs";
+import {validEmail,validOTP,checkSameOrigin,setSessionCookies,clearSessionCookies,sendEmailCode,exchangeDefaultEmailLink} from "../lib/saynue-auth.mjs";
 import {supabaseAuthConfig,supabaseConfig,authAPI,listUserSubscriptions} from "../lib/saynue-storage.mjs";
 
 const pad=(prefix,chr)=>prefix+"_"+chr.repeat(26);
@@ -123,6 +123,71 @@ test("new Supabase API keys use apikey only; signed-in user JWT stays a bearer t
      else process.env[k]=v;
    }
  }
+});
+
+test("Supabase default confirmation links are directed to the SAYNUE account page",async()=>{
+ const oldUrl=process.env.SUPABASE_URL,oldKey=process.env.SUPABASE_PUBLISHABLE_KEY,oldFetch=global.fetch;
+ process.env.SUPABASE_URL="https://sample.supabase.co";
+ process.env.SUPABASE_PUBLISHABLE_KEY="sb_publishable_testing";
+ let url="",body=null;
+ global.fetch=async(target,options)=>{
+  url=String(target);
+  body=JSON.parse(options.body);
+  return new Response("{}",{status:200});
+ };
+ try{
+  await sendEmailCode("qa@example.com");
+  assert.equal(new URL(url).pathname,"/auth/v1/otp");
+  assert.equal(new URL(url).searchParams.get("redirect_to"),"https://saynue.vercel.app/account.html");
+  assert.equal(body.email,"qa@example.com");
+  assert.equal(body.create_user,true);
+ }finally{
+  global.fetch=oldFetch;
+  if(oldUrl===undefined)delete process.env.SUPABASE_URL;else process.env.SUPABASE_URL=oldUrl;
+  if(oldKey===undefined)delete process.env.SUPABASE_PUBLISHABLE_KEY;else process.env.SUPABASE_PUBLISHABLE_KEY=oldKey;
+ }
+});
+
+test("Email magic link requires server-side refresh verification and never accepts untrusted bearer alone",async()=>{
+ const env={
+  SUPABASE_URL:process.env.SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY:process.env.SUPABASE_PUBLISHABLE_KEY
+ };
+ const oldFetch=global.fetch;
+ process.env.SUPABASE_URL="https://sample.supabase.co";
+ process.env.SUPABASE_PUBLISHABLE_KEY="sb_publishable_testing";
+ let requests=[];
+ const expectedUser={id:"11111111-1111-4111-8111-111111111111",email:"qa@example.com",email_confirmed_at:"2026-11-17T09:00:00Z"};
+ global.fetch=async(url,options)=>{
+  requests.push({url:String(url),headers:options.headers});
+  if(String(url).includes("grant_type=refresh_token"))return new Response(JSON.stringify({access_token:"eyJ."+"x".repeat(100),refresh_token:"refreshed-token-value",expires_in:3600,user:expectedUser}),{status:200});
+  if(String(url).endsWith("/auth/v1/user"))return new Response(JSON.stringify(expectedUser),{status:200});
+  throw Error("Unexpected URL");
+ };
+ try{
+  await assert.rejects(()=>exchangeDefaultEmailLink({accessToken:"short",refreshToken:"short"}),/INVALID_LINK/);
+  const result=await exchangeDefaultEmailLink({accessToken:"eyJ."+"x".repeat(100),refreshToken:"original-refreshtoken-value"});
+  assert.equal(result.refresh_token,"refreshed-token-value");
+  assert.equal(requests.length,2);
+  assert.match(requests[0].url,/grant_type=refresh_token/);
+  assert.equal(requests[1].headers.Authorization,"Bearer "+result.access_token);
+ }finally{
+  global.fetch=oldFetch;
+  for(const [key,val] of Object.entries(env)){if(val===undefined)delete process.env[key];else process.env[key]=val}
+ }
+});
+
+test("Account link client removes fragment and sends tokens only to its same-origin auth endpoint",()=>{
+ const script=fs.readFileSync(new URL("../assets/account.js",import.meta.url),"utf8");
+ const page=fs.readFileSync(new URL("../account.html",import.meta.url),"utf8");
+ const route=fs.readFileSync(new URL("../api/auth/link-session.mjs",import.meta.url),"utf8");
+ assert.match(script,/history\.replaceState\(null,"",location\.pathname\+location\.search\)/);
+ assert.match(script,/request\("\/api\/auth\/link-session"/);
+ assert.doesNotMatch(script,/localStorage|sessionStorage|console\.log/);
+ assert.match(page,/id="numericOtpPanel" class="hidden"/);
+ assert.match(route,/checkSameOrigin\(request\)/);
+ assert.match(route,/exchangeDefaultEmailLink\(input\)/);
+ assert.match(route,/setSessionCookies\(headers,session\)/);
 });
 
 test("SQL enforces RLS, atomic webhook event IDs, trusted transaction binding and usage quota",()=>{
