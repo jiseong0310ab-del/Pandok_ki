@@ -23,9 +23,9 @@
 ### 1. Supabase 프로젝트 만들기
 
 1. <https://supabase.com/dashboard> 에서 새 프로젝트 만들기 (실제 서비스 환경에서는 적절한 지역·보안 설정 선택).
-2. SQL Editor에서 `docs/supabase-billing-schema.sql` 전체를 검토한 뒤 실행. 기존 테이블명과 충돌이 없는지 확인.
-3. Authentication → Email 로그인 허용. Supabase 이메일 템플릿은 Magic Link 대신 **`{{ .Token }}`**가 포함된 **숫자 OTP** 메일이 오도록 설정. 실제 사용자 대상 발송 전에는 SMTP 및 CAPTCHA, 전송량 제한을 검토.
-4. Supabase 프로젝트 URL, 공개용 publishable/anon 키, 비밀 service_role 키 확인. 비밀 service_role 키를 채팅·GitHub·브라우저에 노출하지 않기.
+2. **SQL Editor → New query**에서 `docs/supabase-billing-schema.sql`의 최신 코드 전체를 복사·검토한 뒤 실행. 기존 테이블명과 충돌이 없는지 확인.
+3. **Authentication → Sign In / Providers → Email**을 활성화하고, **Authentication → Email Templates → Magic Link**의 본문에 `{{ .Token }}`을 넣어 **숫자 OTP**가 오도록 설정. 기본 Magic Link(인증 링크)만 발송되면 SAYNUE 계정 화면의 숫자 입력과 맞지 않습니다. 실제 사용자 대상 발송 전에는 SMTP, CAPTCHA, 발송 제한을 검토.
+4. **Project Settings → API Keys**(또는 프로젝트 **Connect**)에서 Project URL, `sb_publishable_` 공개용 키, `sb_secret_` 서버용 Secret key를 확인. Secret key는 채팅·GitHub·브라우저에 노출하지 않기.
 
 ### 2. Vercel 환경변수 (Production) 추가
 
@@ -34,8 +34,8 @@ SAYNUE Vercel 프로젝트 → Settings → Environment Variables. 다음 이름
 | 변수 | 용도 |
 |---|---|
 | `SUPABASE_URL` | `https://<project-ref>.supabase.co` |
-| `SUPABASE_ANON_KEY` | 인증 요청용 publishable/anon 키 |
-| `SUPABASE_SERVICE_ROLE_KEY` | 서버 전용 DB 접근용 service_role 키 (Secret) |
+| `SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_...` 공개용 API key |
+| `SUPABASE_SECRET_KEY` | `sb_secret_...` 서버 전용 비밀키 (Secret) |
 | `SAYNUE_PADDLE_ENV` | 반드시 `sandbox` |
 | `PADDLE_API_KEY` | Paddle Sandbox 서버 API 키 (Secret) |
 | `PADDLE_WEBHOOK_SECRET` | Sandbox notification destination의 서명 비밀키 (Secret) |
@@ -46,7 +46,7 @@ SAYNUE Vercel 프로젝트 → Settings → Environment Variables. 다음 이름
 
 모든 비밀키는 Vercel 보안 저장소에 직접 설정하고 **저장 후 Redeploy**. 환경변수 값은 ChatGPT에 보내지 않아도 됩니다.
 
-> 개발 구현은 service_role **JWT 키**를 서버에서 Supabase PostgREST `apikey`와 `Authorization: Bearer`로 사용하는 방식입니다. 사용 중인 Supabase 프로젝트의 키 종류가 다르면 서버 어댑터를 검토하고 수정해야 합니다.
+> 최신 연결 모듈은 **`sb_publishable_` / `sb_secret_` API 키**를 `apikey` 헤더로 전송하고, 해당 키를 JWT인 것처럼 `Authorization` 헤더에 넣지 않습니다. 기존 `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` 구형 키도 호환되지만 **2026년 말 지원 종료 예정이므로 신규 프로젝트는 새 키 사용을 권장**합니다. 실제 로그인 사용자 JWT는 `Authorization` 헤더로 별도 전송합니다.
 
 ### 3. Paddle Sandbox 웹훅 등록
 
