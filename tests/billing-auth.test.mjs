@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {createHmac} from "node:crypto";
-import {verifyPaddleSignature,parsePaddleSubscriptionEvent,activeSubscription} from "../lib/paddle-billing.mjs";
+import {verifyPaddleSignature,parsePaddleSubscriptionEvent,parsePaddleAdjustmentEvent,activeSubscription} from "../lib/paddle-billing.mjs";
 import {validEmail,validOTP,checkSameOrigin,setSessionCookies,clearSessionCookies} from "../lib/saynue-auth.mjs";
 import {supabaseAuthConfig,supabaseConfig} from "../lib/saynue-storage.mjs";
 
@@ -44,13 +44,28 @@ test("subscription events are validated and never accept client success as paid"
 });
 test("paid access requires matching price, active status, unexpired term",()=>{
  const now=Date.parse("2026-11-17T12:00:00Z");
- const row={status:"active",price_id:pad("pri","e"),period_end:"2026-12-17T00:00:00Z"};
+ const row={status:"active",price_id:pad("pri","e"),billing_blocked:false,period_end:"2026-12-17T00:00:00Z"};
  assert.equal(activeSubscription(row,row.price_id,now),true);
  assert.equal(activeSubscription({...row,status:"past_due"},row.price_id,now),false);
+ assert.equal(activeSubscription({...row,billing_blocked:true},row.price_id,now),false);
+ assert.equal(activeSubscription({...row,billing_blocked:undefined},row.price_id,now),false);
  assert.equal(activeSubscription({...row,status:"canceled"},row.price_id,now),false);
  assert.equal(activeSubscription({...row,period_end:"2026-10-01T00:00:00Z"},row.price_id,now),false);
  assert.equal(activeSubscription(row,pad("pri","x"),now),false);
 });
+test("approved refunds and chargebacks invalidate access; unlinked/other adjustments ignored",()=>{
+ const adjustment={
+  event_id:pad("evt","f"),event_type:"adjustment.updated",occurred_at:base.occurred_at,
+  data:{id:pad("adj","g"),subscription_id:pad("sub","b"),transaction_id:pad("txn","d"),action:"refund",status:"approved"}
+ };
+ const result=parsePaddleAdjustmentEvent(adjustment);
+ assert.equal(result.type,"adjustment");
+ assert.equal(result.action,"refund");
+ assert.equal(parsePaddleAdjustmentEvent({...adjustment,data:{...adjustment.data,status:"pending_approval"}}).ignored,true);
+ assert.equal(parsePaddleAdjustmentEvent({...adjustment,data:{...adjustment.data,action:"chargeback"}}).action,"chargeback");
+ assert.equal(parsePaddleAdjustmentEvent({...adjustment,data:{...adjustment.data,subscription_id:null}}).ignored,true);
+});
+
 test("auth validates OTP, email, same origin and uses HttpOnly Secure session cookies",()=>{
  assert.equal(validEmail("hello@example.com"),true);
  assert.equal(validEmail("invalid"),false);
@@ -79,7 +94,7 @@ test("Supabase storage cannot initialize without service credentials and safe HT
 });
 test("SQL enforces RLS, atomic webhook event IDs, trusted transaction binding and usage quota",()=>{
  const sql=fs.readFileSync(new URL("../docs/supabase-billing-schema.sql",import.meta.url),"utf8");
- for(const needle of ["ENABLE ROW LEVEL SECURITY","REVOKE ALL ON TABLE","FOR UPDATE","pg_advisory_xact_lock","saynue_checkout_intents","saynue_apply_subscription_event","saynue_claim_plus_credit","last_event_at<excluded.last_event_at","status='active'","period_end>now()"]){
+ for(const needle of ["ENABLE ROW LEVEL SECURITY","REVOKE ALL ON TABLE","FOR UPDATE","pg_advisory_xact_lock","saynue_checkout_intents","saynue_apply_subscription_event","saynue_claim_plus_credit","last_event_at<excluded.last_event_at","status='active'","period_end>now()","billing_blocked","saynue_apply_adjustment_event"]){
   assert.ok(sql.includes(needle),needle);
  }
  assert.doesNotMatch(sql,/GRANT SELECT ON TABLE .* TO anon/);
