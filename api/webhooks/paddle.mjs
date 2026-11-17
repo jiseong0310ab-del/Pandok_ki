@@ -1,7 +1,7 @@
 // POST /api/webhooks/paddle — Sandbox-only; no secrets means 503, never grant Plus.
 // Verified raw-body signature -> atomic database RPC. No private content in logs.
-import {verifyPaddleSignature,parsePaddleSubscriptionEvent} from "../../lib/paddle-billing.mjs";
-import {applySubscriptionEvent,supabaseConfig} from "../../lib/saynue-storage.mjs";
+import {verifyPaddleSignature,parsePaddleSubscriptionEvent,parsePaddleAdjustmentEvent} from "../../lib/paddle-billing.mjs";
+import {applySubscriptionEvent,applyAdjustmentEvent,supabaseConfig} from "../../lib/saynue-storage.mjs";
 
 const headers={"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store, max-age=0","X-Content-Type-Options":"nosniff"};
 const result=(body,status=200)=>new Response(JSON.stringify(body),{status,headers});
@@ -17,11 +17,11 @@ export default {
   if(Buffer.byteLength(raw,"utf8")>262144)return result({code:"PAYLOAD_TOO_LARGE"},413);
   if(!verifyPaddleSignature(raw,request.headers.get("paddle-signature"),secret))return result({code:"INVALID_SIGNATURE"},401);
   let event;
-  try{event=parsePaddleSubscriptionEvent(JSON.parse(raw))}catch(_){event=null}
+  try{const payload=JSON.parse(raw);event=String(payload?.event_type||"").startsWith("adjustment.")?parsePaddleAdjustmentEvent(payload):parsePaddleSubscriptionEvent(payload)}catch(_){event=null}
   if(!event)return result({code:"INVALID_EVENT"},400);
   if(event.ignored)return result({ok:true,ignored:true});
   try{
-   const state=await applySubscriptionEvent(event);
+   const state=event.type==="adjustment"?await applyAdjustmentEvent(event):await applySubscriptionEvent(event);
    // Only PostgreSQL's atomic RPC may affect subscription state.
    if(!state||!["applied","duplicate","stale"].includes(state.state))throw Error("DB_BAD_RESPONSE");
    return result({ok:true,state:state.state});
