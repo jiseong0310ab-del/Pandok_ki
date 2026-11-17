@@ -41,35 +41,35 @@
 </head>
 <body>
 <main class="wrap">
-<nav class="lab-nav" aria-label="Navigation"><a class="wordmark" href="/"><img src="/assets/saynue-mark.svg" alt="" width="33" height="33"> SAYNUE</a><a href="/plans.html">← Plans</a></nav>
-<div class="lab-badge">● SANDBOX · TEST ONLY</div>
-<h1 class="lab-head">Test the <em>Plus</em><br>checkout flow.</h1>
-<p class="lab-sub">A development-only Paddle checkout test. Sandbox transactions never charge real money. This page does not activate a subscription on SAYNUE.</p>
+<nav class="lab-nav" aria-label="Navigation"><a class="wordmark" href="/"><img src="/assets/saynue-mark.svg" alt="" width="33" height="33"> SAYNUE</a><a href="/plans.html">← Free / Plus</a></nav>
+<div class="lab-badge">● SANDBOX · 테스트 전용</div>
+<h1 class="lab-head"><em>Plus 구독</em><br>테스트 결제</h1>
+<p class="lab-sub">세이뉴 개발을 위한 Paddle 테스트 결제 페이지야. 실제 돈이 청구되지 않는 Sandbox 환경이며, 결제를 완료해도 세이뉴의 Plus 기능은 아직 활성화되지 않아.</p>
 <section class="lab-card">
-<div class="lab-small">SAYNUE Plus · Monthly</div>
-<h2>Subscription test</h2>
-<p class="lab-info">The checkout shows the price and billing cycle currently configured for your Paddle Sandbox product. Verify the amount before submitting your test card.</p>
-<button class="lab-button" type="button" id="openSandbox" disabled>Loading Paddle Sandbox…</button>
-<div class="lab-status" id="status" role="status" aria-live="polite">Connecting to Paddle Sandbox. No real payments are possible.</div>
-<div class="lab-free">Even if the test checkout reports success, your account will <strong>not</strong> receive Plus features. Secure webhook verification, user login, and subscription records must be built before that.</div>
+<div class="lab-small">SAYNUE Plus · 월 구독</div>
+<h2>구독 결제 테스트</h2>
+<p class="lab-info">실제 Sandbox 상품에 설정된 가격과 갱신 주기는 Paddle 결제창 안에 표시돼. 테스트 카드 입력 전에 금액과 월 구독 여부를 확인해 줘.</p>
+<button class="lab-button" type="button" id="openSandbox" disabled>Paddle 연결 중…</button>
+<div class="lab-status" id="status" role="status" aria-live="polite">Paddle Sandbox에 연결하고 있어. 실제 결제는 발생하지 않아.</div>
+<div class="lab-free">테스트 결제가 성공해도 Plus 기능이 열리지는 않아. 회원 로그인·결제 웹훅 검증·구독 기록 DB를 만든 뒤에만 실제 유료 기능이 활성화될 거야.</div>
 </section>
 <section class="lab-card">
-<h2 style="font-size:18px">Test card details</h2>
-<p class="lab-info">Paddle's official simulated card for Sandbox checkout. Use a test card only, never real card details.</p>
+<h2 style="font-size:18px">테스트 카드 정보</h2>
+<p class="lab-info">Paddle에서 공식 제공하는 가상 테스트 카드야. 실제 카드번호는 입력하지 마.</p>
 <div class="lab-test-card">
-<div class="lab-small">Visa · success, no 3DS</div>
+<div class="lab-small">Visa · 테스트 결제 성공</div>
 <div class="number" id="testCard">4242 4242 4242 4242</div>
-<div style="font-size:12px;color:#bfc1d6">Expiry: any future date · CVV: 100</div>
-<button type="button" id="copyCard" class="lab-copy">Copy test card</button>
+<div style="font-size:12px;color:#bfc1d6">유효기간: 미래의 아무 날짜 · 보안코드: 100</div>
+<button type="button" id="copyCard" class="lab-copy">테스트 카드번호 복사</button>
 </div>
 <ol class="lab-steps" style="margin-top:24px">
-<li><b>1.</b> Tap “Open test checkout”.</li>
-<li><b>2.</b> Confirm it says test mode and displays the expected monthly plan.</li>
-<li><b>3.</b> Use the Paddle test card and your own testing email.</li>
-<li><b>4.</b> Confirm the resulting test transaction appears in Paddle Sandbox → Transactions.</li>
+<li><b>1.</b> ‘테스트 결제창 열기’ 버튼 누르기</li>
+<li><b>2.</b> 결제창에 Test Mode와 월 구독 가격이 표시되는지 확인</li>
+<li><b>3.</b> 테스트 카드와 본인의 테스트 이메일 입력</li>
+<li><b>4.</b> Paddle Sandbox → Transactions에 테스트 거래가 생겼는지 확인</li>
 </ol>
 </section>
-<footer class="footer"><a href="/">Return to SAYNUE</a> · No live checkout · No paid entitlement</footer>
+<footer class="footer"><a href="/">SAYNUE로 돌아가기</a> · 실결제 비활성 · 유료 권한 비활성</footer>
 </main>
 <script>
 (function(){
@@ -87,16 +87,16 @@ function onEvent(event){
   // UI feedback only: NEVER grant Plus access based on client events.
   if(!event||typeof event.name!=="string")return;
   if(event.name==="checkout.completed"){
-    setStatus("Sandbox checkout completed. Check the transaction in the Paddle Sandbox dashboard. Plus access is NOT enabled.",false);
+    setStatus("테스트 결제가 완료됐어. Paddle Sandbox의 Transactions에서 확인해 줘. Plus 기능은 아직 활성화되지 않아.",false);
   }else if(event.name==="checkout.closed"){
-    setStatus("Test checkout closed. You can open it again.",false);
+    setStatus("테스트 결제창을 닫았어. 필요하면 다시 열 수 있어.",false);
   }else if(event.name==="checkout.error"||event.name==="checkout.payment.failed"){
-    setStatus("Paddle reported a sandbox checkout error. Review checkout settings and try again.",true);
+    setStatus("Sandbox 결제 오류가 발생했어. Paddle 설정을 확인한 다음 다시 시도해 줘.",true);
   }
 }
 window.addEventListener("load",function(){
   if(!window.Paddle||typeof window.Paddle.Initialize!=="function"){
-    setStatus("Paddle.js did not load. Check Safari content blockers or try another browser.",true);return;
+    setStatus("Paddle.js를 불러오지 못했어. Safari 콘텐츠 차단을 끄거나 다른 브라우저로 시도해 봐.",true);return;
   }
   try{
     window.Paddle.Environment.set("sandbox");
@@ -107,10 +107,10 @@ window.addEventListener("load",function(){
     });
     initialized=true;
     btn.disabled=false;
-    btn.textContent="Open test checkout";
-    setStatus("Sandbox connected. Ready for a test purchase — no real charge.",false);
+    btn.textContent="테스트 결제창 열기";
+    setStatus("Sandbox 연결 완료. 테스트 결제가 가능하며 실제 청구는 없어.",false);
   }catch(_){
-    setStatus("Paddle Sandbox could not initialize. Check the client token and try again.",true);
+    setStatus("Paddle Sandbox 초기화에 실패했어. 공개용 테스트 토큰을 확인해 줘.",true);
   }
 },{once:true});
 btn.addEventListener("click",function(){
@@ -121,9 +121,9 @@ btn.addEventListener("click",function(){
       items:[{priceId:PRICE_ID,quantity:1}],
       settings:{displayMode:"overlay",theme:"dark"}
     });
-    setStatus("Opening Paddle Sandbox checkout…",false);
+    setStatus("Paddle 테스트 결제창을 열고 있어…",false);
   }catch(_){
-    setStatus("Could not open the test checkout. Verify the sandbox price and default payment link.",true);
+    setStatus("테스트 결제창이 열리지 않아. Sandbox 가격과 기본 결제 URL을 확인해 줘.",true);
   }finally{
     btn.disabled=false;
   }
@@ -131,9 +131,9 @@ btn.addEventListener("click",function(){
 document.getElementById("copyCard").addEventListener("click",async function(){
   try{
     await navigator.clipboard.writeText("4242 4242 4242 4242");
-    this.textContent="Copied";
+    this.textContent="복사 완료";
   }catch(_){
-    this.textContent="Long-press the card number to copy";
+    this.textContent="카드번호를 길게 눌러 복사해 줘";
   }
 });
 })();
