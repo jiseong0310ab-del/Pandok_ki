@@ -251,3 +251,38 @@ textarea::placeholder{color:#9299ae}
 .tone-option{font-size:11px;white-space:normal;min-height:36px}
 .tone-option[aria-pressed="true"]{border-color:#bda8f2;background:#39334f}
 @media(max-width:390px){.tone-panel{padding:12px}.tone-option{padding:8px 10px}}
+
+
+/* Three-shot private screenshot editing — native pointer events for iPhone. */
+.shot-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 0 8px;flex-wrap:wrap}
+.shot-head strong{font-size:12px;color:#e6dcfa}
+.shot-head span{font-size:10px;color:#a9afc3;line-height:1.5}
+.shot-list{display:grid;gap:8px;margin:8px 0}
+.shot-item{display:flex;align-items:center;justify-content:space-between;gap:7px;padding:7px;background:#141b2d;border:1px solid #414a61;border-radius:12px}
+.shot-item.active{border-color:#ae9ce3;background:#24233b}
+.shot-choice{flex:1;min-width:0;text-align:left;background:transparent;border:0;color:#e1dce9;padding:8px 7px;font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+.shot-controls{display:flex;gap:4px;flex:none}
+.shot-control{width:32px;height:34px;border-radius:8px;background:#31364d;color:#eee5fb;border:1px solid #545670;font-size:17px;line-height:1;display:grid;place-items:center;padding:0}
+.shot-control:disabled{opacity:.28}
+.shot-status{font-size:11px;line-height:1.65;color:#c3b5e9;margin:9px 0;min-height:0}
+.shot-status:empty{display:none}
+.shot-editor{margin-top:14px;border:1px solid #575071;border-radius:17px;background:#161a2d;padding:15px}
+.shot-editor-heading{display:flex;justify-content:space-between;gap:9px;align-items:center;flex-wrap:wrap;color:#d4c3f7;font-size:12px}
+.shot-editor-heading strong{max-width:100%;font-size:12px;overflow-wrap:anywhere}
+.shot-editor-heading span{font-size:11px;font-weight:700}
+.shot-editor-hint{font-size:11px;line-height:1.8;color:#b5bcd2;margin:9px 0 12px}
+.shot-canvas-wrap{border:1px solid #575d73;background:#050913;border-radius:9px;overflow:hidden}
+#shotCanvas{display:block;max-width:100%;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none}
+.shot-tools{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+.shot-tools button{background:#2d3044;color:#dad5e8;border:1px solid #585771;border-radius:10px;font-size:11px;font-weight:700;min-height:39px;padding:8px 11px}
+.shot-tools button[aria-pressed="true"]{border-color:#c1aeed;background:#443b5e;color:#fff}
+.shot-tools button:disabled{opacity:.45}
+.shot-confirm{margin-top:13px;width:100%;border:1px solid #d7c6ff;border-radius:12px;background:#c9b8f6;color:#1a1433;font-size:12px;font-weight:800;padding:12px;min-height:44px}
+.shot-confirm:hover:not(:disabled){background:#dfd3ff}
+.shot-confirm:disabled{opacity:.5}
+.shot-privacy{font-size:11px;line-height:1.8;color:#a8adc5;padding:13px 3px 1px}
+@media(max-width:390px){
+ .shot-item{padding:5px}.shot-control{width:28px;height:33px}
+ .shot-tools button{padding:8px;font-size:10px}
+ .shot-editor{padding:11px}
+}
