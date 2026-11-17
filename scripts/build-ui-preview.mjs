@@ -19,7 +19,7 @@ html=html.replace(/\bhref="\/"/g,'href="./"');
 html=html.replace(/\bhref="\/(plans\.html|guide\.html|account\.html)"/g,(_m,path)=>'href="https://saynue.vercel.app/'+path+'"');
 
 // Everything else stays the real SAYNUE HTML and client interaction system.
-const editor='<script src="./assets/screenshot-editor.js" defer></script>';
+const editor='<script src="./assets/screenshot-editor.js"></script>';
 if(!html.includes(editor))throw Error("Preview screenshot editor path rewriting failed");
 html=html.replace(editor,editor+'\n<script src="./preview/demo-api.js" defer></script>');
 
