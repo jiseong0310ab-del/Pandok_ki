@@ -13,6 +13,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: node --check lib/persona-analysis.mjs
+      - run: node --check tests/personas.test.mjs
       - run: node --check api/analyze.mjs
       - run: node --check api/feedback.mjs
       - run: node --check tests/quality.test.mjs
@@ -38,6 +40,8 @@ jobs:
       - run: node --check tests/billing-auth.test.mjs
       - name: Free analysis smoke tests
         run: node --test --test-reporter=spec tests/smoke.mjs
+      - name: Persona specialist tests
+        run: node --test --test-reporter=spec tests/personas.test.mjs
       - name: Free analysis quality tests
         run: node --test --test-reporter=spec tests/quality.test.mjs
       - name: Feedback tests
