@@ -20,20 +20,23 @@
  <h2 class="persona-heading" id="personaHeading" data-i="personaHeading">지금 어떤 도움이 필요하세요?</h2>
  <p class="persona-sub" data-i="personaIntro">상황에 맞는 AI 전문가를 고르면 분석 기준과 결과 화면이 달라져요.</p>
  <div id="personas" class="persona-options" role="group" aria-labelledby="personaHeading">
-  <button type="button" class="persona-option" data-persona="standard" aria-pressed="true"><span class="persona-emoji" aria-hidden="true">✦</span><span class="persona-title" data-i="personaStandard">일반 대화 분석</span><span class="persona-caption" data-i="personaStandardDesc">대화 흐름·근거·답장</span></button>
-  <button type="button" class="persona-option" data-persona="court" aria-pressed="false"><span class="persona-emoji" aria-hidden="true">⚖️</span><span class="persona-title" data-i="personaCourt">커플 싸움 재판소</span><span class="persona-caption" data-i="personaCourtDesc">양쪽 관점·중재 의견</span></button>
-  <button type="button" class="persona-option" data-persona="work" aria-pressed="false"><span class="persona-emoji" aria-hidden="true">💼</span><span class="persona-title" data-i="personaWork">직장 답장 전문가</span><span class="persona-caption" data-i="personaWorkDesc">상사·동료·업무 대응</span></button>
-  <button type="button" class="persona-option" data-persona="romance" aria-pressed="false"><span class="persona-emoji" aria-hidden="true">💜</span><span class="persona-title" data-i="personaRomance">썸·연애 분석가</span><span class="persona-caption" data-i="personaRomanceDesc">신호와 다른 가능성</span></button>
-  <button type="button" class="persona-option" data-persona="mediator" aria-pressed="false"><span class="persona-emoji" aria-hidden="true">🤝</span><span class="persona-title" data-i="personaMediator">관계 갈등 중재관</span><span class="persona-caption" data-i="personaMediatorDesc">오해·관계 회복</span></button>
+  <button type="button" class="persona-option" data-persona="standard" aria-pressed="true"><span class="persona-title" data-i="personaStandard">일반 대화 분석</span><span class="persona-caption" data-i="personaStandardDesc">대화 흐름·근거·답장</span></button>
+  <button type="button" class="persona-option" data-persona="court" aria-pressed="false"><span class="persona-title" data-i="personaCourt">커플 싸움 재판소</span><span class="persona-caption" data-i="personaCourtDesc">양쪽 관점·중재 의견</span></button>
+  <button type="button" class="persona-option" data-persona="work" aria-pressed="false"><span class="persona-title" data-i="personaWork">직장 답장 전문가</span><span class="persona-caption" data-i="personaWorkDesc">상사·동료·업무 대응</span></button>
+  <button type="button" class="persona-option" data-persona="romance" aria-pressed="false"><span class="persona-title" data-i="personaRomance">썸·연애 분석가</span><span class="persona-caption" data-i="personaRomanceDesc">신호와 다른 가능성</span></button>
+  <button type="button" class="persona-option" data-persona="mediator" aria-pressed="false"><span class="persona-title" data-i="personaMediator">관계 갈등 중재관</span><span class="persona-caption" data-i="personaMediatorDesc">오해·관계 회복</span></button>
  </div>
- <div id="personaContextBox" class="persona-context hidden">
+ <details id="personaContextBox" class="persona-context hidden">
+  <summary data-i="personaContextHeading">상황 더 알려주기 (선택)</summary>
   <label for="personaContext" id="personaContextLabel" class="persona-context-label" data-i="personaContextHeading">상황 설명 (선택)</label>
   <p id="personaContextHint" class="persona-context-hint"></p>
   <textarea id="personaContext" maxlength="500" rows="3" data-placeholder="personaContextPlaceholder" placeholder="필요한 배경만 짧게 입력하세요." aria-describedby="personaContextHint personaContextCaution"></textarea>
   <p class="persona-context-caution" id="personaContextCaution" data-i="personaContextCaution">내가 입력한 상황 설명은 확인되지 않은 배경 정보로만 사용됩니다. 개인정보는 가려 주세요.</p>
- </div>
+ </details>
 </section>
-<hr class="divider">
+<details class="analysis-options" id="analysisOptions">
+ <summary><span data-i="analysisOptionsTitle">세부 분석 설정</span><span id="analysisOptionsSummary" class="analysis-options-summary"></span></summary>
+ <div class="analysis-options-body">
 <div class="eyebrow" data-i="step1">STEP 01 · 메신저</div><div class="label" data-i="platformLabel">어떤 앱에서 나눈 대화인가요?</div>
 <div class="platforms" id="platforms"><button class="chip platform" data-platform="kakao" type="button"><span class="platform-symbol kakao" aria-hidden="true">K</span> KakaoTalk</button><button class="chip platform" data-platform="line" type="button"><span class="platform-symbol line" aria-hidden="true">L</span> LINE</button><button class="chip platform" data-platform="wechat" type="button"><span class="platform-symbol wechat" aria-hidden="true">微</span> WeChat</button><button class="chip platform" data-platform="whatsapp" type="button"><span class="platform-symbol whatsapp" aria-hidden="true">W</span> WhatsApp</button><button class="chip platform" data-platform="imessage" type="button"><span class="platform-symbol imessage" aria-hidden="true">i</span> iMessage</button><button class="chip platform" data-platform="instagram" type="button"><span class="platform-symbol instagram" aria-hidden="true">◎</span> Instagram</button><button class="chip platform" data-platform="other" type="button"><span class="platform-symbol other" aria-hidden="true">···</span> Other</button></div>
 <hr class="divider"><div class="eyebrow" data-i="step2">STEP 02 · 관계</div><div class="label" data-i="relationLabel">두 사람의 관계를 선택하세요</div>
@@ -55,8 +58,10 @@
 <button class="chip tone-option" type="button" data-tone="direct" aria-pressed="false" data-i="toneDirect">담백하고 분명하게</button>
 <button class="chip tone-option" type="button" data-tone="light" aria-pressed="false" data-i="toneLight">편안하고 가볍게</button>
 </div></details>
-<hr class="divider"><div class="eyebrow" data-i="step3">STEP 04 · 대화 입력</div><div class="input-head"><label class="label" for="chatText" style="margin:0" data-i="inputLabel">대화를 붙여넣거나 캡처를 올려주세요</label><button id="sample" class="secondary" type="button" data-i="sample">예시 넣기</button></div>
-<div class="tabs" role="tablist"><button class="tab" id="textTab" type="button" role="tab" aria-selected="true" data-i="textTab">✍️ 텍스트</button><button class="tab" id="imageTab" type="button" role="tab" aria-selected="false" data-i="imageTab">📷 스크린샷</button></div>
+ </div>
+</details>
+<div class="eyebrow" data-i="step3">STEP 04 · 대화 입력</div><div class="input-head"><label class="label" for="chatText" style="margin:0" data-i="inputLabel">대화를 붙여넣거나 캡처를 올려주세요</label><button id="sample" class="secondary" type="button" data-i="sample">예시 넣기</button></div>
+<div class="tabs" role="tablist"><button class="tab" id="textTab" type="button" role="tab" aria-selected="true" data-i="textTab">텍스트</button><button class="tab" id="imageTab" type="button" role="tab" aria-selected="false" data-i="imageTab">스크린샷</button></div>
 <div id="textBox"><textarea id="chatText" maxlength="12000" data-placeholder="placeholder" placeholder="나: 이번 주에 시간 있어?&#10;상대: 이번 주는 좀 바빠 ㅠㅠ&#10;나: 그럼 다음 주는?&#10;상대: 다음 주 되면 다시 말해줄게!" aria-label="Conversation text"></textarea><div class="small" id="charCount" style="text-align:right">0 / 12,000</div><div class="mask-row"><button class="mask-btn" id="maskText" type="button" data-i="maskButton">연락처·이메일·링크 빠르게 가리기</button><span class="mask-note" id="maskStatus" aria-live="polite"></span></div><div class="mask-note" data-i="maskCaution">이름·사진·기타 개인정보는 직접 확인해 가려주세요. 완전한 익명화는 아닙니다.</div></div>
 <div id="imageBox" class="hidden">
 <label class="filebox"><strong id="fileLabel" data-i="uploadLabel">스크린샷 추가하기 (최대 3장)</strong><span data-i="uploadHint">선택한 순서대로 분석 · 아이폰에서 개인정보 가리기</span><input id="chatImage" type="file" multiple accept="image/png,image/jpeg,image/webp,image/heic,image/heif,image/*" aria-label="Choose up to 3 conversation screenshots"></label>
@@ -77,7 +82,7 @@
 <div class="shot-privacy" data-i="shotPrivacy">확인 완료한 이미지만 AI에 전송합니다. 자동 익명화가 아니며, 가리지 않은 부분은 그대로 전송돼요.</div>
 </div>
 <label class="check"><input type="checkbox" id="consent"><span data-i="consent">대화 당사자의 개인정보를 가렸으며, 입력한 내용이 분석을 위해 Google Gemini로 전송된다는 점에 동의합니다. Gemini 무료 API 이용 시 Google의 제품 개선에 데이터가 사용될 수 있습니다.</span></label>
-<button class="primary" id="analyze" type="button" data-i="analyze">무료 AI 판독 시작 →</button><div class="notice" data-i="privacyNote">🔒 세이뉴는 대화를 자체 데이터베이스에 저장하지 않도록 설계됐습니다. 다만 서버·외부 AI 제공자의 별도 처리 및 보존 정책이 적용될 수 있습니다.</div><div class="error hidden" id="error" role="alert"></div>
+<button class="primary" id="analyze" type="button" data-i="analyze">무료 AI 판독 시작 →</button><div class="notice" data-i="privacyNote">세이뉴는 대화를 자체 데이터베이스에 저장하지 않도록 설계됐습니다. 다만 서버·외부 AI 제공자의 별도 처리 및 보존 정책이 적용될 수 있습니다.</div><div class="error hidden" id="error" role="alert"></div>
 </section>
 <div class="trust-row" aria-label="SAYNUE principles">
   <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v6c0 5 2.9 7.8 7.5 9 4.6-1.2 7.5-4 7.5-9V6z"/></svg><span data-i="trust1">대화 원문 DB 미저장</span></div>
@@ -103,6 +108,10 @@
 <section class="card persona-result hidden" id="personaReport" aria-labelledby="personaSummary">
  <div class="persona-report-head"><div><div class="eyebrow" data-i="personaReportKicker">SAYNUE · SPECIALIST REPORT</div><span id="personaReportName" class="persona-report-name"></span></div><span id="personaEvidenceLevel" class="persona-confidence"></span></div>
  <h2 class="persona-verdict" id="personaSummary"></h2>
+ <div class="persona-next"><strong data-i="personaNextTitle">지금의 권장 행동</strong><p id="personaNextStep"></p></div>
+ <section class="persona-reply" id="personaReply"><h3 data-i="personaReplyTitle">바로 활용할 문장</h3><p id="personaDraft"></p><p class="persona-reply-why" id="personaDraftWhy"></p><button id="copyPersonaReply" type="button" class="copy-reply" data-i="personaCopy">문장 복사하기</button><span id="personaCopyStatus" class="mask-note" role="status" aria-live="polite"></span></section>
+ <div class="persona-no-reply hidden" id="personaNoReply" data-i="personaNoReply">이 상황에서는 추가 연락보다 경계를 존중하거나 잠시 멈추는 편이 좋아요.</div>
+ <details class="insight-details persona-explain" id="personaExplain"><summary data-i="personaExplainTitle">판단 근거·상세 분석 보기</summary><div class="insight-details-body">
  <p class="persona-report-warning" data-i="personaReportWarning">일부 대화만으로 상대의 속마음이나 사실관계 전체를 판단할 수 없어요. 재판소의 의견은 법적 판단이 아닙니다.</p>
  <div id="personaQuoteBox" class="persona-quote-box hidden"><strong data-i="personaQuoteTitle">확인할 수 있는 표현</strong><blockquote id="personaQuote"></blockquote><p id="personaQuoteNotice"></p></div>
  <div class="persona-report-sections">
@@ -110,16 +119,18 @@
   <article class="persona-report-section"><div class="persona-section-number">02</div><div><h3 id="personaSectionTwoLabel"></h3><p id="personaSectionTwo"></p></div></article>
   <article class="persona-report-section"><div class="persona-section-number">03</div><div><h3 id="personaSectionThreeLabel"></h3><p id="personaSectionThree"></p></div></article>
  </div>
- <div class="persona-next"><strong data-i="personaNextTitle">지금의 권장 행동</strong><p id="personaNextStep"></p></div>
- <section class="persona-reply" id="personaReply"><h3 data-i="personaReplyTitle">바로 활용할 문장</h3><p id="personaDraft"></p><p class="persona-reply-why" id="personaDraftWhy"></p><button id="copyPersonaReply" type="button" class="copy-reply" data-i="personaCopy">문장 복사하기</button><span id="personaCopyStatus" class="mask-note" role="status" aria-live="polite"></span></section>
- <div class="persona-no-reply hidden" id="personaNoReply" data-i="personaNoReply">이 상황에서는 추가 연락보다 경계를 존중하거나 잠시 멈추는 편이 좋아요.</div>
+
+ </div></details>
 </section>
 <div class="card" id="shareCard"><div class="report-top"><div class="eyebrow" style="margin:0" data-i="reportLabel">SAYNUE · AI REPORT</div><div class="tag" id="reportPlatform"></div></div>
-<h2 class="verdict" id="verdict"></h2><div class="metrics">
+<h2 class="verdict" id="verdict"></h2><div class="callout"><h3 data-i="signalLabel">🔎 가장 중요한 대화 신호</h3><p id="signal"></p></div>
+<div class="evidence"><b data-i="nextLabel">✨ 지금 권장하는 다음 행동</b><p id="nextStep"></p></div><div class="reply-card hidden" id="replyCard"><div class="reply-card-heading" data-i="replyTitle">지금 보낼 수 있는 답장</div><p class="reply-context" data-i="replySubtitle">문맥에 맞춰 제안한 초안입니다. 내 말투로 수정한 뒤 사용해보세요.</p><p class="reply-text" id="replyDraft"></p><p class="reply-reason" id="replyWhy"></p><button class="copy-reply" type="button" id="copyReply" data-i="copyReply">답장 문장 복사</button><div class="mask-note" id="copyStatus" role="status" aria-live="polite"></div></div>
+<div class="reply-unavailable hidden" id="replyUnavailable" data-i="replyUnavailable">이번 분석에서는 적절한 답장 예시를 만들지 못했어요. 위의 다음 행동 제안을 참고해주세요.</div>
+<details class="insight-details standard-explain" id="standardExplain"><summary data-i="standardExplainTitle">근거·점수·다른 해석 자세히 보기</summary><div class="insight-details-body">
+<div class="metrics">
 <div class="metric"><span data-i="warmthLabel">호의적 신호</span><strong id="warmth">--</strong><small data-i="notProbability">가능성 아닌 참고지표</small></div>
 <div class="metric"><span data-i="balanceLabel">대화 상호성</span><strong id="balance">--</strong><small data-i="balanceHelp">서로 주고받는 정도</small></div>
 <div class="metric"><span data-i="confidenceLabel">분석 근거량</span><strong id="confidence">--</strong><small data-i="confidenceHelp">제공된 대화 기준</small></div></div>
-<div class="callout"><h3 data-i="signalLabel">🔎 가장 중요한 대화 신호</h3><p id="signal"></p></div>
 <section class="evidence-cards-panel hidden" id="evidenceCardsPanel" aria-labelledby="evidenceCardsTitle">
  <div class="evidence-cards-heading"><h3 id="evidenceCardsTitle" data-i="evidenceCardsTitle">대화 속 근거를 하나씩 살펴보기</h3><span id="evidenceCardsCount" class="evidence-cards-count"></span></div>
  <p class="evidence-cards-intro" data-i="evidenceCardsIntro">실제 표현과 가능한 의미, 다른 설명을 구분했어요.</p>
@@ -127,10 +138,8 @@
 </section>
 <div class="evidence"><b data-i="evidenceLabel">💬 대화 속 구체적 근거</b><p id="evidence"></p></div>
 <div class="evidence"><b data-i="alternateLabel">🔁 다른 가능성</b><p id="alternative"></p></div>
-<div class="evidence"><b data-i="nextLabel">✨ 지금 권장하는 다음 행동</b><p id="nextStep"></p></div>
-<div class="reply-card hidden" id="replyCard"><div class="reply-card-heading" data-i="replyTitle">지금 보낼 수 있는 답장</div><p class="reply-context" data-i="replySubtitle">문맥에 맞춰 제안한 초안입니다. 내 말투로 수정한 뒤 사용해보세요.</p><p class="reply-text" id="replyDraft"></p><p class="reply-reason" id="replyWhy"></p><button class="copy-reply" type="button" id="copyReply" data-i="copyReply">답장 문장 복사</button><div class="mask-note" id="copyStatus" role="status" aria-live="polite"></div></div>
-<div class="reply-unavailable hidden" id="replyUnavailable" data-i="replyUnavailable">이번 분석에서는 적절한 답장 예시를 만들지 못했어요. 위의 다음 행동 제안을 참고해주세요.</div>
 <p class="notice" data-i="disclaimer">AI는 메시지만으로 타인의 진짜 마음을 알 수 없습니다. 수치는 대화 특징을 정리한 참고지표이며 사실·확률·진단이 아닙니다.</p>
+</div></details>
 <div class="feedback-card" id="feedbackCard">
   <div class="feedback-title" data-i="feedbackQuestion">이번 분석과 답장이 도움이 됐나요?</div>
   <div class="feedback-buttons" id="feedbackButtons">
