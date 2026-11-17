@@ -27,6 +27,15 @@ html=html.replace(editor,editor+'\n<script src="./preview/demo-api.js" defer></s
 // so use a synchronous local mock loaded before the existing inline main script.
 html=html.replace('<script src="./preview/demo-api.js" defer></script>', '<script src="./preview/demo-api.js"></script>');
 
+// Clarify that the static demonstration has NO external AI data processing.
+// Removing data-i prevents the production locale script from restoring real-API copy.
+html=html.replace(/<span data-i="consent">[\s\S]*?<\/span>/,
+ '<span>UI 미리보기 전용: 입력 내용은 외부 AI로 전송하지 않습니다. 가상 대화로 테스트해 주세요. (UI only: no AI data transfer.)</span>');
+html=html.replace(/<div class="notice" data-i="privacyNote">[\s\S]*?<\/div>/,
+ '<div class="notice">UI DEMO · Gemini, 결제 및 계정 API를 호출하지 않습니다. 입력한 대화는 브라우저 밖으로 보내지지 않습니다.</div>');
+// Avoid a fake "feedback submitted" acknowledgement in this visual-only environment.
+html=html.replace('</head>','<style>#feedbackCard{display:none!important}</style></head>');
+
 const banner='<aside class="preview-banner" role="note" aria-label="Preview mode"><strong>UI PREVIEW</strong><span>화면 테스트 전용 · 분석 결과는 예시입니다 · AI/결제 연결 없음</span></aside>';
 html=html.replace('<main class="wrap">','<main class="wrap">\n'+banner);
 
