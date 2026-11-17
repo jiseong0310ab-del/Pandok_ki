@@ -15,13 +15,13 @@ Implementation: 2026-11-17.
 
 ## Manual Sandbox test
 1. Open https://saynue.vercel.app/sandbox-checkout.html in Safari.
-2. Tap "Open test checkout".
+2. 화면의 **테스트 결제창 열기** 버튼을 누른다.
 3. Confirm the modal displays test mode, SAYNUE Plus, and the expected recurring price **in Paddle itself** (we have not verified the price amount via the merchant API).
 4. Enter an email you control, choose a billing country, and use only the official test card **4242 4242 4242 4242** with any future expiration date and CVV **100**.
 5. Confirm Paddle Sandbox -> Transactions and Sandbox -> Subscriptions show the corresponding test records.
 6. Try Paddle's declined Sandbox card 4000 0000 0000 0002 and verify the checkout reports rejection.
 7. If it fails, verify Paddle Sandbox -> Checkout -> Checkout configuration -> Default payment link is set to an HTTPS URL. For future transaction links and payment method updates, use **https://saynue.vercel.app/sandbox-checkout.html** as the Sandbox default payment link; the homepage URL may be enough for a basic overlay test but does not itself load Paddle.js.
-8. On iOS Safari, if the button stays disabled, turn off content blockers for this site and retry. Blockers can interfere with external Paddle.js.
+8. iPhone Safari에서 버튼이 계속 비활성화되면 해당 사이트의 콘텐츠 차단 기능을 끄고 다시 시도. 외부 Paddle.js가 차단될 수 있다.
 
 ## Browser-safe vs secret credentials
 - Sandbox client-side token is designed to appear in browser JS and is not a server secret.
