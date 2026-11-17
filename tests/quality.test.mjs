@@ -11,7 +11,8 @@ const mockReport={
   alternative:"A schedule conflict could also explain the delay.",
   nextStep:"Respect the other person's boundaries and ask only if appropriate.",
   replyDraft:"No pressure at all. Let me know if another day is better.",
-  replyWhy:"This acknowledges uncertainty without making demands."
+  replyWhy:"This acknowledges uncertainty without making demands.",
+  evidenceCards:[]
 };
 
 test("30 diverse synthetic cases cover 5 languages and key safety situations",()=>{
