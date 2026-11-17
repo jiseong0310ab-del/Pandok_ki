@@ -142,3 +142,13 @@ GitHub Actions가 main의 모든 푸시와 PR에 Node.js 22 환경으로 smoke t
 - **사용자에게 보이는 것은 가상 대화를 이용한 정적 기능 미리보기**: [plans.html](plans.html) + [assets/plus-preview.js](assets/plus-preview.js). 5개 언어 및 iPhone 탭 UI 지원. **실사용자 Plus AI 호출/결제/구독 권한 해제는 아직 불가능**.
 - 가상 한국어 친구 대화를 실제 Gemini로 호출해 **서로 다른 3전략 + 4반응과 장단점** 정상 생성(HTTP 200)을 확인. 임시 검사용 API는 삭제.
 - 추후 회원 인증, DB, Paddle Webhook 원본 서명 검증 및 중복 처리, 사용자별 실제 권한/쿼터 확인을 구현해야 기능을 공개할 수 있다. [개발·판매 선행조건](docs/plus-coach-development.md).
+
+## 15. 계정·구독 백엔드 기반 (2026-11-17)
+
+- **실제 구현:** Supabase 이메일 OTP 인증, Secure·HttpOnly 로그인/갱신/로그아웃, 5개 언어 계정 화면, 로그인 사용자 전용 Paddle Sandbox 거래 생성, 거래 ID ↔ 사용자 ID DB 연결, `Paddle-Signature` 원본문자열 HMAC 검증·타임스탬프 검사, DB webhook 중복/역순 처리, 취소/기간 만료/과거 연체 및 승인된 환불·차지백 차단, Plus AI 사용 전 서버 DB 권한 및 원자적 일별 사용량 조회.
+- **회원 로그인:** `/account.html`, `/api/auth/start`, `/api/auth/verify`, `/api/auth/logout`, `/api/auth/state`. Supabase를 설정하지 않으면 준비 중만 노출.
+- **Paddle Sandbox:** `/api/webhooks/paddle`, `/api/plus/checkout`. 사용자 인증·DB·Paddle Sandbox 키·명시적인 체크아웃 활성화 플래그 없으면 금지. 기존 `sandbox-checkout.html`의 비로그인 테스트 결제는 사용자 구독으로 연결하지 않음.
+- **Plus API:** `/api/plus/report`. `SAYNUE_ENABLE_PLUS_ENGINE=true`, 인증, 활성 구독, 올바른 가격, 결제 차단 여부, 서버 일별 quota를 모두 통과해야 AI 호출. 외부 설정 전에는 503.
+- **중요:** **현 시점 Vercel 프로젝트에는 GEMINI_API_KEY 외에 Supabase/Paddle 서버 비밀키가 없음**. SQL도 Supabase에서 아직 실행되지 않았음. 따라서 회원 등록·웹훅 기록·Plus 권한 활성화를 실제로 완료했다고 볼 수 없음. 실결제는 여전히 꺼져 있음.
+- **설치 순서, iPhone 운영자 단계, 필수 비밀키와 테스트:** [docs/account-billing-setup.md](docs/account-billing-setup.md), [docs/supabase-billing-schema.sql](docs/supabase-billing-schema.sql).
+- CI에 [tests/billing-auth.test.mjs](tests/billing-auth.test.mjs)를 추가해 HMAC, 이벤트 상태, DB/쿠키 안전성 및 기본 비활성 조건 확인. 실제 Supabase/Paddle 종단 간 통합 테스트는 비밀키와 DB 연결 후 별도 필요.
