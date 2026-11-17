@@ -53,27 +53,27 @@
       <p data-i="demoFreeMessage">좋아, 수요일 저녁 괜찮아!</p>
     </div>
   </div>
-  <div class="plus-demo-part"><span class="plus-demo-pill plus-pill">PLUS · DEMO</span><strong data-i="demoThreeTitle">상황별 답장 전략 3가지</strong></div>
-  <div class="plus-demo-choice" id="plusDemoChoices" role="group" aria-label="Sample reply approaches">
+  <div class="plus-demo-part"><span class="plus-demo-pill plus-pill">PLUS · DEMO</span><strong id="plusDemoApproachesTitle" data-i="demoThreeTitle">상황별 답장 전략 3가지</strong></div>
+  <div class="plus-demo-choice" id="plusDemoChoices" role="group" aria-labelledby="plusDemoApproachesTitle">
     <button type="button" data-approach="gentle" aria-pressed="true" data-i="demoGentle">다정하게</button>
     <button type="button" data-approach="clear" aria-pressed="false" data-i="demoClear">명확하게</button>
     <button type="button" data-approach="low_pressure" aria-pressed="false" data-i="demoLowPressure">부담 없이</button>
   </div>
   <div class="plus-demo-detail">
-    <p id="plusDemoMessage" class="plus-demo-message"></p>
+    <p id="plusDemoMessage" class="plus-demo-message" aria-live="polite"></p>
     <div class="plus-demo-insight"><strong data-i="demoWhyTitle">이 전략의 장점</strong><p id="plusDemoWhy"></p></div>
     <div class="plus-demo-insight"><strong data-i="demoTradeoffTitle">주의할 점</strong><p id="plusDemoTradeoff"></p></div>
     <div class="plus-demo-insight"><strong data-i="demoWhenTitle">이럴 때 적합해요</strong><p id="plusDemoBestWhen"></p></div>
   </div>
-  <div class="plus-demo-part plus-reaction-heading"><strong data-i="demoReactionTitle">상대가 이렇게 반응한다면?</strong></div>
-  <div id="plusDemoReactions" class="plus-demo-reactions" role="group" aria-label="Sample follow-up reactions">
+  <div class="plus-demo-part plus-reaction-heading"><strong id="plusDemoReactionsTitle" data-i="demoReactionTitle">상대가 이렇게 반응한다면?</strong></div>
+  <div id="plusDemoReactions" class="plus-demo-reactions" role="group" aria-labelledby="plusDemoReactionsTitle">
     <button type="button" data-reaction="engaged" aria-pressed="true" data-i="demoEngaged">적극적으로 답함</button>
     <button type="button" data-reaction="uncertain" aria-pressed="false" data-i="demoUncertain">아직 잘 모름</button>
     <button type="button" data-reaction="no_reply" aria-pressed="false" data-i="demoNoReply">답장이 없음</button>
     <button type="button" data-reaction="refusal" aria-pressed="false" data-i="demoRefusal">명확한 거절</button>
   </div>
   <div class="plus-demo-follow">
-    <strong data-i="demoNextTitle">권장하는 다음 행동</strong><p id="plusDemoStep"></p>
+    <strong data-i="demoNextTitle">권장하는 다음 행동</strong><p id="plusDemoStep" aria-live="polite"></p>
     <strong data-i="demoCautionTitle">주의할 점</strong><p id="plusDemoCaution"></p>
   </div>
   <p class="plus-demo-disclaimer" data-i="demoDisclaimer">이 예시는 가상 대화를 사용한 정적 체험입니다. 실제 개인 대화 분석이나 결제·구독 기능이 아닙니다.</p>
