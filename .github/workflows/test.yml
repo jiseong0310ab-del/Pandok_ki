@@ -29,6 +29,7 @@ jobs:
       - run: node --check api/webhooks/paddle.mjs
       - run: node --check api/auth/start.mjs
       - run: node --check api/auth/verify.mjs
+      - run: node --check api/auth/link-session.mjs
       - run: node --check api/auth/logout.mjs
       - run: node --check api/auth/state.mjs
       - run: node --check api/plus/report.mjs
