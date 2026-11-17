@@ -25,6 +25,8 @@ test("index HTML has a script with valid JavaScript syntax",()=>{
   assert.match(page,/id="replyCard"/);
   assert.match(page,/id="maskText"/);
   assert.match(page,/goal:goal/);
+  assert.match(page,/id="tones"/);
+  assert.match(page,/replyTone:replyTone/);
   assert.doesNotMatch(page,/LOVE2026|YOUR_GEMINI_API_KEY|getMockResult/);
 });
 test("GET is rejected",async()=>{assert.equal((await app.fetch(req(valid,{method:"GET"}))).status,405)});
@@ -48,6 +50,28 @@ test("goal values are strictly validated while older clients keep a safe default
     const r=await app.fetch(req({...valid,goal:undefined},{headers:{"x-vercel-forwarded-for":"198.51.100.49"}}));
     assert.equal(r.status,200);
     assert.match(seen,/User goal: understand/);
+  }finally{global.fetch=old}
+});
+test("reply tone is validated and safely defaults to natural",async()=>{
+  process.env.GEMINI_API_KEY="test-key";
+  const invalid=await app.fetch(req({...valid,replyTone:"unlock-plus"}));
+  assert.equal(invalid.status,400);
+  const old=global.fetch;const prompts=[];
+  global.fetch=async(_url,options)=>{
+    const payload=JSON.parse(options.body);
+    prompts.push(payload.contents[0].parts[0].text);
+    assert.match(payload.systemInstruction.parts[0].text,/The reply tone is a STYLE preference/);
+    return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(mock)}]}}]}),{status:200});
+  };
+  try {
+    const requests=[{tone:undefined,ip:"198.51.100.51",expected:"natural"},{tone:"warm",ip:"198.51.100.52",expected:"warm"},{tone:"direct",ip:"198.51.100.53",expected:"direct"},{tone:"light",ip:"198.51.100.54",expected:"light"}];
+    for(const x of requests){
+      const result=await app.fetch(req({...valid,replyTone:x.tone},{headers:{"x-vercel-forwarded-for":x.ip}}));
+      assert.equal(result.status,200);
+      assert.equal((await result.json()).replyDraft,mock.replyDraft);
+    }
+    assert.equal(prompts.length,4);
+    requests.forEach((x,i)=>assert.match(prompts[i],new RegExp("Preferred reply tone: "+x.expected)));
   }finally{global.fetch=old}
 });
 test("unsupported mime and extra image text are rejected",async()=>{
