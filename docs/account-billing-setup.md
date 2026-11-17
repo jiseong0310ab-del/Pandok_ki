@@ -25,9 +25,9 @@
 1. <https://supabase.com/dashboard> 에서 새 프로젝트 만들기 (실제 서비스 환경에서는 적절한 지역·보안 설정 선택).
 2. **SQL Editor → New query**에서 `docs/supabase-billing-schema.sql`의 최신 코드 전체를 복사·검토한 뒤 실행. 기존 테이블명과 충돌이 없는지 확인.
 3. **Authentication → URL Configuration**에서 **Site URL**을 `https://saynue.vercel.app`으로 변경하고, **Redirect URLs**에 `https://saynue.vercel.app/account.html`을 등록. 초기 기본값인 `http://localhost:3000`을 그대로 두면 이메일 확인 링크가 사용자 아이폰에서 열리지 않습니다.
-4. **Authentication → Sign In / Providers → Email**을 활성화한 뒤, **Authentication → Email Templates → Confirm sign up 및 Magic Link**를 **둘 다** 열어 각각 링크 본문(`{{ .ConfirmationURL }}`)을 숫자 OTP 표시(`{{ .Token }}`)로 바꾸세요. 신규 이메일은 **Confirm sign up**, 기존 사용자는 **Magic Link** 템플릿이 발송될 수 있습니다. 예시: `<p>Your SAYNUE verification code: <strong>{{ .Token }}</strong></p>`.
-5. 변경 전 발송된 `localhost:3000` 링크는 다시 사용하지 말고 세이뉴 `/account.html`에서 새로운 인증 코드를 요청하세요. 이미 링크로 이메일을 확인했다면 기존 사용자의 로그인 코드가 올 수 있습니다. 실제 사용자 대상 발송 전에는 SMTP, CAPTCHA, 발송 제한을 검토.
-4. **Project Settings → API Keys**(또는 프로젝트 **Connect**)에서 Project URL, `sb_publishable_` 공개용 키, `sb_secret_` 서버용 Secret key를 확인. Secret key는 채팅·GitHub·브라우저에 노출하지 않기.
+4. **Authentication → Sign In / Providers → Email** 활성화. **2026-06-03부터 Supabase Free 플랜 신규 프로젝트에서는 기본 발송기를 쓰면 이메일 템플릿을 수정할 수 없음**. 화면에 `Set up custom SMTP to edit templates`가 보이는 것은 정상임. SMTP 서비스 설정을 강요하지 않고 **기본 확인 이메일 링크**를 사용하도록 SAYNUE 로그인 UI를 변경했음.
+5. **링크 로그인**: https://saynue.vercel.app/account.html 에서 `로그인 링크 이메일 받기`를 누른 다음 새로운 `Confirm your email address` 또는 `Magic Link` 메일의 확인 링크를 누르면 **세이뉴 계정 페이지로 돌아오도록 설정**되어 있음. 서버에서 토큰을 검증해 HttpOnly 쿠키로 교환함. `localhost:3000`으로 향하는 예전 메일은 폐기하고 새 메일을 요청.
+6. **Project Settings → API Keys**(또는 프로젝트 **Connect**)에서 Project URL, `sb_publishable_` 공개용 키, `sb_secret_` 서버용 Secret key를 확인. Secret key는 채팅·GitHub·브라우저에 노출하지 않기.
 
 ### 2. Vercel 환경변수 (Production) 추가
 
@@ -61,9 +61,9 @@ SAYNUE Vercel 프로젝트 → Settings → Environment Variables. 다음 이름
 ### 4. 회원 인증 테스트
 
 1. <https://saynue.vercel.app/account.html> 접속.
-2. 설정된 Supabase OTP 메일을 받을 실제 본인 소유 이메일로 인증.
+2. 자신이 소유한 이메일 주소로 로그인을 요청하고, **새로운 확인 이메일의 링크를 눌러** 세이뉴 계정 화면으로 돌아오는지 확인. 이메일은 다른 브라우저/탭에서 열릴 수 있으므로 로그인 유지가 되는지 같은 브라우저에서 확인.
 3. 서버가 반환한 `/api/auth/state`의 `authenticated:true` 확인. API나 개발자 도구에 토큰을 복사해 공유하지 않기.
-4. 로그아웃, 잘못된 코드, 만료된 코드, 이전 브라우저 세션 유지/갱신, 앱 종료 후 재접속을 확인.
+4. 로그아웃, 만료된 링크, 이전 브라우저 세션 유지/갱신, 앱 종료 후 재접속을 확인. 기본 발송기에서는 메일 발송량과 수신 대상에 제한이 있으므로 실서비스 SMTP 설정은 별도 검토.
 
 ### 5. 구독 사용 테스트 (아직 승인된 후에만)
 
@@ -76,12 +76,12 @@ SAYNUE Vercel 프로젝트 → Settings → Environment Variables. 다음 이름
 
 ## 현재 제약과 출시 차단 조건
 
-- **현재 Vercel에는 GEMINI_API_KEY 외 위 환경변수가 없음**(설치 전 조사 기준). Supabase DB도 아직 생성·SQL 실행되지 않음. 그래서 Plus와 인증은 실제 사용 불가.
-- SUPABASE SQL/RPC, 로그인 이메일 템플릿, Paddle destination은 외부 관리 콘솔에서 직접 설정해야 하며, 코드 파일 배포만으로 연결되지 않음.
+- **2026-11-17 사용자 설정 진행:** Supabase SQL은 성공 화면이 확인됐고 Vercel에 프로젝트 URL·공개키·Secret key도 등록했음. 실제 링크 로그인의 종단 간 테스트는 아직 필요. Paddle Sandbox 서버 API 키·웹훅 비밀키·활성화 플래그는 별개.
+- Supabase 무료 기본 메일 템플릿은 수정 불가하므로 이메일 링크 방식으로 인증함. Site URL과 Redirect URL은 Supabase 콘솔에서 설정해야 하며, Paddle destination도 별도 설정이 필요.
 - SQL은 웹훅 이벤트를 Postgres 트랜잭션으로 처리하고 시각 역행을 차단하지만, 서버 다운 등으로 이벤트를 놓쳤을 때의 **Paddle API 정기 재동기화**, 복잡한 변경/다중 구독, 동일 시간 이벤트 정책은 추가 운영 검증 필요.
 - 승인된 **부분 환불도 보수적으로 해당 구독을 차단**하며, 차단 해제는 별도 관리자 검토 및 감사 기록 없이 자동 처리하지 않음.
 - Paddle 서비스 취급 승인 여부, 일본 내 체류자격·수익활동 허가 및 개인정보 고지/원가 제한 해결 전에는 **실제 판매 절대 금지**.
-- 로그인 OTP 남용 방지(예: CAPTCHA/추가 분산 rate limit), 사용자 탈퇴/데이터 삭제, 메일 발송 신뢰성, 부정 결제·구독 변경 테스트도 출시 이전 필수.
+- 로그인 이메일 발송 남용 방지(예: CAPTCHA/추가 분산 rate limit), 사용자 탈퇴/데이터 삭제, 메일 발송 신뢰성, 부정 결제·구독 변경 테스트도 출시 이전 필수.
 - 기존 Sandbox URL은 단순 결제 테스트 전용이며 사용자의 계정 Plus 사용 권한을 만들지 않음.
 
 공식 참고:
