@@ -24,7 +24,9 @@
 
 1. <https://supabase.com/dashboard> 에서 새 프로젝트 만들기 (실제 서비스 환경에서는 적절한 지역·보안 설정 선택).
 2. **SQL Editor → New query**에서 `docs/supabase-billing-schema.sql`의 최신 코드 전체를 복사·검토한 뒤 실행. 기존 테이블명과 충돌이 없는지 확인.
-3. **Authentication → Sign In / Providers → Email**을 활성화하고, **Authentication → Email Templates → Magic Link**의 본문에 `{{ .Token }}`을 넣어 **숫자 OTP**가 오도록 설정. 기본 Magic Link(인증 링크)만 발송되면 SAYNUE 계정 화면의 숫자 입력과 맞지 않습니다. 실제 사용자 대상 발송 전에는 SMTP, CAPTCHA, 발송 제한을 검토.
+3. **Authentication → URL Configuration**에서 **Site URL**을 `https://saynue.vercel.app`으로 변경하고, **Redirect URLs**에 `https://saynue.vercel.app/account.html`을 등록. 초기 기본값인 `http://localhost:3000`을 그대로 두면 이메일 확인 링크가 사용자 아이폰에서 열리지 않습니다.
+4. **Authentication → Sign In / Providers → Email**을 활성화한 뒤, **Authentication → Email Templates → Confirm sign up 및 Magic Link**를 **둘 다** 열어 각각 링크 본문(`{{ .ConfirmationURL }}`)을 숫자 OTP 표시(`{{ .Token }}`)로 바꾸세요. 신규 이메일은 **Confirm sign up**, 기존 사용자는 **Magic Link** 템플릿이 발송될 수 있습니다. 예시: `<p>Your SAYNUE verification code: <strong>{{ .Token }}</strong></p>`.
+5. 변경 전 발송된 `localhost:3000` 링크는 다시 사용하지 말고 세이뉴 `/account.html`에서 새로운 인증 코드를 요청하세요. 이미 링크로 이메일을 확인했다면 기존 사용자의 로그인 코드가 올 수 있습니다. 실제 사용자 대상 발송 전에는 SMTP, CAPTCHA, 발송 제한을 검토.
 4. **Project Settings → API Keys**(또는 프로젝트 **Connect**)에서 Project URL, `sb_publishable_` 공개용 키, `sb_secret_` 서버용 Secret key를 확인. Secret key는 채팅·GitHub·브라우저에 노출하지 않기.
 
 ### 2. Vercel 환경변수 (Production) 추가
