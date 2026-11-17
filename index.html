@@ -164,21 +164,58 @@ const API_ERRORS={
   "zh-TW":{NOT_CONFIGURED:"尚未設定 Gemini API 金鑰。",AI_KEY_INVALID:"Gemini API 金鑰無效，請檢查 AI Studio。",AI_PERMISSION:"無 Gemini API 存取權限。",AI_RATE_LIMITED:"已達 Gemini 使用額度，請查看 AI Studio。",RATE_LIMITED:"已達本站每小時使用上限，請稍後再試。",AI_MODEL_UNAVAILABLE:"Gemini 模型目前不可用。",AI_REQUEST_REJECTED:"Gemini 拒絕請求格式，需修正伺服器設定。",AI_INVALID_OUTPUT:"AI 回傳格式有誤，請重試。",AI_TIMEOUT:"Gemini 回應逾時，請重試。",AI_BUSY:"Gemini 伺服器暫時忙碌，請稍後重試。",AI_UNAVAILABLE:"目前無法連線 Gemini。",RATE_LIMIT_UNAVAILABLE:"使用限制服務暫時無法使用。"}
 };
 const $=id=>document.getElementById(id);
-let locale="ko",platform="kakao",relation="talking",goal="understand",replyTone="natural",feedbackSent=false,resultGoal="understand",resultLocale="ko",mode="text",lastResult=null;
+let locale="ko",platform="kakao",relation="talking",goal="understand",replyTone="natural",persona="standard",feedbackSent=false,resultGoal="understand",resultLocale="ko",mode="text",lastResult=null;
 function langFromBrowser(){const l=(navigator.language||"en").toLowerCase();if(l.startsWith("ko"))return"ko";if(l.startsWith("ja"))return"ja";if(l.startsWith("zh"))return l.includes("tw")||l.includes("hk")||l.includes("mo")?"zh-TW":"zh-CN";return"en"}
 function tx(k){return (T[locale]||T.en)[k]||T.en[k]||k}
-function setLocale(l){locale=T[l]?l:"en";$("locale").value=locale;document.documentElement.lang=locale;document.title="SAYNUE · Read Between the Lines";document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=tx(el.dataset.i)});$("chatText").placeholder=tx("placeholder");shots.refresh();if(!lastResult&&!$("error").classList.contains("hidden"))hideError();if(lastResult)render(lastResult,false)}
+function setLocale(l){locale=T[l]?l:"en";$("locale").value=locale;document.documentElement.lang=locale;document.title="SAYNUE · Read Between the Lines";document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=tx(el.dataset.i)});$("chatText").placeholder=tx("placeholder");updatePersonaUI();shots.refresh();if(!lastResult&&!$("error").classList.contains("hidden"))hideError();if(lastResult)render(lastResult,false)}
 function choose(group,dataKey,value){document.querySelectorAll("#"+group+" [data-"+dataKey+"]").forEach(el=>{el.setAttribute("aria-pressed",String(el.dataset[dataKey]===value))})}
 function choosePlatform(p){platform=p;choose("platforms","platform",p)}
 function chooseRelation(r){relation=r;choose("relations","rel",r)}
 function chooseGoal(g){goal=g;choose("goals","goal",g)}
 function chooseReplyTone(t){replyTone=t;choose("tones","tone",t)}
+const PERSONA_DEFAULTS={
+ standard:{relation:"talking",goal:"understand"},
+ court:{relation:"dating",goal:"repair"},
+ work:{relation:"work",goal:"reply"},
+ romance:{relation:"talking",goal:"understand"},
+ mediator:{relation:"friends",goal:"repair"}
+};
+function personaNameKey(mode){return "persona"+mode[0].toUpperCase()+mode.slice(1)}
+function updatePersonaUI(){
+ choose("personas","persona",persona);
+ const special=persona!=="standard";
+ $("personaContextBox").classList.toggle("hidden",!special);
+ $("personaContextHint").textContent=special?tx("personaContext"+persona[0].toUpperCase()+persona.slice(1)):"";
+ $("personaContext").placeholder=tx("personaContextPlaceholder");
+ $("personaContext").setAttribute("aria-label",tx("personaContextHeading"));
+}
+function choosePersona(mode){
+ if(!Object.prototype.hasOwnProperty.call(PERSONA_DEFAULTS,mode))return;
+ if(mode!==persona){
+  persona=mode;
+  $("personaContext").value="";
+  const defaults=PERSONA_DEFAULTS[mode];
+  chooseRelation(defaults.relation);
+  chooseGoal(defaults.goal);
+  $("results").classList.add("hidden");
+  $("samplePreview").classList.remove("hidden");
+  $("plusPeek").classList.remove("hidden");
+  lastResult=null;
+  hideError();
+ }
+ updatePersonaUI();
+}
+$("personas").addEventListener("click",event=>{
+ const button=event.target.closest("[data-persona]");
+ if(button)choosePersona(button.dataset.persona);
+});
+
 $("platforms").addEventListener("click",e=>{const b=e.target.closest("[data-platform]");if(b)choosePlatform(b.dataset.platform)});
 $("relations").addEventListener("click",e=>{const b=e.target.closest("[data-rel]");if(b)chooseRelation(b.dataset.rel)});
 $("goals").addEventListener("click",e=>{const b=e.target.closest("[data-goal]");if(b)chooseGoal(b.dataset.goal)});
 $("tones").addEventListener("click",e=>{const b=e.target.closest("[data-tone]");if(b)chooseReplyTone(b.dataset.tone)});
 function switchMode(m){mode=m;$("textTab").setAttribute("aria-selected",String(m==="text"));$("imageTab").setAttribute("aria-selected",String(m==="image"));$("textBox").classList.toggle("hidden",m!=="text");$("imageBox").classList.toggle("hidden",m!=="image");hideError()}
-$("textTab").addEventListener("click",()=>switchMode("text"));$("imageTab").addEventListener("click",()=>switchMode("image"));$("sample").addEventListener("click",()=>{switchMode("text");$("chatText").value=tx("sampleText");$("charCount").textContent=$("chatText").value.length+" / 12,000";$("chatText").focus()});
+$("textTab").addEventListener("click",()=>switchMode("text"));$("imageTab").addEventListener("click",()=>switchMode("image"));$("sample").addEventListener("click",()=>{switchMode("text");$("chatText").value=tx(persona==="standard"?"sampleText":"sample"+persona[0].toUpperCase()+persona.slice(1));$("charCount").textContent=$("chatText").value.length+" / 12,000";$("chatText").focus()});
 $("chatText").addEventListener("input",()=>{$("charCount").textContent=$("chatText").value.length+" / 12,000"});
 function maskCommonInfo(text) {
   return text
@@ -223,8 +260,40 @@ function renderEvidenceCards(cards){
   list.appendChild(card);
  }
 }
-function render(data,scroll){lastResult=data;$("samplePreview").classList.add("hidden");$("plusPeek").classList.add("hidden");$("reportPlatform").textContent=({kakao:"KakaoTalk",line:"LINE",wechat:"WeChat",whatsapp:"WhatsApp",imessage:"iMessage",instagram:"Instagram",other:"Other"})[platform];$("verdict").textContent=safeText(data.verdict,220);$("warmth").textContent=clamp(data.warmthScore)+"/100";$("balance").textContent=clamp(data.reciprocityScore)+"/100";$("confidence").textContent=tx(({low:"low",medium:"medium",high:"high"})[data.evidenceLevel]||"low");$("signal").textContent=safeText(data.keySignal,850);$("evidence").textContent=safeText(data.evidence,950);renderEvidenceCards(data.evidenceCards);$("alternative").textContent=safeText(data.alternative,700);$("nextStep").textContent=safeText(data.nextStep,750);$("replyDraft").textContent=safeText(data.replyDraft,480);$("replyWhy").textContent=safeText(data.replyWhy,520);$("replyCard").classList.toggle("hidden",!data.replyDraft);$("replyUnavailable").classList.toggle("hidden",!!data.replyDraft);$("copyStatus").textContent="";$("results").classList.remove("hidden");if(scroll)$("results").scrollIntoView({behavior:"smooth",block:"start"})}
-$("analyze").addEventListener("click",async()=>{hideError();if(!$("consent").checked){showError(tx("errConsent"));return}const chatText=$("chatText").value.trim();if(mode==="text"&&chatText.length<20){showError(chatText?tx("errShort"):tx("errInput"));return}if(mode==="image"&&!shots.isReady()){showError(shots.isBusy()?tx("shotPreparing"):shots.hasImages()?tx("shotMustReview"):tx("errInput"));return}const btn=$("analyze");btn.disabled=true;$("loading").classList.remove("hidden");$("results").classList.add("hidden");lastResult=null;try{const ctl=new AbortController();const timer=setTimeout(()=>ctl.abort(),33000);let response;try{response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({platform:platform,relation:relation,goal:goal,replyTone:replyTone,locale:locale,chatText:mode==="text"?chatText:"",images:mode==="image"?shots.getImages():undefined}),signal:ctl.signal,cache:"no-store"})}finally{clearTimeout(timer)}const payload=await response.json().catch(()=>({}));if(!response.ok){const code=typeof payload.code==="string"&&/^[A-Z_]{3,50}$/.test(payload.code)?payload.code:"HTTP_"+response.status;const kind=code==="NOT_CONFIGURED"?"errMissing":response.status===429?"errLimit":"errOther";throw Error(((API_ERRORS[locale]||API_ERRORS.en)[code]||tx(kind))+" ["+code+"]")}if(!payload||typeof payload.verdict!=="string")throw Error(tx("errOther"));feedbackSent=false;resultGoal=goal;resultLocale=locale;$("feedbackStatus").textContent="";document.querySelectorAll("#feedbackButtons [data-feedback]").forEach(b=>b.disabled=false);render(payload,true)}catch(err){showError(err.name==="AbortError"?tx("errServer"):(err.message||tx("errOther")))}finally{btn.disabled=false;$("loading").classList.add("hidden")}});
+function renderPersona(data,scroll){
+ const mode=data.persona;
+ if(!PERSONA_DEFAULTS[mode]||mode==="standard")return;
+ lastResult=data;
+ $("samplePreview").classList.add("hidden");
+ $("plusPeek").classList.add("hidden");
+ $("shareCard").classList.add("hidden");
+ $("personaReport").classList.remove("hidden");
+ $("personaReportName").textContent=tx(personaNameKey(mode));
+ $("personaEvidenceLevel").textContent=tx("confidenceLabel")+" · "+tx(data.evidenceLevel||"low");
+ $("personaSummary").textContent=safeText(data.summary,240);
+ const labels=["personaSectionOneLabel","personaSectionTwoLabel","personaSectionThreeLabel"];
+ const values=["personaSectionOne","personaSectionTwo","personaSectionThree"];
+ const keyParts=["One","Two","Three"];
+ for(let i=0;i<3;i++){
+  $(labels[i]).textContent=tx(personaNameKey(mode)+keyParts[i]);
+  $(values[i]).textContent=safeText(data["section"+keyParts[i]],1000);
+ }
+ $("personaNextStep").textContent=safeText(data.nextStep,650);
+ const hasQuote=typeof data.sourceQuote==="string"&&data.sourceQuote.length>=5;
+ $("personaQuoteBox").classList.toggle("hidden",!hasQuote);
+ $("personaQuote").textContent=hasQuote?data.sourceQuote:"";
+ $("personaQuoteNotice").textContent=hasQuote?(data.sourceVerified?tx("personaQuoteVerified"):tx("personaQuoteScreenshot")+" "+Number(data.sourceScreenshotIndex||1)):"";
+ const showReply=!!data.shouldReply&&typeof data.replyDraft==="string"&&!!data.replyDraft.trim();
+ $("personaReply").classList.toggle("hidden",!showReply);
+ $("personaNoReply").classList.toggle("hidden",showReply);
+ $("personaDraft").textContent=showReply?safeText(data.replyDraft,550):"";
+ $("personaDraftWhy").textContent=safeText(data.replyWhy,520);
+ $("personaCopyStatus").textContent="";
+ $("results").classList.remove("hidden");
+ if(scroll)$("results").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function render(data,scroll){if(data&&data.persona&&data.persona!=="standard"){renderPersona(data,scroll);return} $("shareCard").classList.remove("hidden");$("personaReport").classList.add("hidden");lastResult=data;$("samplePreview").classList.add("hidden");$("plusPeek").classList.add("hidden");$("reportPlatform").textContent=({kakao:"KakaoTalk",line:"LINE",wechat:"WeChat",whatsapp:"WhatsApp",imessage:"iMessage",instagram:"Instagram",other:"Other"})[platform];$("verdict").textContent=safeText(data.verdict,220);$("warmth").textContent=clamp(data.warmthScore)+"/100";$("balance").textContent=clamp(data.reciprocityScore)+"/100";$("confidence").textContent=tx(({low:"low",medium:"medium",high:"high"})[data.evidenceLevel]||"low");$("signal").textContent=safeText(data.keySignal,850);$("evidence").textContent=safeText(data.evidence,950);renderEvidenceCards(data.evidenceCards);$("alternative").textContent=safeText(data.alternative,700);$("nextStep").textContent=safeText(data.nextStep,750);$("replyDraft").textContent=safeText(data.replyDraft,480);$("replyWhy").textContent=safeText(data.replyWhy,520);$("replyCard").classList.toggle("hidden",!data.replyDraft);$("replyUnavailable").classList.toggle("hidden",!!data.replyDraft);$("copyStatus").textContent="";$("results").classList.remove("hidden");if(scroll)$("results").scrollIntoView({behavior:"smooth",block:"start"})}
+$("analyze").addEventListener("click",async()=>{hideError();if(!$("consent").checked){showError(tx("errConsent"));return}const chatText=$("chatText").value.trim();if(mode==="text"&&chatText.length<20){showError(chatText?tx("errShort"):tx("errInput"));return}if(mode==="image"&&!shots.isReady()){showError(shots.isBusy()?tx("shotPreparing"):shots.hasImages()?tx("shotMustReview"):tx("errInput"));return}const btn=$("analyze");btn.disabled=true;$("loading").classList.remove("hidden");$("results").classList.add("hidden");lastResult=null;try{const ctl=new AbortController();const timer=setTimeout(()=>ctl.abort(),33000);let response;try{response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({platform:platform,relation:relation,goal:goal,replyTone:replyTone,locale:locale,persona:persona,caseContext:persona==="standard"?undefined:$("personaContext").value.trim(),chatText:mode==="text"?chatText:"",images:mode==="image"?shots.getImages():undefined}),signal:ctl.signal,cache:"no-store"})}finally{clearTimeout(timer)}const payload=await response.json().catch(()=>({}));if(!response.ok){const code=typeof payload.code==="string"&&/^[A-Z_]{3,50}$/.test(payload.code)?payload.code:"HTTP_"+response.status;const kind=code==="NOT_CONFIGURED"?"errMissing":response.status===429?"errLimit":"errOther";throw Error(((API_ERRORS[locale]||API_ERRORS.en)[code]||tx(kind))+" ["+code+"]")}if(!payload||(persona==="standard"?typeof payload.verdict!=="string":payload.persona!==persona||typeof payload.summary!=="string"))throw Error(tx("errOther"));feedbackSent=false;resultGoal=goal;resultLocale=locale;$("feedbackStatus").textContent="";document.querySelectorAll("#feedbackButtons [data-feedback]").forEach(b=>b.disabled=false);render(payload,true)}catch(err){showError(err.name==="AbortError"?tx("errServer"):(err.message||tx("errOther")))}finally{btn.disabled=false;$("loading").classList.add("hidden")}});
 $("feedbackButtons").addEventListener("click",async(event)=>{
   const btn=event.target.closest("[data-feedback]");
   if(!btn||feedbackSent||!lastResult)return;
@@ -247,14 +316,19 @@ $("feedbackButtons").addEventListener("click",async(event)=>{
     $("feedbackStatus").textContent=tx("feedbackError");
   }
 });
+$("copyPersonaReply").addEventListener("click",async()=>{
+ if(!lastResult||!lastResult.persona||!lastResult.shouldReply||typeof lastResult.replyDraft!=="string"||!lastResult.replyDraft)return;
+ try{await navigator.clipboard.writeText(lastResult.replyDraft);$("personaCopyStatus").textContent=tx("personaCopied")}
+ catch(_){$("personaCopyStatus").textContent=tx("personaCopyFailed")}
+});
 $("copyReply").addEventListener("click",async()=>{
   if(!lastResult||typeof lastResult.replyDraft!=="string"||!lastResult.replyDraft)return;
   try{await navigator.clipboard.writeText(lastResult.replyDraft);$("copyStatus").textContent=tx("replyCopied")}
   catch(_){$("copyStatus").textContent=tx("replyCopyFail")}
 });
 $("share").addEventListener("click",async()=>{if(!lastResult)return;const text=tx("shareTitle")+"\n"+tx("shareScore")+": "+clamp(lastResult.warmthScore)+"/100\n"+safeText(lastResult.verdict,160)+"\n"+tx("sharePrompt");try{if(navigator.share){await navigator.share({title:tx("shareTitle"),text:text,url:location.origin+location.pathname})}else{await navigator.clipboard.writeText(text+"\n"+location.origin+location.pathname);alert(tx("copied"))}}catch(err){if(err.name!=="AbortError")alert(tx("errOther"))}});
-$("reset").addEventListener("click",()=>{$("results").classList.add("hidden");$("samplePreview").classList.remove("hidden");$("plusPeek").classList.remove("hidden");lastResult=null;feedbackSent=false;$("feedbackStatus").textContent="";$("formCard").scrollIntoView({behavior:"smooth",block:"start"})});
-setLocale(langFromBrowser());choosePlatform(locale==="ko"?"kakao":locale==="ja"?"line":locale.startsWith("zh")?"wechat":"whatsapp");chooseRelation("talking");chooseGoal("understand");chooseReplyTone("natural");
+$("reset").addEventListener("click",()=>{$("results").classList.add("hidden");$("personaReport").classList.add("hidden");$("shareCard").classList.remove("hidden");$("samplePreview").classList.remove("hidden");$("plusPeek").classList.remove("hidden");lastResult=null;feedbackSent=false;$("feedbackStatus").textContent="";$("formCard").scrollIntoView({behavior:"smooth",block:"start"})});
+setLocale(langFromBrowser());choosePlatform(locale==="ko"?"kakao":locale==="ja"?"line":locale.startsWith("zh")?"wechat":"whatsapp");chooseRelation("talking");chooseGoal("understand");chooseReplyTone("natural");updatePersonaUI();
 })();
 </script>
 </body>
