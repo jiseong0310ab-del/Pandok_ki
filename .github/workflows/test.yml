@@ -23,4 +23,16 @@ jobs:
       - run: node --check lib/plus-coach.mjs
       - run: node --check assets/plus-preview.js
       - run: node --check tests/plus-coach.test.mjs
-      - run: node --test tests/smoke.mjs tests/quality.test.mjs tests/feedback.test.mjs tests/monetization.test.mjs tests/screenshot-editor.test.mjs tests/plus-coach.test.mjs
+      - run: node --check lib/paddle-billing.mjs
+      - run: node --check lib/saynue-auth.mjs
+      - run: node --check lib/saynue-storage.mjs
+      - run: node --check api/webhooks/paddle.mjs
+      - run: node --check api/auth/start.mjs
+      - run: node --check api/auth/verify.mjs
+      - run: node --check api/auth/logout.mjs
+      - run: node --check api/auth/state.mjs
+      - run: node --check api/plus/report.mjs
+      - run: node --check api/plus/checkout.mjs
+      - run: node --check assets/account.js
+      - run: node --check tests/billing-auth.test.mjs
+      - run: node --test tests/smoke.mjs tests/quality.test.mjs tests/feedback.test.mjs tests/monetization.test.mjs tests/screenshot-editor.test.mjs tests/plus-coach.test.mjs tests/billing-auth.test.mjs
