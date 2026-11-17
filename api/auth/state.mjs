@@ -7,7 +7,7 @@ export default {async fetch(request){
  const headers=new Headers({"Content-Type":"application/json","Cache-Control":"no-store","X-Content-Type-Options":"nosniff"});
  const session=await getAuthenticatedUser(request,headers);
  const hasDatabase=!!supabaseConfig();
- const result={authConfigured:session.configured,storageConfigured:hasDatabase,authenticated:!!session.user,plus:false,plusStatus:"unavailable"};
+ const result={authConfigured:session.configured,storageConfigured:hasDatabase,authenticated:!!session.user,plus:false,plusStatus:"unavailable",sandboxCheckoutReady:!!session.user&&hasDatabase&&process.env.SAYNUE_PADDLE_ENV==="sandbox"&&process.env.SAYNUE_ENABLE_SANDBOX_CHECKOUT==="true"&&!!process.env.PADDLE_API_KEY&&!!process.env.PADDLE_WEBHOOK_SECRET};
  if(session.user){
   result.email=session.user.email;
   if(hasDatabase){
