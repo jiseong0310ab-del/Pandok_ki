@@ -9,7 +9,7 @@ function req(body,extra={}){
   return new Request("https://saynue.test/api/analyze",{method:extra.method||"POST",headers,body:(extra.method||"POST")==="POST"?(typeof body==="string"?body:JSON.stringify(body)):undefined});
 }
 const valid={platform:"line",relation:"talking",goal:"reply",locale:"ja",chatText:"Me: Can we meet next week? Them: I'll check my schedule and let you know."};
-const mock={verdict:"A polite but undecided response",warmthScore:57,reciprocityScore:48,evidenceLevel:"medium",keySignal:"A reply but no date agreed.",evidence:"They said they will check their schedule.",alternative:"They may genuinely be busy.",nextStep:"Give them time and respect the boundary.",replyDraft:"No rush, let me know when you know your schedule.",replyWhy:"It acknowledges their busy schedule without pressuring them."};
+const mock={verdict:"A polite but undecided response",warmthScore:57,reciprocityScore:48,evidenceLevel:"medium",keySignal:"A reply but no date agreed.",evidence:"They said they will check their schedule.",alternative:"They may genuinely be busy.",nextStep:"Give them time and respect the boundary.",replyDraft:"No rush, let me know when you know your schedule.",replyWhy:"It acknowledges their busy schedule without pressuring them.",evidenceCards:[]};
 
 test("index HTML has a script with valid JavaScript syntax",()=>{
   const page=fs.readFileSync(new URL("../index.html",import.meta.url),"utf8");
@@ -139,6 +139,62 @@ test("legacy single screenshot JSON remains valid for previously deployed client
     const r=await app.fetch(req({...valid,chatText:"",imageBase64,imageMimeType:"image/jpeg"},{headers:{"x-vercel-forwarded-for":"198.51.100.82"}}));
     assert.equal(r.status,200);
     assert.equal(parts[3].inline_data.data,imageBase64);
+  }finally{global.fetch=old}
+});
+
+test("evidence cards return only exact pasted quotes with separate tentative readings",async()=>{
+  process.env.GEMINI_API_KEY="test-key";
+  const old=global.fetch;
+  const cards=[
+    {quote:"I'll check my schedule",reading:"A reply was given but no firm day was agreed.",otherExplanation:"They might be occupied with other plans.",screenshotIndex:0},
+    {quote:"I secretly love you",reading:"Not present in the conversation.",otherExplanation:"Unverified invented claim.",screenshotIndex:0},
+    {quote:"I'll check my schedule",reading:"Duplicate should be filtered out.",otherExplanation:"Another duplicate interpretation.",screenshotIndex:0},
+    {quote:"me@example.com",reading:"Personal details should not be repeated.",otherExplanation:"Privacy protection should prevent this.",screenshotIndex:0}
+  ];
+  global.fetch=async()=>new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify({...mock,evidenceCards:cards})}]}}]}),{status:200});
+  try{
+    const res=await app.fetch(req(valid,{headers:{"x-vercel-forwarded-for":"198.51.100.91"}}));
+    assert.equal(res.status,200);
+    const result=await res.json();
+    assert.equal(result.evidenceCards.length,1);
+    assert.equal(result.evidenceCards[0].quote,"I'll check my schedule");
+    assert.equal(result.evidenceCards[0].sourceType,"text");
+    assert.equal(result.evidenceCards[0].screenshotIndex,0);
+    assert.equal(result.evidenceCards[0].reading,cards[0].reading);
+    assert.equal(Object.hasOwn(result,"deepMindAnalysis"),false);
+  }finally{global.fetch=old}
+});
+
+test("image excerpt cards must identify an uploaded screenshot and never claim text verification",async()=>{
+  process.env.GEMINI_API_KEY="test-key";
+  const old=global.fetch;
+  const img={mimeType:"image/jpeg",base64:"/9j/"+"A".repeat(200)};
+  const cards=[
+    {quote:"Maybe next week",reading:"There may be interest in another time.",otherExplanation:"The sender could be busy.",screenshotIndex:2},
+    {quote:"A line from screenshot four",reading:"This line has no valid source.",otherExplanation:"Source out of range.",screenshotIndex:4},
+    {quote:"Another message",reading:"This line has no valid screenshot.",otherExplanation:"Source missing.",screenshotIndex:0}
+  ];
+  global.fetch=async()=>new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify({...mock,evidenceCards:cards})}]}}]}),{status:200});
+  try{
+    const res=await app.fetch(req({...valid,chatText:"",images:[img,img]},{headers:{"x-vercel-forwarded-for":"198.51.100.92"}}));
+    assert.equal(res.status,200);
+    const result=await res.json();
+    assert.equal(result.evidenceCards.length,1);
+    assert.equal(result.evidenceCards[0].sourceType,"image");
+    assert.equal(result.evidenceCards[0].screenshotIndex,2);
+  }finally{global.fetch=old}
+});
+
+test("missing or unverifiable evidence cards do not erase the core analysis",async()=>{
+  process.env.GEMINI_API_KEY="test-key";
+  const old=global.fetch;
+  global.fetch=async()=>new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify({...mock,evidenceCards:[{quote:"Made-up observation",reading:"Could be something",otherExplanation:"May mean something else",screenshotIndex:0}]})}]}}]}),{status:200});
+  try{
+    const res=await app.fetch(req(valid,{headers:{"x-vercel-forwarded-for":"198.51.100.93"}}));
+    assert.equal(res.status,200);
+    const result=await res.json();
+    assert.deepEqual(result.evidenceCards,[]);
+    assert.equal(result.verdict,mock.verdict);
   }finally{global.fetch=old}
 });
 
