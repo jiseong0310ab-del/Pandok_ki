@@ -30,6 +30,7 @@ export default {async fetch(request){
    body:JSON.stringify({
     items:[{price_id:priceId,quantity:1}],
     collection_mode:"automatic",
+    checkout:{url:"https://saynue.vercel.app/sandbox-checkout.html"},
     custom_data:{saynue_origin:"server-authenticated-sandbox"}
    }),
    signal:AbortSignal.timeout(9000),
@@ -45,11 +46,10 @@ export default {async fetch(request){
   // An unused transaction is safer than an untracked checkout.
   return reply("STORAGE_UNAVAILABLE",503,headers);
  }
- const checkout=transaction.checkout?.url;
- const out=new URL(checkout||"https://saynue.vercel.app/sandbox-checkout.html");
- // Never return an untrusted remote redirect. Paddle payment links may use
- // only the site's own HTTPS checkout page.
- if(out.origin!=="https://saynue.vercel.app")return reply("CHECKOUT_LINK_UNAVAILABLE",503,headers);
+ // Construct an origin-pinned link only after the server-owned transaction
+ // has been written to the database. The browser must NOT use the public price
+ // when following this link; Paddle.js opens the transaction by ID.
+ const checkout="https://saynue.vercel.app/sandbox-checkout.html?_ptxn="+encodeURIComponent(transaction.id);
  for(const [k,v] of Object.entries(base))headers.set(k,v);
- return new Response(JSON.stringify({code:"SANDBOX_TRANSACTION_CREATED",transactionId:transaction.id,checkoutUrl:checkout||null}),{status:200,headers});
+ return new Response(JSON.stringify({code:"SANDBOX_TRANSACTION_CREATED",transactionId:transaction.id,checkoutUrl:checkout}),{status:200,headers});
 }};
