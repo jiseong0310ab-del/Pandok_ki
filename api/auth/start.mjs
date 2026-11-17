@@ -15,5 +15,11 @@ export default {async fetch(request){
   await sendEmailCode(input.email);
   // Same response for known/unknown addresses; never expose accounts.
   return reply("CODE_REQUESTED",200);
- }catch(_){return reply("AUTH_UNAVAILABLE",503)}
+ }catch(error){
+  // Stable, safe public error categories; do not leak whether a user exists.
+  if(error?.message==="AUTH_EMAIL_RATE_LIMIT")return reply("EMAIL_RATE_LIMIT",429);
+  if(error?.message==="AUTH_EMAIL_NOT_AUTHORIZED")return reply("EMAIL_NOT_AUTHORIZED",403);
+  if(error?.message==="AUTH_OTP_DISABLED")return reply("EMAIL_LOGIN_DISABLED",503);
+  return reply("AUTH_UNAVAILABLE",503);
+ }
 }};
