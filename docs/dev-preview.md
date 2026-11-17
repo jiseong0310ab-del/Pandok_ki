@@ -14,7 +14,7 @@ Open https://github.com/jiseong0310ab-del/Pandok_ki/settings/pages
 
 1. In **Build and deployment**, set **Source → GitHub Actions**.
 2. Save the setting. (The site cannot be published via connector configuration currently.)
-3. Once enabled, trigger the workflow from **Actions → SAYNUE mobile UI preview (no Vercel) → Run workflow**, selecting `dev-preview`; or ask ChatGPT to make a new UI commit on `dev-preview`.
+3. Reply that Pages is enabled. ChatGPT can then push a small `dev-preview` update, which automatically triggers the workflow. (Workflows only on a non-default branch might not offer the manual **Run workflow** button in the UI.)
 
 Expected public URL **after successful Pages deployment**:
 https://jiseong0310ab-del.github.io/Pandok_ki/
