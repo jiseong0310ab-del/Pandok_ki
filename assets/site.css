@@ -239,3 +239,15 @@ textarea::placeholder{color:#9299ae}
 .prelaunch-link{display:inline-block;margin-top:13px;color:#d6c7fa;text-decoration:underline;text-underline-offset:4px;font-weight:720;font-size:12px}
 .prelaunch-footer{display:flex;justify-content:center;gap:21px;flex-wrap:wrap;padding-bottom:15px}
 .prelaunch-footer a{color:#d6c7fa;font-size:12px;text-underline-offset:4px}
+
+/* Optional voice picker: collapsed by default to preserve quick analysis flow. */
+.tone-panel{margin-top:18px;padding:14px 15px;border:1px solid #3f455d;border-radius:14px;background:rgba(16,22,41,.5)}
+.tone-panel summary{list-style:none;cursor:pointer;color:#d9d2eb;font-size:12px;font-weight:760;display:flex;align-items:center;justify-content:space-between;gap:9px}
+.tone-panel summary::-webkit-details-marker{display:none}
+.tone-panel summary:after{content:"⌄";font-size:17px;line-height:1;color:#c4b5ec;transition:transform .17s}
+.tone-panel[open] summary:after{transform:rotate(180deg)}
+.tone-panel summary:focus-visible{outline:2px solid var(--lavender);outline-offset:4px}
+.tone-sub{font-size:11px;line-height:1.7;color:#abb0c8;margin:12px 0 11px}
+.tone-option{font-size:11px;white-space:normal;min-height:36px}
+.tone-option[aria-pressed="true"]{border-color:#bda8f2;background:#39334f}
+@media(max-width:390px){.tone-panel{padding:12px}.tone-option{padding:8px 10px}}
