@@ -79,6 +79,69 @@ test("unsupported mime and extra image text are rejected",async()=>{
   assert.equal((await app.fetch(req({...valid,imageBase64:"AA".repeat(100),imageMimeType:"image/svg+xml",chatText:""}))).status,400);
   assert.equal((await app.fetch(req({...valid,imageBase64:"AA".repeat(100),imageMimeType:"image/jpeg"}))).status,400);
 });
+test("three redacted JPEG screenshots reach Gemini in the exact user order",async()=>{
+  process.env.GEMINI_API_KEY="test-key";
+  const fake=i=>"/9j/"+String(i).repeat(160);
+  const items=[1,2,3].map(i=>({mimeType:"image/jpeg",base64:fake(i)}));
+  let captured=null;
+  const previous=global.fetch;
+  global.fetch=async(_url,options)=>{
+    captured=JSON.parse(options.body);
+    return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(mock)}]}}]}),{status:200});
+  };
+  try{
+    const r=await app.fetch(req({...valid,chatText:"",images:items},{headers:{"x-vercel-forwarded-for":"198.51.100.61"}}));
+    assert.equal(r.status,200);
+    assert.equal((await r.json()).verdict,mock.verdict);
+    const parts=captured.contents[0].parts;
+    assert.equal(parts.length,8);
+    assert.match(parts[1].text,/oldest to newest/);
+    for(let i=0;i<3;i++){
+      assert.match(parts[i*2+2].text,new RegExp("Screenshot "+(i+1)+" of 3"));
+      assert.equal(parts[i*2+3].inline_data.mime_type,"image/jpeg");
+      assert.equal(parts[i*2+3].inline_data.data,items[i].base64);
+    }
+    assert.match(captured.systemInstruction.parts[0].text,/duplicate overlapping messages/);
+  }finally{global.fetch=previous}
+});
+
+test("multi-image JSON rejects unredacted formats, mixed text, and oversized inputs",async()=>{
+  process.env.GEMINI_API_KEY="test-key";
+  const fake="/9j/"+"A".repeat(100);
+  const img={mimeType:"image/jpeg",base64:fake};
+  const invalid=[
+    [],
+    [img,img,img,img],
+    [{mimeType:"image/png",base64:fake}],
+    [{mimeType:"image/jpeg",base64:"A".repeat(100)}],
+    [{mimeType:"image/jpeg",base64:fake,name:"recipient-identity"}],
+    [{mimeType:"image/jpeg",base64:"/9j/"+"A".repeat(1050000)}],
+    null,"wrong format"
+  ];
+  for(const [index,images] of invalid.entries()){
+    const r=await app.fetch(req({...valid,chatText:"",images},{headers:{"x-vercel-forwarded-for":"198.51.100."+(65+index)}}));
+    assert.equal(r.status,400,"invalid image payload "+index);
+  }
+  assert.equal((await app.fetch(req({...valid,images:[img]},{headers:{"x-vercel-forwarded-for":"198.51.100.80"}}))).status,400);
+  assert.equal((await app.fetch(req({...valid,chatText:"",imageBase64:fake,images:[img]},{headers:{"x-vercel-forwarded-for":"198.51.100.81"}}))).status,400);
+});
+
+test("legacy single screenshot JSON remains valid for previously deployed clients",async()=>{
+  process.env.GEMINI_API_KEY="test-key";
+  const old=global.fetch;
+  let parts=[];
+  global.fetch=async(_url,options)=>{
+    parts=JSON.parse(options.body).contents[0].parts;
+    return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(mock)}]}}]}),{status:200});
+  };
+  try{
+    const imageBase64="/9j/"+"A".repeat(100);
+    const r=await app.fetch(req({...valid,chatText:"",imageBase64,imageMimeType:"image/jpeg"},{headers:{"x-vercel-forwarded-for":"198.51.100.82"}}));
+    assert.equal(r.status,200);
+    assert.equal(parts[3].inline_data.data,imageBase64);
+  }finally{global.fetch=old}
+});
+
 test("response is free-only and not cached, with Gemini called from server",async()=>{
   process.env.GEMINI_API_KEY="test-key";
   const old=global.fetch;let calls=0;
