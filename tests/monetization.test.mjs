@@ -41,3 +41,22 @@ test("all monetization informational pages translate their visible labels into f
     }
   }
 });
+
+// Dedicated Paddle Sandbox integration is intentionally isolated from Free / Plus public pages.
+// Client-side sandbox tokens are publishable; the API key and webhook secret must never appear.
+test("SAYNUE Sandbox checkout can only open a simulated payment and never grant Plus",()=>{
+  const page=load("sandbox-checkout.html");
+  const script=codeFrom(page);
+  assert.doesNotThrow(()=>new vm.Script(script));
+  assert.match(page,/noindex,nofollow/);
+  assert.match(page,/https:\/\/cdn\.paddle\.com\/paddle\/v2\/paddle\.js/);
+  assert.match(script,/const PRICE_ID="pri_01m7k4h86fsasy85vxy1w5d1bw"/);
+  assert.match(script,/const CLIENT_TOKEN="test_[a-z0-9]+"/);
+  assert.match(script,/Paddle\.Environment\.set\("sandbox"\)/);
+  assert.match(script,/Paddle\.Initialize\(/);
+  assert.match(script,/Paddle\.Checkout\.open\(/);
+  assert.match(script,/eventCallback:onEvent/);
+  assert.match(page,/Plus access is NOT enabled/);
+  assert.doesNotMatch(page,/live_[a-z0-9]+|PADDLE_API_KEY|PADDLE_WEBHOOK_SECRET|grantPlus|localStorage\.setItem|sessionStorage\.setItem/);
+  assert.doesNotMatch(load("index.html")+load("plans.html"),/sandbox-checkout\.html|test_1e2da107b538595bfd8fb2d8923/);
+});
