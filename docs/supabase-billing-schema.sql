@@ -144,9 +144,8 @@ $$;
 REVOKE ALL ON FUNCTION public.saynue_apply_subscription_event(text,text,timestamptz,text,text,text,text,text,timestamptz) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.saynue_apply_subscription_event(text,text,timestamptz,text,text,text,text,text,timestamptz) TO service_role;
 
--- Refunds and chargebacks are fail-closed: approved adjustments block
--- further Plus use. This also applies to partial refunds conservatively.
--- Do not silently unblock later when a subscription.updated arrives.
+-- Approved refunds and chargebacks block further Plus access, including
+-- partial refunds. A later subscription.updated never resets this block.
 CREATE OR REPLACE FUNCTION public.saynue_apply_adjustment_event(
   p_event_id text,
   p_event_type text,
@@ -157,130 +156,48 @@ CREATE OR REPLACE FUNCTION public.saynue_apply_adjustment_event(
   p_status text
 )
 RETURNS jsonb
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public,pg_temp
-AS $
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp
+AS $adjustment$
 DECLARE
   v_existing text;
 BEGIN
-  IF p_event_id !~ '^evt_[a-z0-9]{10,64} No client-supplied
--- "isPlus" boolean can bypass this DB decision.
-CREATE OR REPLACE FUNCTION public.saynue_claim_plus_credit(p_user_id uuid,p_price_id text,p_daily_limit integer)
-RETURNS boolean
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public,pg_temp
-AS $$
-DECLARE
-  v_count integer;
-BEGIN
-  IF p_user_id IS NULL OR p_price_id IS NULL OR p_daily_limit < 1 OR p_daily_limit > 25 THEN
-    RETURN false;
-  END IF;
-  IF NOT EXISTS (
-    SELECT 1 FROM public.saynue_subscriptions
-      WHERE user_id=p_user_id AND price_id=p_price_id AND status='active' AND NOT billing_blocked AND period_end>now()
-  ) THEN
-    RETURN false;
-  END IF;
-  INSERT INTO public.saynue_plus_usage (user_id,usage_date,calls)
-    VALUES (p_user_id,(now() AT TIME ZONE 'UTC')::date,1)
-    ON CONFLICT (user_id,usage_date) DO UPDATE SET calls=public.saynue_plus_usage.calls+1
-    WHERE public.saynue_plus_usage.calls<p_daily_limit
-    RETURNING calls INTO v_count;
-  RETURN v_count IS NOT NULL;
-END;
-$$;
-REVOKE ALL ON FUNCTION public.saynue_claim_plus_credit(uuid,text,integer) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.saynue_claim_plus_credit(uuid,text,integer) TO service_role;
-
-COMMIT;
-
-     OR p_subscription_id !~ '^sub_[a-z0-9]{10,64} No client-supplied
--- "isPlus" boolean can bypass this DB decision.
-CREATE OR REPLACE FUNCTION public.saynue_claim_plus_credit(p_user_id uuid,p_price_id text,p_daily_limit integer)
-RETURNS boolean
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public,pg_temp
-AS $$
-DECLARE
-  v_count integer;
-BEGIN
-  IF p_user_id IS NULL OR p_price_id IS NULL OR p_daily_limit < 1 OR p_daily_limit > 25 THEN
-    RETURN false;
-  END IF;
-  IF NOT EXISTS (
-    SELECT 1 FROM public.saynue_subscriptions
-      WHERE user_id=p_user_id AND price_id=p_price_id AND status='active' AND NOT billing_blocked AND period_end>now()
-  ) THEN
-    RETURN false;
-  END IF;
-  INSERT INTO public.saynue_plus_usage (user_id,usage_date,calls)
-    VALUES (p_user_id,(now() AT TIME ZONE 'UTC')::date,1)
-    ON CONFLICT (user_id,usage_date) DO UPDATE SET calls=public.saynue_plus_usage.calls+1
-    WHERE public.saynue_plus_usage.calls<p_daily_limit
-    RETURNING calls INTO v_count;
-  RETURN v_count IS NOT NULL;
-END;
-$$;
-REVOKE ALL ON FUNCTION public.saynue_claim_plus_credit(uuid,text,integer) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.saynue_claim_plus_credit(uuid,text,integer) TO service_role;
-
-COMMIT;
-
-     OR p_transaction_id !~ '^txn_[a-z0-9]{10,64} No client-supplied
--- "isPlus" boolean can bypass this DB decision.
-CREATE OR REPLACE FUNCTION public.saynue_claim_plus_credit(p_user_id uuid,p_price_id text,p_daily_limit integer)
-RETURNS boolean
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public,pg_temp
-AS $$
-DECLARE
-  v_count integer;
-BEGIN
-  IF p_user_id IS NULL OR p_price_id IS NULL OR p_daily_limit < 1 OR p_daily_limit > 25 THEN
-    RETURN false;
-  END IF;
-  IF NOT EXISTS (
-    SELECT 1 FROM public.saynue_subscriptions
-      WHERE user_id=p_user_id AND price_id=p_price_id AND status='active' AND NOT billing_blocked AND period_end>now()
-  ) THEN
-    RETURN false;
-  END IF;
-  INSERT INTO public.saynue_plus_usage (user_id,usage_date,calls)
-    VALUES (p_user_id,(now() AT TIME ZONE 'UTC')::date,1)
-    ON CONFLICT (user_id,usage_date) DO UPDATE SET calls=public.saynue_plus_usage.calls+1
-    WHERE public.saynue_plus_usage.calls<p_daily_limit
-    RETURNING calls INTO v_count;
-  RETURN v_count IS NOT NULL;
-END;
-$$;
-REVOKE ALL ON FUNCTION public.saynue_claim_plus_credit(uuid,text,integer) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.saynue_claim_plus_credit(uuid,text,integer) TO service_role;
-
-COMMIT;
-
+  IF p_event_id !~ '^evt_[a-z0-9]{10,64}$'
+     OR p_subscription_id !~ '^sub_[a-z0-9]{10,64}$'
+     OR p_transaction_id !~ '^txn_[a-z0-9]{10,64}$'
      OR p_event_type NOT IN ('adjustment.created','adjustment.updated')
      OR p_action NOT IN ('refund','chargeback')
      OR p_status <> 'approved'
      OR p_occurred_at IS NULL
-  THEN RAISE EXCEPTION 'invalid_adjustment_event';
+  THEN
+    RAISE EXCEPTION 'invalid_adjustment_event';
   END IF;
+
   PERFORM pg_advisory_xact_lock(hashtext(p_subscription_id));
+
   IF EXISTS (SELECT 1 FROM public.saynue_webhook_events WHERE event_id=p_event_id) THEN
     RETURN jsonb_build_object('state','duplicate');
   END IF;
+
   SELECT subscription_id INTO v_existing
-    FROM public.saynue_subscriptions WHERE subscription_id=p_subscription_id FOR UPDATE;
-  IF v_existing IS NULL THEN RAISE EXCEPTION 'unlinked_adjustment'; END IF;
+    FROM public.saynue_subscriptions
+    WHERE subscription_id=p_subscription_id FOR UPDATE;
+  IF v_existing IS NULL THEN
+    RAISE EXCEPTION 'unlinked_adjustment';
+  END IF;
 
   UPDATE public.saynue_subscriptions
-    SET billing_blocked=true,updated_at=now() WHERE subscription_id=p_subscription_id;
+    SET billing_blocked=true,updated_at=now()
+    WHERE subscription_id=p_subscription_id;
+
   INSERT INTO public.saynue_webhook_events(event_id,subscription_id,event_type,occurred_at)
-    VALUES(p_event_id,p_subscription_id,p_event_type,p_occurred_at);
+  VALUES(p_event_id,p_subscription_id,p_event_type,p_occurred_at);
   RETURN jsonb_build_object('state','applied');
 END;
-$;
+$adjustment$;
 REVOKE ALL ON FUNCTION public.saynue_apply_adjustment_event(text,text,timestamptz,text,text,text,text) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.saynue_apply_adjustment_event(text,text,timestamptz,text,text,text,text) TO service_role;
 
--- Atomic paid entitlement + per-user per-day quota. No client-supplied
--- "isPlus" boolean can bypass this DB decision.
+-- Atomic paid entitlement + per-user daily quota. Clients cannot claim Plus.
 CREATE OR REPLACE FUNCTION public.saynue_claim_plus_credit(p_user_id uuid,p_price_id text,p_daily_limit integer)
 RETURNS boolean
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public,pg_temp
