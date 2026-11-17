@@ -76,6 +76,8 @@
 "use strict";
 const PRICE_ID="pri_01m7k4h86fsasy85vxy1w5d1bw";
 const CLIENT_TOKEN="test_1e2da107b538595bfd8fb2d8923";
+const linkedTransaction=new URLSearchParams(window.location.search).get("_ptxn");
+const transactionValid=!linkedTransaction||/^txn_[a-z0-9]{26}$/.test(linkedTransaction);
 const btn=document.getElementById("openSandbox");
 const status=document.getElementById("status");
 let initialized=false;
@@ -95,6 +97,7 @@ function onEvent(event){
   }
 }
 window.addEventListener("load",function(){
+  if(!transactionValid){setStatus("잘못된 Sandbox 거래 주소야. 원래 테스트 페이지로 돌아가 다시 시도해 줘.",true);return}
   if(!window.Paddle||typeof window.Paddle.Initialize!=="function"){
     setStatus("Paddle.js를 불러오지 못했어. Safari 콘텐츠 차단을 끄거나 다른 브라우저로 시도해 봐.",true);return;
   }
@@ -107,7 +110,7 @@ window.addEventListener("load",function(){
     });
     initialized=true;
     btn.disabled=false;
-    btn.textContent="테스트 결제창 열기";
+    btn.textContent=linkedTransaction?"연결된 테스트 거래 결제창 열기":"테스트 결제창 열기";
     setStatus("Sandbox 연결 완료. 테스트 결제가 가능하며 실제 청구는 없어.",false);
   }catch(_){
     setStatus("Paddle Sandbox 초기화에 실패했어. 공개용 테스트 토큰을 확인해 줘.",true);
@@ -118,7 +121,7 @@ btn.addEventListener("click",function(){
   btn.disabled=true;
   try{
     window.Paddle.Checkout.open({
-      items:[{priceId:PRICE_ID,quantity:1}],
+      ...(linkedTransaction?{transactionId:linkedTransaction}:{items:[{priceId:PRICE_ID,quantity:1}]}),
       settings:{displayMode:"overlay",theme:"dark"}
     });
     setStatus("Paddle 테스트 결제창을 열고 있어…",false);
