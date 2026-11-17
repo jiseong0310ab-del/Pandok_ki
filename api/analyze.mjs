@@ -27,9 +27,19 @@ const FREE_SCHEMA = {
     alternative: {type:"STRING",description:"Plausible alternative explanation, not an assumption"},
     nextStep: {type:"STRING",description:"A respectful, non-manipulative practical next step"},
     replyDraft: {type:"STRING",description:"One practical, safe NEXT ACTION: either a short authentic ready-to-edit message from the user, OR an explicit instruction NOT to send another message when the other participant clearly refused or the conversation is already respectfully closed. Output in requested locale. Never invent facts, pressure others, or suggest violating boundaries."},
-    replyWhy: {type:"STRING",description:"One concise reason why this particular reply fits the available conversation and goal, including its limitation"}
+    replyWhy: {type:"STRING",description:"One concise reason why this particular reply fits the available conversation and goal, including its limitation"},
+    evidenceCards: {
+      type:"ARRAY",
+      description:"Return 1-3 evidence cards only when actually visible; otherwise []. Each card includes a short verbatim excerpt, cautious meaning and a distinct alternative, without private identifiers.",
+      items:{type:"OBJECT",properties:{
+        quote:{type:"STRING",description:"EXACT short contiguous excerpt (5-90 chars) in user chat text or visible screenshot. Do not add quotation marks or paraphrase, and exclude names/addresses/contacts."},
+        reading:{type:"STRING",description:"Tentative interpretation of this exact observation (not a certain feeling or intention)."},
+        otherExplanation:{type:"STRING",description:"Other plausible explanation for the exact same observation."},
+        screenshotIndex:{type:"INTEGER",description:"0 for pasted chat text; for screenshots, the 1-based source screenshot number."}
+      },required:["quote","reading","otherExplanation","screenshotIndex"]}
+    }
   },
-  required:["verdict","warmthScore","reciprocityScore","evidenceLevel","keySignal","evidence","alternative","nextStep","replyDraft","replyWhy"]
+  required:["verdict","warmthScore","reciprocityScore","evidenceLevel","keySignal","evidence","alternative","nextStep","replyDraft","replyWhy","evidenceCards"]
 };
 const SYSTEM = [
   "You are SAYNUE, a careful intercultural communication pattern analyst, not a mind reader.",
@@ -47,6 +57,9 @@ const SYSTEM = [
   "Do not instruct user to violate anyone's privacy; respect boundaries, consent and safety.",
   "Make the keySignal and evidence specific to ACTUAL observed messages. Mention plausible non-romantic explanations.",
   "Provide at least one verifiable paraphrase or very short quoted nonidentifying phrase in evidence. If the conversation is too short to support a claim, plainly state the limitation.",
+  "For evidenceCards, include up to three DISTINCT actual utterances only if supported; return [] when the source is unclear. Each quote MUST be a short exact contiguous excerpt (no added quotation marks), not a paraphrase or invented text.",
+  "For pasted text cards screenshotIndex=0; for image cards screenshotIndex must be the actual 1-based screenshot containing the words. Never invent content obscured by redactions or cropping. Prefer [] over guessed text.",
+  "Avoid names, phone numbers, addresses, handles, emails, dates, URLs, account numbers and other personal details in every quote. reading and otherExplanation must distinguish observation from speculation.",
   "Interpret the user goal (understand/reply/repair/boundary) as guidance, never as evidence that the other person feels a certain way.",
   "When proposing a reply, respect the requested voice: natural=neutral authentic and simple; warm=gently empathetic without intimacy assumptions; direct=clear and concise without harshness; light=casually friendly without jokes at someone else’s expense.",
   "The reply tone is a STYLE preference, not proof of any feeling. Do not force flirting, playfulness, reconciliation or additional contact when the conversation indicates no reply is appropriate.",
@@ -63,14 +76,44 @@ function json(data,status=200,extra={}) {
 function error(status,code) { return json({error:"Analysis unavailable",code},status); }
 function asText(v,max) { return typeof v==="string"?v.slice(0,max).trim():""; }
 function inRange(v){return Number.isInteger(v)&&v>=0&&v<=100}
-function textResult(parsed){
+function safeEvidenceCards(value,input){
+  if(!Array.isArray(value))return [];
+  const result=[],seen=new Set();
+  const imageCount=input.images.length;
+  for(const item of value.slice(0,6)){
+    if(result.length>=3)break;
+    if(!item||typeof item!=="object"||Array.isArray(item))continue;
+    const quote=asText(item.quote,100),reading=asText(item.reading,250),otherExplanation=asText(item.otherExplanation,250);
+    const index=item.screenshotIndex;
+    if(quote.length<5||quote.length>90||/[\r\n\t<>]/.test(quote))continue;
+    // Refuse unsafe excerpt formats rather than echo identifiers in the report.
+    if(/(?:https?:\/\/|www\.|@|\b\d[\d ().+-]{6,}\d\b)/i.test(quote))continue;
+    if(reading.length<8||otherExplanation.length<8)continue;
+    let sourceType;
+    if(imageCount){
+      // OCR excerpts in screenshots cannot be verified against pixels on the server.
+      if(!Number.isInteger(index)||index<1||index>imageCount)continue;
+      sourceType="image";
+    }else{
+      // No invented quotations are shown for pasted text.
+      if(index!==0||!input.chat.includes(quote))continue;
+      sourceType="text";
+    }
+    const key=sourceType+":"+index+":"+quote;
+    if(seen.has(key))continue;
+    seen.add(key);
+    result.push({quote,reading,otherExplanation,sourceType,screenshotIndex:index});
+  }
+  return result;
+}
+function textResult(parsed,input){
   if(!parsed||typeof parsed!=="object"||!inRange(parsed.warmthScore)||!inRange(parsed.reciprocityScore)||!["low","medium","high"].includes(parsed.evidenceLevel))return null;
   // The report is useful even when a respectful "do not reply" answer leads
   // Gemini to leave an optional draft blank. Never fabricate a draft.
   const names=["verdict","keySignal","evidence","alternative","nextStep"];
   if(names.some(k=>typeof parsed[k]!=="string"||parsed[k].trim().length<3))return null;
   const draft=asText(parsed.replyDraft,480);
-  return {verdict:asText(parsed.verdict,220),warmthScore:parsed.warmthScore,reciprocityScore:parsed.reciprocityScore,evidenceLevel:parsed.evidenceLevel,keySignal:asText(parsed.keySignal,850),evidence:asText(parsed.evidence,950),alternative:asText(parsed.alternative,700),nextStep:asText(parsed.nextStep,750),replyDraft:draft.length>=3?draft:"",replyWhy:draft.length>=3?asText(parsed.replyWhy,520):""};
+  return {verdict:asText(parsed.verdict,220),warmthScore:parsed.warmthScore,reciprocityScore:parsed.reciprocityScore,evidenceLevel:parsed.evidenceLevel,keySignal:asText(parsed.keySignal,850),evidence:asText(parsed.evidence,950),alternative:asText(parsed.alternative,700),nextStep:asText(parsed.nextStep,750),replyDraft:draft.length>=3?draft:"",replyWhy:draft.length>=3?asText(parsed.replyWhy,520):"",evidenceCards:safeEvidenceCards(parsed.evidenceCards,input)};
 }
 function clientHash(request){
   const ip=request.headers.get("x-vercel-forwarded-for")||request.headers.get("x-forwarded-for")||"unknown";
@@ -179,7 +222,7 @@ export default {
     const payload=JSON.stringify({
       systemInstruction:{parts:[{text:SYSTEM}]},
       contents:[{role:"user",parts}],
-      generationConfig:{temperature:0.45,responseMimeType:"application/json",responseSchema:FREE_SCHEMA,maxOutputTokens:2100}
+      generationConfig:{temperature:0.4,responseMimeType:"application/json",responseSchema:FREE_SCHEMA,maxOutputTokens:2900}
     });
 
     // Google documents 503 as transient server overload (not a quota failure).
@@ -207,7 +250,7 @@ export default {
             let parsed;
             try{parsed=JSON.parse(answer)}catch(_){reason="INVALID_JSON"}
             if(parsed){
-              result=textResult(parsed);
+              result=textResult(parsed,input);
               if(!result){
                 const fields=["verdict","warmthScore","reciprocityScore","evidenceLevel","keySignal","evidence","alternative","nextStep","replyDraft","replyWhy"];
                 const bad=fields.filter(k=>!(k in parsed)||(typeof parsed[k]==="string"&&parsed[k].trim().length<3));
