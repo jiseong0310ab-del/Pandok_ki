@@ -87,6 +87,11 @@
 <div class="metric"><span data-i="balanceLabel">대화 상호성</span><strong id="balance">--</strong><small data-i="balanceHelp">서로 주고받는 정도</small></div>
 <div class="metric"><span data-i="confidenceLabel">분석 근거량</span><strong id="confidence">--</strong><small data-i="confidenceHelp">제공된 대화 기준</small></div></div>
 <div class="callout"><h3 data-i="signalLabel">🔎 가장 중요한 대화 신호</h3><p id="signal"></p></div>
+<section class="evidence-cards-panel hidden" id="evidenceCardsPanel" aria-labelledby="evidenceCardsTitle">
+ <div class="evidence-cards-heading"><h3 id="evidenceCardsTitle" data-i="evidenceCardsTitle">대화 속 근거를 하나씩 살펴보기</h3><span id="evidenceCardsCount" class="evidence-cards-count"></span></div>
+ <p class="evidence-cards-intro" data-i="evidenceCardsIntro">실제 표현과 가능한 의미, 다른 설명을 구분했어요.</p>
+ <div id="evidenceCardsList" class="evidence-cards-list"></div>
+</section>
 <div class="evidence"><b data-i="evidenceLabel">💬 대화 속 구체적 근거</b><p id="evidence"></p></div>
 <div class="evidence"><b data-i="alternateLabel">🔁 다른 가능성</b><p id="alternative"></p></div>
 <div class="evidence"><b data-i="nextLabel">✨ 지금 권장하는 다음 행동</b><p id="nextStep"></p></div>
