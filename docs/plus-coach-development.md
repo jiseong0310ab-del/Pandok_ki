@@ -16,7 +16,7 @@ For each option the generated result contains `draft`, `why`, `tradeoff`, and `b
 2. `plans.html` + `assets/plus-preview.js`: a **fully static fictional example**, available in all five languages. On iPhone users can tap the three approaches and four responses to compare trade-offs. No chat uploads, Gemini calls, cookies, Paddle sessions, client tokens or active checkout.
 3. `tests/plus-coach.test.mjs`: unit tests for schema, no-contact behavior, input validation, image ordering, private-key isolation, missing key, and malformed AI outputs.
 4. `tests/monetization.test.mjs`: verifies the planned Plus page and static preview never create checkout, client-side entitlement or AI requests.
-5. Synthetic live Gemini test: a fictional Korean friend scheduling scenario returned **three strategies (gentle, clear, low_pressure), four branches (engaged, uncertain, no_reply, refusal)** with trade-offs, HTTP 200. Temporary test API was deleted after verification. Not a real-user privacy or safety evaluation.
+5. Synthetic live Gemini test: a fictional Korean friend scheduling scenario returned **three strategies (gentle, clear, low_pressure), four branches (engaged, uncertain, no_reply, refusal)** with trade-offs, HTTP 200. Temporary test API was deleted after verification. A separate synthetic Korean explicit no-contact scenario also returned **shouldReply=false, 0 drafts, 0 reaction branches**, HTTP 200. Its temporary API was removed. These spot checks do not guarantee the model will always interpret boundaries correctly.
 
 ## Why it is not public yet
 The internal generator is **not a Vercel API route**. It is not called from the public frontend. Calling code must eventually implement and verify, server-side:
