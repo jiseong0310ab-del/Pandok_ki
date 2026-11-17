@@ -18,4 +18,6 @@ jobs:
       - run: node --check tests/quality.test.mjs
       - run: node --check tests/feedback.test.mjs
       - run: node --check tests/monetization.test.mjs
-      - run: node --test tests/smoke.mjs tests/quality.test.mjs tests/feedback.test.mjs tests/monetization.test.mjs
+      - run: node --check assets/screenshot-editor.js
+      - run: node --check tests/screenshot-editor.test.mjs
+      - run: node --test tests/smoke.mjs tests/quality.test.mjs tests/feedback.test.mjs tests/monetization.test.mjs tests/screenshot-editor.test.mjs
