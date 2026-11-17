@@ -190,6 +190,26 @@ test("Account link client removes fragment and sends tokens only to its same-ori
  assert.match(route,/setSessionCookies\(headers,session\)/);
 });
 
+test("Supabase email rate limit and allowlist errors are classified without echoing provider secrets",async()=>{
+ const before={SUPABASE_URL:process.env.SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY:process.env.SUPABASE_PUBLISHABLE_KEY};
+ process.env.SUPABASE_URL="https://sample.supabase.co";
+ process.env.SUPABASE_PUBLISHABLE_KEY="sb_publishable_test";
+ const codes=[
+  {http:429,code:"over_email_send_rate_limit",expected:"AUTH_EMAIL_RATE_LIMIT"},
+  {http:403,code:"email_address_not_authorized",expected:"AUTH_EMAIL_NOT_AUTHORIZED"},
+  {http:400,code:"otp_disabled",expected:"AUTH_OTP_DISABLED"},
+  {http:500,code:"unexpected",expected:"UPSTREAM_ERROR_500"}
+ ];
+ try{
+  for(const x of codes){
+   const mock=async()=>new Response(JSON.stringify({code:x.code,message:"PRIVATE_PROVIDER_DETAIL_SHOULD_NOT_LEAK"}),{status:x.http});
+   await assert.rejects(()=>authAPI("/auth/v1/otp",{method:"POST",body:{email:"qa@example.com"},fetchImpl:mock}),e=>e.message===x.expected);
+  }
+ }finally{
+  for(const [k,v] of Object.entries(before)){if(v===undefined)delete process.env[k];else process.env[k]=v}
+ }
+});
+
 test("SQL enforces RLS, atomic webhook event IDs, trusted transaction binding and usage quota",()=>{
  const sql=fs.readFileSync(new URL("../docs/supabase-billing-schema.sql",import.meta.url),"utf8");
  for(const needle of ["ENABLE ROW LEVEL SECURITY","REVOKE ALL ON TABLE","FOR UPDATE","pg_advisory_xact_lock","saynue_checkout_intents","saynue_apply_subscription_event","saynue_claim_plus_credit","last_event_at<excluded.last_event_at","status='active'","period_end>now()","billing_blocked","saynue_apply_adjustment_event"]){
