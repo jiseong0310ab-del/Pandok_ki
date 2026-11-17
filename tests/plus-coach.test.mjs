@@ -31,6 +31,7 @@ test("Plus is an internal module, not a public HTTP route or an entitlement gate
 test("Plus validates locale, goal, input length, tone and masked image limit",()=>{
  assert.equal(validatePlusInput({...input,goal:"unlock"}),null);
  assert.equal(validatePlusInput({...input,locale:"xx"}),null);
+ assert.equal(validatePlusInput({...input,platform:"unknown-messenger"}),null);
  assert.equal(validatePlusInput({...input,chatText:"x"}),null);
  assert.equal(validatePlusInput({...input,replyTone:"intrusive"}),null);
  assert.ok(validatePlusInput(input));
