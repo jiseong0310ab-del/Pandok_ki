@@ -35,4 +35,17 @@ jobs:
       - run: node --check api/plus/checkout.mjs
       - run: node --check assets/account.js
       - run: node --check tests/billing-auth.test.mjs
-      - run: node --test tests/smoke.mjs tests/quality.test.mjs tests/feedback.test.mjs tests/monetization.test.mjs tests/screenshot-editor.test.mjs tests/plus-coach.test.mjs tests/billing-auth.test.mjs
+      - name: Free analysis smoke tests
+        run: node --test --test-reporter=spec tests/smoke.mjs
+      - name: Free analysis quality tests
+        run: node --test --test-reporter=spec tests/quality.test.mjs
+      - name: Feedback tests
+        run: node --test --test-reporter=spec tests/feedback.test.mjs
+      - name: Monetization safety tests
+        run: node --test --test-reporter=spec tests/monetization.test.mjs
+      - name: Screenshot editor tests
+        run: node --test --test-reporter=spec tests/screenshot-editor.test.mjs
+      - name: Plus coaching tests
+        run: node --test --test-reporter=spec tests/plus-coach.test.mjs
+      - name: Billing authentication and webhook tests
+        run: node --test --test-reporter=spec tests/billing-auth.test.mjs
