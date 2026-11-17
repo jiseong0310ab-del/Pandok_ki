@@ -286,3 +286,23 @@ textarea::placeholder{color:#9299ae}
  .shot-tools button{padding:8px;font-size:10px}
  .shot-editor{padding:11px}
 }
+
+/* Evidence is shown as an observation, a tentative reading, and an alternative. */
+.evidence-cards-panel{margin:23px 0 7px}
+.evidence-cards-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.evidence-cards-heading h3{font-size:15px;font-weight:760;letter-spacing:-.2px;color:#eadcff;margin:0}
+.evidence-cards-count{font-size:11px;white-space:nowrap;color:#c4b2e8;border:1px solid #675c7e;border-radius:99px;padding:4px 9px}
+.evidence-cards-intro{font-size:11px;line-height:1.8;color:#aeb4ca;margin:9px 0 15px}
+.evidence-cards-list{display:grid;gap:12px}
+.evidence-card{border:1px solid #49445d;border-radius:16px;background:linear-gradient(142deg,#222235,#151b2c);padding:17px;overflow:hidden}
+.evidence-card-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 13px}
+.evidence-card-nr{font:italic 500 23px/1 Georgia,serif;color:#c6b4f1}
+.evidence-card-source{font-size:10px;font-weight:750;color:#c7b7e7;letter-spacing:.2px}
+.evidence-card-quote{font-size:14px;line-height:1.85;font-weight:600;color:#f2ecff;margin:0;padding:9px 0 9px 14px;border-left:2px solid #b5a2e8;overflow-wrap:anywhere;white-space:pre-wrap}
+.evidence-card-reading,.evidence-card-other{margin-top:15px}
+.evidence-card-other{padding-top:12px;border-top:1px solid #3f4054}
+.evidence-card-label{font-size:11px;color:#cebfed;font-weight:770}
+.evidence-card-body{font-size:12px;line-height:1.8;color:#d2d0df;margin:5px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.evidence-card-other .evidence-card-body{color:#afb6ce}
+.evidence-card-disclosure{font-size:10px;line-height:1.7;color:#b8b7cf;margin:14px 0 0;border-top:1px dashed #45465d;padding-top:10px}
+@media(max-width:390px){.evidence-card{padding:14px}.evidence-cards-heading h3{font-size:14px}}
