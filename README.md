@@ -94,3 +94,13 @@ GitHub Actions가 main의 모든 푸시와 PR에 Node.js 22 환경으로 smoke t
 - 사이트 심사·판매자 실명·법적 이용약관/개인정보처리방침/환불·해지 조건·계정 심사·비밀키·웹훅·DB가 완료되기 전까지 실제 고객에게 과금하지 않는다.
 - `tests/monetization.test.mjs`: 5개 언어 정보성 페이지 및 결제 기능이 비활성 상태인지 테스트.
 - 개인 판매자 Paddle/Stripe 일본 자격, AdSense, 개발 로드맵: [docs/individual-monetization-onboarding.md](docs/individual-monetization-onboarding.md).
+
+## 10. Paddle Sandbox 결제 테스트 (2026-11-17)
+
+- 사용자 본인이 Paddle Sandbox에 생성한 SAYNUE Plus의 월 구독 Price ID와 공개용 client-side token을 단독 테스트 페이지에 연결.
+- 개발용 테스트 페이지: https://saynue.vercel.app/sandbox-checkout.html (noindex, 일반 사용자 탐색/요금제 화면에서 링크하지 않음).
+- 공식 Paddle.js v2를 불러와 **Paddle.Environment.set("sandbox") 고정** 후 브라우저 클릭으로 테스트용 오버레이 결제를 실행. 테스트 카드 4242 4242 4242 4242 / 미래 유효기간 / CVV 100 사용.
+- Sandbox 가격은 Paddle 화면에서 직접 확인. 해당 가격의 실제 주기·통화·수량 설정은 서버 API로 검증하지 않았으므로 테스트 결제창 표시를 확인할 것.
+- 결제 완료 UI 이벤트는 **메시지만 표시**하고 Plus 권한을 절대로 활성화하지 않음. 로그인, 웹훅 서명 검증, DB, 이력 처리, 구독/취소 기능이 아직 없음.
+- 실결제·광고·유료 기능 공개는 모두 기존대로 비활성화. 테스트만 진행하고, 실판매 전 Paddle 심사·체류자격/법률 문제를 확인.
+- 구현 및 수동 검증 안내: [docs/paddle-sandbox.md](docs/paddle-sandbox.md).
