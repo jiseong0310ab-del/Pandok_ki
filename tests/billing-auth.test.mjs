@@ -4,7 +4,7 @@ import fs from "node:fs";
 import {createHmac} from "node:crypto";
 import {verifyPaddleSignature,parsePaddleSubscriptionEvent,parsePaddleAdjustmentEvent,activeSubscription} from "../lib/paddle-billing.mjs";
 import {validEmail,validOTP,checkSameOrigin,setSessionCookies,clearSessionCookies} from "../lib/saynue-auth.mjs";
-import {supabaseAuthConfig,supabaseConfig} from "../lib/saynue-storage.mjs";
+import {supabaseAuthConfig,supabaseConfig,authAPI,listUserSubscriptions} from "../lib/saynue-storage.mjs";
 
 const pad=(prefix,chr)=>prefix+"_"+chr.repeat(26);
 const base={
@@ -91,7 +91,40 @@ test("Supabase storage cannot initialize without service credentials and safe HT
  assert.equal(supabaseConfig({SUPABASE_URL:"https://abc.supabase.co/",SUPABASE_ANON_KEY:"pub"}),null);
  assert.equal(supabaseConfig({SUPABASE_URL:"https://abc.supabase.co/",SUPABASE_ANON_KEY:"same",SUPABASE_SERVICE_ROLE_KEY:"same"}),null);
  assert.equal(supabaseAuthConfig({SUPABASE_URL:"https://abc.supabase.co/",SUPABASE_ANON_KEY:"public"}).url,"https://abc.supabase.co");
+ assert.equal(supabaseAuthConfig({SUPABASE_URL:"https://abc.supabase.co/",SUPABASE_PUBLISHABLE_KEY:"sb_publishable_test"}).anon,"sb_publishable_test");
+ assert.equal(supabaseConfig({SUPABASE_URL:"https://abc.supabase.co/",SUPABASE_PUBLISHABLE_KEY:"sb_publishable_test",SUPABASE_SECRET_KEY:"sb_secret_test"}).service,"sb_secret_test");
 });
+test("new Supabase API keys use apikey only; signed-in user JWT stays a bearer token",async()=>{
+ const old={
+  SUPABASE_URL:process.env.SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY:process.env.SUPABASE_PUBLISHABLE_KEY,
+  SUPABASE_SECRET_KEY:process.env.SUPABASE_SECRET_KEY
+ };
+ process.env.SUPABASE_URL="https://sample.supabase.co";
+ process.env.SUPABASE_PUBLISHABLE_KEY="sb_publishable_testing";
+ process.env.SUPABASE_SECRET_KEY="sb_secret_testing";
+ const headers=[];
+ const mock=async (_url,opt)=>{
+   headers.push(opt.headers);
+   return new Response(JSON.stringify(opt.method==="GET"?[]:{}),{status:200});
+ };
+ try{
+   await authAPI("/auth/v1/otp",{method:"POST",body:{email:"qa@example.com"},fetchImpl:mock});
+   assert.equal(headers[0].apikey,"sb_publishable_testing");
+   assert.equal(headers[0].Authorization,undefined);
+   await authAPI("/auth/v1/user",{accessToken:"eyJ.user.jwt",fetchImpl:mock});
+   assert.equal(headers[1].Authorization,"Bearer eyJ.user.jwt");
+   await listUserSubscriptions("11111111-1111-4111-8111-111111111111",mock);
+   assert.equal(headers[2].apikey,"sb_secret_testing");
+   assert.equal(headers[2].Authorization,undefined);
+ }finally{
+   for(const [k,v] of Object.entries(old)){
+     if(v===undefined)delete process.env[k];
+     else process.env[k]=v;
+   }
+ }
+});
+
 test("SQL enforces RLS, atomic webhook event IDs, trusted transaction binding and usage quota",()=>{
  const sql=fs.readFileSync(new URL("../docs/supabase-billing-schema.sql",import.meta.url),"utf8");
  for(const needle of ["ENABLE ROW LEVEL SECURITY","REVOKE ALL ON TABLE","FOR UPDATE","pg_advisory_xact_lock","saynue_checkout_intents","saynue_apply_subscription_event","saynue_claim_plus_credit","last_event_at<excluded.last_event_at","status='active'","period_end>now()","billing_blocked","saynue_apply_adjustment_event"]){
