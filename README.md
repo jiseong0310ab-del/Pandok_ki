@@ -152,3 +152,14 @@ GitHub Actions가 main의 모든 푸시와 PR에 Node.js 22 환경으로 smoke t
 - **중요:** **현 시점 Vercel 프로젝트에는 GEMINI_API_KEY 외에 Supabase/Paddle 서버 비밀키가 없음**. SQL도 Supabase에서 아직 실행되지 않았음. 따라서 회원 등록·웹훅 기록·Plus 권한 활성화를 실제로 완료했다고 볼 수 없음. 실결제는 여전히 꺼져 있음.
 - **설치 순서, iPhone 운영자 단계, 필수 비밀키와 테스트:** [docs/account-billing-setup.md](docs/account-billing-setup.md), [docs/supabase-billing-schema.sql](docs/supabase-billing-schema.sql).
 - CI에 [tests/billing-auth.test.mjs](tests/billing-auth.test.mjs)를 추가해 HMAC, 이벤트 상태, DB/쿠키 안전성 및 기본 비활성 조건 확인. 실제 Supabase/Paddle 종단 간 통합 테스트는 비밀키와 DB 연결 후 별도 필요.
+
+
+## 16. 페르소나 선택형 AI 전문가 시스템 (2026-11-17)
+
+- **완료:** 첫 화면에서 일반 분석 / 커플 싸움 재판소 / 직장 답장 전문가 / 썸·연애 분석가 / 관계 갈등 중재관 **5종 중 선택**. 페르소나별 상황 설명(선택, 500자), 전용 예시 대화, 추천 관계·분석 목표, 전문 결과 카드 제공. 한국어·일본어·영어·중국어 간체·번체 UI 지원.
+- **실제 별도 분석:** [lib/persona-analysis.mjs](lib/persona-analysis.mjs)의 페르소나별 판단 기준과 Gemini 구조화 출력. 단순 말투 전환이 아니라 각 모드에서 **서로 다른 3개 분석 항목**, 행동 추천, 적절할 때 복사 가능한 답장을 제시. 커플 재판소는 법적 판결·잘못 비율을 만들지 않고 증거와 양쪽 관점·중재안을 분리함.
+- **기존 무료 분석 호환:** [api/analyze.mjs](api/analyze.mjs)에서 persona 미지정 시 기존 `standard` 분석을 유지. 기존 분석 점수·근거 카드·스크린샷 1~3장·차단 편집·모델 백오프/요청 제한 유지. 페르소나 인용은 원문과 일치 여부를 서버에서 검사하고, 사진 인용은 AI 판독임을 표시.
+- **실서비스 인공 데이터 검사:** court(한국어), work(일본어), romance(영어), mediator(한국어) 각각 **HTTP 200·전용 3개 결과·원문 인용 확인** 성공. 임시 검증용 API는 삭제.
+- **테스트:** [tests/personas.test.mjs](tests/personas.test.mjs) 및 GitHub CI의 Persona specialist tests. 직접 아이폰 Safari 터치/카피, 복잡한 실제 사례의 판단 품질은 추가 검수 필요.
+- **Plus 관련:** 새 페르소나는 현재 일반 무료 분석 API를 사용하므로 결제나 회원가입을 요구하지 않음. Paddle Sandbox·Plus 유료 접근 제어는 별도이며 실판매는 아직 하지 않음.
+- [기능 설명·검증 기록·다음 단계](docs/persona-system.md)
