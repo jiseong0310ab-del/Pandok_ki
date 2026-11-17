@@ -56,7 +56,7 @@ test("SAYNUE Sandbox checkout can only open a simulated payment and never grant 
   assert.match(script,/Paddle\.Initialize\(/);
   assert.match(script,/Paddle\.Checkout\.open\(/);
   assert.match(script,/eventCallback:onEvent/);
-  assert.match(page,/Plus access is NOT enabled/);
+  assert.match(page,/Plus 기능은 아직 활성화되지 않아/);
   assert.doesNotMatch(page,/live_[a-z0-9]+|PADDLE_API_KEY|PADDLE_WEBHOOK_SECRET|grantPlus|localStorage\.setItem|sessionStorage\.setItem/);
   assert.doesNotMatch(load("index.html")+load("plans.html"),/sandbox-checkout\.html|test_1e2da107b538595bfd8fb2d8923/);
 });
