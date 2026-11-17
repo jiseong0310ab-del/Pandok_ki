@@ -60,3 +60,19 @@ test("SAYNUE Sandbox checkout can only open a simulated payment and never grant 
   assert.doesNotMatch(page,/live_[a-z0-9]+|PADDLE_API_KEY|PADDLE_WEBHOOK_SECRET|grantPlus|localStorage\.setItem|sessionStorage\.setItem/);
   assert.doesNotMatch(load("index.html")+load("plans.html"),/sandbox-checkout\.html|test_1e2da107b538595bfd8fb2d8923/);
 });
+
+test("Plus preview is a fictional interactive feature demo with no checkout and no AI request",()=>{
+  const page=load("plans.html");
+  const preview=load("assets/plus-preview.js");
+  assert.doesNotThrow(()=>new vm.Script(preview));
+  assert.match(page,/id="plusPreview"/);
+  assert.match(page,/src="\/assets\/plus-preview\.js"/);
+  assert.match(page,/id="plusDemoChoices"/);
+  assert.match(page,/id="plusDemoReactions"/);
+  assert.match(preview,/gentle/);
+  assert.match(preview,/clear/);
+  assert.match(preview,/low_pressure/);
+  for(const key of ["engaged","uncertain","no_reply","refusal"])assert.match(preview,new RegExp(key+":"));
+  assert.doesNotMatch(page+preview,/\/api\/plus|Paddle\.Checkout|Paddle\.Initialize|pri_01m7k4|test_1e2da|fetch\s*\(|XMLHttpRequest/i);
+  assert.match(preview,/static demonstration|static demonstration/i);
+});
