@@ -15,6 +15,7 @@ jobs:
           node-version: '22'
       - run: node --check lib/persona-analysis.mjs
       - run: node --check tests/personas.test.mjs
+      - run: node --check tests/mobile-focus.test.mjs
       - run: node --check api/analyze.mjs
       - run: node --check api/feedback.mjs
       - run: node --check tests/quality.test.mjs
@@ -40,6 +41,8 @@ jobs:
       - run: node --check tests/billing-auth.test.mjs
       - name: Free analysis smoke tests
         run: node --test --test-reporter=spec tests/smoke.mjs
+      - name: Mobile UX information hierarchy tests
+        run: node --test --test-reporter=spec tests/mobile-focus.test.mjs
       - name: Persona specialist tests
         run: node --test --test-reporter=spec tests/personas.test.mjs
       - name: Free analysis quality tests
