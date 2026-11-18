@@ -587,3 +587,21 @@ textarea::placeholder{color:#9299ae}
  .reply-simulator{padding:17px 15px}
  .simulator-body{gap:10px}
 }
+
+
+/* Personal reply style: inside existing collapsed advanced settings. */
+.voice-preferences{margin-top:14px;border-top:1px solid #48465d;padding-top:13px}
+.voice-label{font-size:12px;color:#e6dafa;font-weight:720;margin:11px 0 8px}
+.voice-preferences .chips{gap:8px;display:flex;flex-wrap:wrap}
+.voice-preferences .chip{flex:1;min-width:115px;min-height:39px;justify-content:center;text-align:center}
+.voice-buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
+.voice-buttons button{min-height:39px;font-size:12px}
+.voice-note{color:#a7aec5;font-size:11px;line-height:1.7;margin:11px 0 0}
+.voice-status{min-height:0;font-size:11px;line-height:1.6;color:#d8c3ef;margin:7px 0 0}
+/* Explicit, independently reversible consent to analytics. Never activated by the Gemini checkbox. */
+.metrics-consent{border-top:1px solid #3f455a;border-bottom:1px solid #3f455a;margin:20px 0 19px;padding:13px 0;font-size:12px;color:#bfc2d3}
+.metrics-consent summary{cursor:pointer;font-weight:680;color:#e6ddfb;padding:3px 0;min-height:30px;display:flex;align-items:center}
+.metrics-consent .check{margin:10px 0 8px;font-size:13px}
+.metrics-consent p{font-size:11px;line-height:1.7;color:#aab0c8;margin:8px 0}
+.metrics-consent #metricsStatus{color:#e0c9f0;min-height:0}
+@media(max-width:620px){.voice-preferences .chip{min-width:95px}.voice-buttons button{flex:1;padding:9px 7px}}

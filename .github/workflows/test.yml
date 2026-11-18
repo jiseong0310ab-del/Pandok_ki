@@ -24,6 +24,10 @@ jobs:
       - run: node --check assets/screenshot-editor.js
       - run: node --check assets/situation-library.js
       - run: node --check api/simulate.mjs
+      - run: node --check api/metrics.mjs
+      - run: node --check assets/usage-metrics.js
+      - run: node --check assets/reply-style.js
+      - run: node --check tests/usage-metrics.test.mjs
       - run: node --check tests/situations-rehearsal.test.mjs
       - run: node --check tests/screenshot-editor.test.mjs
       - run: node --check lib/plus-coach.mjs
@@ -64,3 +68,5 @@ jobs:
         run: node --test --test-reporter=spec tests/followup.test.mjs
       - name: Situation library and reply rehearsal tests
         run: node --test --test-reporter=spec tests/situations-rehearsal.test.mjs
+      - name: Opt-in metrics and style personalization tests
+        run: node --test --test-reporter=spec tests/usage-metrics.test.mjs
