@@ -527,3 +527,149 @@ textarea::placeholder{color:#9299ae}
  .analysis-options summary{padding:11px 10px}
  .analysis-options-summary{font-size:10px}
 }
+
+
+/* Mobile capture-first workflow & locale-aware native typography (2026-11-18).
+ * Uses installed system fonts: no downloads, no layout shift, no extra requests.
+ * 16px editable fields avoid iPhone Safari autofocus zoom.
+ */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html[lang="ko"] body{
+ font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+ font-synthesis:none;
+}
+html[lang="ja"] body{
+ font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;
+ line-break:strict;
+}
+html[lang="en"] body{
+ font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Arial,sans-serif;
+}
+html[lang="zh-CN"] body{
+ font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+}
+html[lang="zh-TW"] body{
+ font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif;
+}
+html[lang="ko"] .hero-title,
+html[lang="ja"] .hero-title,
+html[lang="zh-CN"] .hero-title,
+html[lang="zh-TW"] .hero-title{
+ font-family:inherit;font-style:normal;font-weight:760;letter-spacing:-.025em;
+}
+html[lang="en"] .hero-title{font-style:normal;letter-spacing:-.025em}
+html[lang="ko"] .persona-title,
+html[lang="ko"] .persona-heading,
+html[lang="ko"] .input-head .label,
+html[lang="ko"] .persona-verdict{
+ word-break:keep-all;overflow-wrap:anywhere;
+}
+html[lang="ja"] .persona-title,
+html[lang="ja"] .persona-heading,
+html[lang="zh-CN"] .persona-title,
+html[lang="zh-TW"] .persona-title{
+ word-break:normal;overflow-wrap:anywhere;
+}
+html[lang="en"] .persona-title,
+html[lang="en"] .input-head .label{
+ overflow-wrap:anywhere;hyphens:auto;
+}
+html[lang="ja"] .eyebrow,html[lang^="zh"] .eyebrow{letter-spacing:.045em}
+.input-head .label{font-size:15px;line-height:1.5;font-weight:760;min-width:0}
+.input-method-tabs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px}
+.input-method-tabs .tab{
+ display:flex;align-items:center;justify-content:center;
+ min-width:0;min-height:48px;padding:11px 8px;
+ font-size:14px;line-height:1.45;letter-spacing:-.01em;
+ white-space:normal;word-break:keep-all;overflow-wrap:anywhere;
+}
+.input-method-tabs .tab[aria-selected="true"]{
+ background:#4c4169;color:#fcf9ff;
+ box-shadow:inset 0 0 0 1px #9884c3,0 1px 5px #0509133f;
+}
+.input-method-tabs .tab:focus-visible{outline:2px solid #e0d3ff;outline-offset:2px}
+.sample-row{
+ display:flex;align-items:center;justify-content:space-between;
+ flex-wrap:wrap;gap:6px;margin:7px 0 12px;
+}
+.sample-row span{font-size:12px;line-height:1.65;color:#b3b7cd;min-width:0;flex:1 1 140px}
+.sample-row #sample{font-size:12px;min-height:42px;padding:8px 4px;flex:none}
+#chatText,
+#personaContext{
+ font-size:16px!important;
+ line-height:1.65;
+ letter-spacing:0;
+}
+#chatText{min-height:150px}
+.filebox{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:5px;min-height:144px;padding:19px 13px;
+ border:1.5px dashed #8f83b0;border-radius:15px;
+ background:linear-gradient(160deg,#26223d 0%,#171d2e 100%);
+ color:#f2e9ff;
+}
+.filebox:active{background:#2d2845}
+.filebox strong{
+ max-width:100%;font-size:15px;line-height:1.5;
+ font-weight:790;overflow-wrap:anywhere;
+}
+.filebox span{
+ max-width:100%;font-size:12px;line-height:1.55;
+ color:#c4bed7;overflow-wrap:anywhere;
+}
+.shot-head{margin:12px 0 8px}
+.shot-head strong{font-size:13px}
+.shot-head span,.shot-privacy{font-size:12px;line-height:1.7}
+.shot-editor-heading,.shot-editor-heading strong{font-size:13px}
+.shot-editor-hint{font-size:13px;line-height:1.7}
+.shot-tools button{min-height:44px;font-size:12px;line-height:1.4}
+.shot-confirm{min-height:48px;font-size:14px}
+.shot-status{font-size:12px;line-height:1.7}
+.shot-privacy{padding-top:10px}
+.analyzer .check{font-size:12px;line-height:1.72}
+.analyzer .notice{font-size:12px;line-height:1.7}
+.analyzer .error{font-size:13px;line-height:1.7}
+.analyzer .mask-note{font-size:12px;line-height:1.65}
+.analyzer .mask-btn{min-height:44px;font-size:12px}
+.analyzer .goal-intro{font-size:12px}
+.analyzer .analysis-options summary,.analyzer .persona-context summary{font-size:13px}
+.analyzer .analysis-options-summary{font-size:12px}
+.analyzer .analysis-options-body .label{font-size:14px}
+.analyzer .analysis-options-body .chip{min-height:42px;font-size:13px}
+.analyzer .tone-sub,.analyzer .persona-context-hint,.analyzer .persona-context-caution{font-size:12px;line-height:1.7}
+.analyzer .persona-options .persona-option{min-height:48px}
+.analyzer .persona-options .persona-title{font-size:13px;line-height:1.5;letter-spacing:0}
+.persona-report-section h3{font-size:14px}
+.persona-report-section p{font-size:13px;line-height:1.8}
+.persona-next p{font-size:14px;line-height:1.75}
+.persona-reply #personaDraft{font-size:14px;line-height:1.7}
+.persona-report-warning,.persona-micro{font-size:12px;line-height:1.7}
+.persona-result .persona-verdict{line-height:1.48}
+
+@media(max-width:620px){
+ .analyzer .input-head{margin:0 0 3px}
+ .analyzer .input-head .label{font-size:15px;line-height:1.5}
+ .analyzer .input-method-tabs{margin:9px 0 11px;padding:4px;border-radius:13px}
+ .analyzer .input-method-tabs .tab{min-height:47px;font-size:14px;line-height:1.4}
+ .analyzer #chatText{min-height:133px;font-size:16px}
+ .analyzer #imageBox .filebox{min-height:136px;padding:18px 12px}
+ .analyzer #imageBox .filebox strong{font-size:15px}
+ .analyzer #imageBox .filebox span{font-size:12px}
+ .analyzer .persona-options .persona-title{font-size:13px}
+ .analyzer .check{font-size:12px;line-height:1.7}
+ .analyzer>.notice{font-size:11px;line-height:1.65}
+ .analyzer .analysis-options-summary{font-size:11px}
+ .analyzer .primary{font-size:15px;min-height:52px}
+ .persona-heading{font-size:19px}
+ .hero-title{font-size:clamp(29px,7.5vw,40px);line-height:1.18}
+ .hero .sub{font-size:13px;line-height:1.65}
+ #results .persona-verdict,#results .verdict{font-size:23px;line-height:1.45}
+ #results .persona-next p,#results .reply-text{font-size:14px;line-height:1.75}
+}
+@media(max-width:370px){
+ .analyzer .input-method-tabs .tab{font-size:13px;padding-inline:4px}
+ .analyzer .persona-options .persona-title{font-size:12.5px}
+ .analyzer .analysis-options-summary{font-size:10.5px}
+ .shot-head span{font-size:11px}
+ .shot-tools button{font-size:12px;padding:9px 8px}
+}
