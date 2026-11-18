@@ -223,6 +223,7 @@ function create({t,onError}){
     isBusy(){return busy||drawing},
     isReady(){return shots.length>0&&!busy&&!drawing&&shots.every(s=>s.reviewed&&typeof s.safeData==="string"&&s.safeData.length<=MAX_BASE64)},
     getImages(){return this.isReady()?shots.map(s=>({mimeType:"image/jpeg",base64:s.safeData})):[]},
+    clear(){if(busy||drawing)return false;shots.splice(0);active=-1;fileInput.value="";notify("");rerender();return true},
     refresh(){rerender()}
   };
 }

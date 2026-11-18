@@ -57,3 +57,5 @@ jobs:
         run: node --test --test-reporter=spec tests/plus-coach.test.mjs
       - name: Billing authentication and webhook tests
         run: node --test --test-reporter=spec tests/billing-auth.test.mjs
+      - name: Follow-up context and privacy tests
+        run: node --test --test-reporter=spec tests/followup.test.mjs

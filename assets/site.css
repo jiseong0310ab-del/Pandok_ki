@@ -527,3 +527,26 @@ textarea::placeholder{color:#9299ae}
  .analysis-options summary{padding:11px 10px}
  .analysis-options-summary{font-size:10px}
 }
+
+/* Follow-up coaching: revealed only after results or an explicit saved session. */
+.saved-context{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#1c2334;border:1px solid #454760;border-radius:14px;padding:14px 17px;margin:0 0 16px}
+.saved-context p,.followup-composer p,.followup-actions p{font-size:13px;color:#aeb4c9;line-height:1.55;margin:6px 0 0}
+.saved-context-controls{display:flex;gap:7px;flex-shrink:0}
+.saved-context-controls button{min-height:40px}
+.followup-composer{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#24243a;border:1px solid #70618d;border-radius:12px;padding:14px;margin:15px 0}
+.followup-composer strong{color:#f3eaff;font-size:15px}
+.followup-composer button{flex-shrink:0}
+.followup-actions{margin-top:12px}
+.followup-actions h3{font-size:18px;margin:0 0 5px}
+.followup-actions>.primary{margin-top:15px;width:100%;min-height:47px}
+.followup-save-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:13px}
+.followup-save-row button{font-size:13px}
+.followup-save-row span{font-size:12px;color:#c3b3eb}
+.followup-actions .followup-disclaimer{font-size:11px;line-height:1.6}
+@media(max-width:620px){
+ .saved-context,.followup-composer{align-items:stretch;flex-direction:column;gap:10px}
+ .saved-context-controls{width:100%}
+ .saved-context-controls button{flex:1}
+ .followup-composer button{align-self:flex-start}
+ .followup-actions{padding:17px 15px}
+}
