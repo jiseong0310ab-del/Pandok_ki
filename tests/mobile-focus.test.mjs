@@ -77,3 +77,96 @@ test("all five locales have translations for progressive disclosure controls",()
  }
  new Function(script);
 });
+
+
+test("capture-first tabs place screenshots on the left and select the image panel by default",()=>{
+ const form=slice('<section class="card analyzer"','</section>\n<div class="trust-row"');
+ const head=form.indexOf('id="inputTabs"'),left=form.indexOf('id="imageTab"'),right=form.indexOf('id="textTab"');
+ assert.ok(head>0&&head<left&&left<right);
+ const imageTag=form.match(/<button[^>]*id="imageTab"[^>]*>/)?.[0]||"";
+ const textTag=form.match(/<button[^>]*id="textTab"[^>]*>/)?.[0]||"";
+ assert.match(imageTag,/aria-selected="true"/);
+ assert.match(imageTag,/aria-controls="imageBox"/);
+ assert.match(imageTag,/tabindex="0"/);
+ assert.match(textTag,/aria-selected="false"/);
+ assert.match(textTag,/aria-controls="textBox"/);
+ assert.match(textTag,/tabindex="-1"/);
+ assert.match(form,/<div id="imageBox" role="tabpanel" aria-labelledby="imageTab">/);
+ assert.match(form,/<div id="textBox" class="hidden" role="tabpanel" aria-labelledby="textTab">/);
+ assert.match(form,/<div class="sample-row">/);
+ assert.ok(form.indexOf('id="sample"')>form.indexOf('id="textBox"'));
+ assert.match(script,/mode="image",lastResult=null/);
+ assert.match(script,/updatePersonaUI\(\);switchMode\("image"\)/);
+ assert.match(script,/"ArrowLeft","ArrowRight","Home","End"/);
+});
+
+test("live tab switching correctly shows and labels only the active input panel",()=>{
+ const start=script.indexOf("function switchMode(m){");
+ const end=script.indexOf('$("textTab").addEventListener',start);
+ assert.ok(start>=0&&end>start);
+ const subset=script.slice(start,end);
+ const elements={};
+ const el=id=>{
+  if(!elements[id]){
+   const classes=new Set();
+   elements[id]={
+    attributes:{},dataset:{},tabIndex:0,textContent:"",
+    setAttribute(name,value){this.attributes[name]=value;},
+    classList:{
+     contains(name){return classes.has(name);},
+     toggle(name,enabled){if(enabled)classes.add(name);else classes.delete(name);}
+    }
+   };
+  }
+  return elements[id];
+ };
+ let dismissed=0;
+ const driver=new Function("$","tx","hideError","mode",
+  subset+"\nreturn {switchMode,getMode:()=>mode};")(el,key=>key,()=>dismissed++,"image");
+ driver.switchMode("image");
+ assert.equal(driver.getMode(),"image");
+ assert.equal(el("imageTab").attributes["aria-selected"],"true");
+ assert.equal(el("textTab").attributes["aria-selected"],"false");
+ assert.equal(el("textBox").classList.contains("hidden"),true);
+ assert.equal(el("imageBox").classList.contains("hidden"),false);
+ assert.equal(el("inputModeLabel").dataset.i,"inputImageLabel");
+ driver.switchMode("text");
+ assert.equal(driver.getMode(),"text");
+ assert.equal(el("imageTab").tabIndex,-1);
+ assert.equal(el("textTab").tabIndex,0);
+ assert.equal(el("textBox").classList.contains("hidden"),false);
+ assert.equal(el("imageBox").classList.contains("hidden"),true);
+ assert.equal(el("inputModeLabel").dataset.i,"inputTextLabel");
+ assert.equal(dismissed,2);
+});
+
+test("five language-specific font stacks and readable mobile touch targets are present",()=>{
+ const expectedFonts={
+  ko:"Apple SD Gothic Neo",ja:"Hiragino Sans",
+  "zh-CN":"PingFang SC","zh-TW":"PingFang TC",en:"SF Pro Text"
+ };
+ for(const [lang,font] of Object.entries(expectedFonts)){
+  assert.match(css,new RegExp('html\\[lang="'+lang+'"\\] body\\{'));
+  assert.ok(css.includes(font),lang+" missing native font");
+ }
+ assert.match(css,/#chatText,\s*#personaContext\{[\s\S]*?font-size:16px!important/);
+ assert.match(css,/\.input-method-tabs \.tab\{[\s\S]*?min-height:48px/);
+ assert.match(css,/\.shot-tools button\{min-height:44px/);
+ assert.match(css,/\.shot-confirm\{min-height:48px/);
+ assert.match(css,/html\[lang="ja"\] body\{[\s\S]*?line-break:strict/);
+ assert.doesNotMatch(css,/@import\s+url\(/);
+});
+
+test("screenshot-first and text-tab instructions are localized for all supported languages",()=>{
+ const begin=script.indexOf("const T=")+8,end=script.indexOf("const API_ERRORS",begin);
+ const dict=new Function("return ("+script.slice(begin,end).trim().replace(/;\s*$/,"")+")")();
+ for(const lang of ["ko","ja","en","zh-CN","zh-TW"]){
+  for(const key of ["inputMethodLabel","inputImageLabel","inputTextLabel","textInputHint","imageTab","textTab","uploadLabel","uploadHint"]){
+   assert.ok(typeof dict[lang][key]==="string"&&dict[lang][key].length>3,lang+"."+key);
+  }
+  assert.notEqual(dict[lang].imageTab,dict[lang].textTab);
+  assert.notEqual(dict[lang].inputImageLabel,dict[lang].inputTextLabel);
+ }
+ assert.match(script,/\$\("inputTabs"\)\.setAttribute\("aria-label",tx\("inputMethodLabel"\)\)/);
+ assert.match(script,/\$\("inputModeLabel"\)\.dataset\.i=m==="image"\?"inputImageLabel":"inputTextLabel"/);
+});
