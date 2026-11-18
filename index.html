@@ -253,7 +253,6 @@ $("locale").addEventListener("change",e=>{setLocale(e.target.value);if(e.target.
 function hideError(){$("error").classList.add("hidden");$("error").textContent=""}
 function showError(message){$("error").textContent=message;$("error").classList.remove("hidden");$("formCard").scrollIntoView({behavior:"smooth",block:"start"})}
 const shots=window.SaynueScreenshotEditor({t:tx,onError:()=>showError(tx("errImage"))});
-savedSession=loadSavedSession();updateSavedBar();
 
 const SESSION_KEY="saynue:context:v1",SESSION_TTL=30*24*60*60*1000;
 function buildSession(data,previous){
@@ -407,6 +406,7 @@ $("copyReply").addEventListener("click",async()=>{
 });
 $("share").addEventListener("click",async()=>{if(!lastResult)return;const text=tx("shareTitle")+"\n"+tx("shareScore")+": "+clamp(lastResult.warmthScore)+"/100\n"+safeText(lastResult.verdict,160)+"\n"+tx("sharePrompt");try{if(navigator.share){await navigator.share({title:tx("shareTitle"),text:text,url:location.origin+location.pathname})}else{await navigator.clipboard.writeText(text+"\n"+location.origin+location.pathname);alert(tx("copied"))}}catch(err){if(err.name!=="AbortError")alert(tx("errOther"))}});
 $("reset").addEventListener("click",()=>{$("results").classList.add("hidden");$("personaReport").classList.add("hidden");$("shareCard").classList.remove("hidden");$("samplePreview").classList.remove("hidden");$("plusPeek").classList.remove("hidden");lastResult=null;activeSession=null;followUpContext=null;shots.clear();$("chatText").value="";$("charCount").textContent="0 / 12,000";updateFollowUpActions();feedbackSent=false;$("feedbackStatus").textContent="";$("formCard").scrollIntoView({behavior:"smooth",block:"start"})});
+savedSession=loadSavedSession();
 updateFollowUpActions();
 setLocale(langFromBrowser());choosePlatform(locale==="ko"?"kakao":locale==="ja"?"line":locale.startsWith("zh")?"wechat":"whatsapp");chooseRelation("talking");chooseGoal("understand");chooseReplyTone("natural");updatePersonaUI();
 })();
