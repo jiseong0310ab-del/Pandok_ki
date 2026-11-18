@@ -58,10 +58,10 @@
 </div></details>
  </div>
 </details>
-<div class="eyebrow" data-i="step3">STEP 02 · 대화 입력</div><div class="input-head"><label class="label" for="chatText" style="margin:0" data-i="inputLabel">대화를 붙여넣거나 캡처를 올려주세요</label><button id="sample" class="secondary" type="button" data-i="sample">예시 넣기</button></div>
-<div class="tabs" role="tablist"><button class="tab" id="textTab" type="button" role="tab" aria-selected="true" data-i="textTab">텍스트</button><button class="tab" id="imageTab" type="button" role="tab" aria-selected="false" data-i="imageTab">스크린샷</button></div>
-<div id="textBox"><textarea id="chatText" maxlength="12000" data-placeholder="placeholder" placeholder="나: 이번 주에 시간 있어?&#10;상대: 이번 주는 좀 바빠 ㅠㅠ&#10;나: 그럼 다음 주는?&#10;상대: 다음 주 되면 다시 말해줄게!" aria-label="Conversation text"></textarea><div class="small" id="charCount" style="text-align:right">0 / 12,000</div><div class="mask-row"><button class="mask-btn" id="maskText" type="button" data-i="maskButton">연락처·이메일·링크 빠르게 가리기</button><span class="mask-note" id="maskStatus" aria-live="polite"></span></div><div class="mask-note" data-i="maskCaution">이름·사진·기타 개인정보는 직접 확인해 가려주세요. 완전한 익명화는 아닙니다.</div></div>
-<div id="imageBox" class="hidden">
+<div class="eyebrow" data-i="step3">02 · 대화 입력</div><div class="input-head"><div class="label" id="inputModeLabel" data-i="inputImageLabel">대화 스크린샷을 올려주세요</div></div>
+<div class="tabs input-method-tabs" id="inputTabs" role="tablist" aria-label="대화 입력 방법"><button class="tab" id="imageTab" type="button" role="tab" aria-controls="imageBox" aria-selected="true" tabindex="0" data-i="imageTab">스크린샷</button><button class="tab" id="textTab" type="button" role="tab" aria-controls="textBox" aria-selected="false" tabindex="-1" data-i="textTab">텍스트 붙여넣기</button></div>
+<div id="textBox" class="hidden" role="tabpanel" aria-labelledby="textTab"><div class="sample-row"><span data-i="textInputHint">대화를 복사해서 붙여넣으세요.</span><button id="sample" class="secondary" type="button" data-i="sample">예시 넣기</button></div><textarea id="chatText" maxlength="12000" data-placeholder="placeholder" placeholder="나: 이번 주에 시간 있어?&#10;상대: 이번 주는 좀 바빠 ㅠㅠ&#10;나: 그럼 다음 주는?&#10;상대: 다음 주 되면 다시 말해줄게!" aria-label="Conversation text"></textarea><div class="small" id="charCount" style="text-align:right">0 / 12,000</div><div class="mask-row"><button class="mask-btn" id="maskText" type="button" data-i="maskButton">연락처·이메일·링크 빠르게 가리기</button><span class="mask-note" id="maskStatus" aria-live="polite"></span></div><div class="mask-note" data-i="maskCaution">이름·사진·기타 개인정보는 직접 확인해 가려주세요. 완전한 익명화는 아닙니다.</div></div>
+<div id="imageBox" role="tabpanel" aria-labelledby="imageTab">
 <label class="filebox"><strong id="fileLabel" data-i="uploadLabel">스크린샷 추가하기 (최대 3장)</strong><span data-i="uploadHint">선택한 순서대로 분석 · 아이폰에서 개인정보 가리기</span><input id="chatImage" type="file" multiple accept="image/png,image/jpeg,image/webp,image/heic,image/heif,image/*" aria-label="Choose up to 3 conversation screenshots"></label>
 <div class="shot-head"><strong id="shotCount">0 / 3</strong><span data-i="shotOrderHelp">오래된 대화를 먼저 배치해 주세요.</span></div>
 <div id="shotList" class="shot-list" aria-label="Selected screenshot order"></div>
@@ -172,10 +172,10 @@ const API_ERRORS={
   "zh-TW":{NOT_CONFIGURED:"尚未設定 Gemini API 金鑰。",AI_KEY_INVALID:"Gemini API 金鑰無效，請檢查 AI Studio。",AI_PERMISSION:"無 Gemini API 存取權限。",AI_RATE_LIMITED:"已達 Gemini 使用額度，請查看 AI Studio。",RATE_LIMITED:"已達本站每小時使用上限，請稍後再試。",AI_MODEL_UNAVAILABLE:"Gemini 模型目前不可用。",AI_REQUEST_REJECTED:"Gemini 拒絕請求格式，需修正伺服器設定。",AI_INVALID_OUTPUT:"AI 回傳格式有誤，請重試。",AI_TIMEOUT:"Gemini 回應逾時，請重試。",AI_BUSY:"Gemini 伺服器暫時忙碌，請稍後重試。",AI_UNAVAILABLE:"目前無法連線 Gemini。",RATE_LIMIT_UNAVAILABLE:"使用限制服務暫時無法使用。"}
 };
 const $=id=>document.getElementById(id);
-let locale="ko",relation="talking",goal="understand",replyTone="natural",persona="standard",feedbackSent=false,resultGoal="understand",resultLocale="ko",mode="text",lastResult=null;
+let locale="ko",relation="talking",goal="understand",replyTone="natural",persona="standard",feedbackSent=false,resultGoal="understand",resultLocale="ko",mode="image",lastResult=null;
 function langFromBrowser(){const l=(navigator.language||"en").toLowerCase();if(l.startsWith("ko"))return"ko";if(l.startsWith("ja"))return"ja";if(l.startsWith("zh"))return l.includes("tw")||l.includes("hk")||l.includes("mo")?"zh-TW":"zh-CN";return"en"}
 function tx(k){return (T[locale]||T.en)[k]||T.en[k]||k}
-function setLocale(l){locale=T[l]?l:"en";$("locale").value=locale;document.documentElement.lang=locale;document.title="SAYNUE · Read Between the Lines";document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=tx(el.dataset.i)});$("chatText").placeholder=tx("placeholder");updatePersonaUI();updateSettingsSummary();shots.refresh();if(!lastResult&&!$("error").classList.contains("hidden"))hideError();if(lastResult)render(lastResult,false)}
+function setLocale(l){locale=T[l]?l:"en";$("locale").value=locale;document.documentElement.lang=locale;document.title="SAYNUE · Read Between the Lines";document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=tx(el.dataset.i)});$("chatText").placeholder=tx("placeholder");$("inputTabs").setAttribute("aria-label",tx("inputMethodLabel"));updatePersonaUI();updateSettingsSummary();shots.refresh();if(!lastResult&&!$("error").classList.contains("hidden"))hideError();if(lastResult)render(lastResult,false)}
 function choose(group,dataKey,value){document.querySelectorAll("#"+group+" [data-"+dataKey+"]").forEach(el=>{el.setAttribute("aria-pressed",String(el.dataset[dataKey]===value))})}
 function updateSettingsSummary(){
  const rel=document.querySelector('#relations [data-rel="'+relation+'"]');
@@ -226,8 +226,8 @@ $("personas").addEventListener("click",event=>{
 $("relations").addEventListener("click",e=>{const b=e.target.closest("[data-rel]");if(b)chooseRelation(b.dataset.rel)});
 $("goals").addEventListener("click",e=>{const b=e.target.closest("[data-goal]");if(b)chooseGoal(b.dataset.goal)});
 $("tones").addEventListener("click",e=>{const b=e.target.closest("[data-tone]");if(b)chooseReplyTone(b.dataset.tone)});
-function switchMode(m){mode=m;$("textTab").setAttribute("aria-selected",String(m==="text"));$("imageTab").setAttribute("aria-selected",String(m==="image"));$("textBox").classList.toggle("hidden",m!=="text");$("imageBox").classList.toggle("hidden",m!=="image");hideError()}
-$("textTab").addEventListener("click",()=>switchMode("text"));$("imageTab").addEventListener("click",()=>switchMode("image"));$("sample").addEventListener("click",()=>{switchMode("text");$("chatText").value=tx(persona==="standard"?"sampleText":"sample"+persona[0].toUpperCase()+persona.slice(1));$("charCount").textContent=$("chatText").value.length+" / 12,000";$("chatText").focus()});
+function switchMode(m){if(m!=="text"&&m!=="image")return;mode=m;$("textTab").setAttribute("aria-selected",String(m==="text"));$("imageTab").setAttribute("aria-selected",String(m==="image"));$("textTab").tabIndex=m==="text"?0:-1;$("imageTab").tabIndex=m==="image"?0:-1;$("textBox").classList.toggle("hidden",m!=="text");$("imageBox").classList.toggle("hidden",m!=="image");$("inputModeLabel").dataset.i=m==="image"?"inputImageLabel":"inputTextLabel";$("inputModeLabel").textContent=tx($("inputModeLabel").dataset.i);hideError()}
+$("textTab").addEventListener("click",()=>switchMode("text"));$("imageTab").addEventListener("click",()=>switchMode("image"));$("inputTabs").addEventListener("keydown",e=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(e.key))return;e.preventDefault();const m=e.key==="Home"?"image":e.key==="End"?"text":e.key==="ArrowRight"?"text":"image";switchMode(m);$(m==="image"?"imageTab":"textTab").focus()});$("sample").addEventListener("click",()=>{switchMode("text");$("chatText").value=tx(persona==="standard"?"sampleText":"sample"+persona[0].toUpperCase()+persona.slice(1));$("charCount").textContent=$("chatText").value.length+" / 12,000";$("chatText").focus()});
 $("chatText").addEventListener("input",()=>{$("charCount").textContent=$("chatText").value.length+" / 12,000"});
 function maskCommonInfo(text) {
   return text
@@ -341,7 +341,7 @@ $("copyReply").addEventListener("click",async()=>{
 });
 $("share").addEventListener("click",async()=>{if(!lastResult)return;const text=tx("shareTitle")+"\n"+tx("shareScore")+": "+clamp(lastResult.warmthScore)+"/100\n"+safeText(lastResult.verdict,160)+"\n"+tx("sharePrompt");try{if(navigator.share){await navigator.share({title:tx("shareTitle"),text:text,url:location.origin+location.pathname})}else{await navigator.clipboard.writeText(text+"\n"+location.origin+location.pathname);alert(tx("copied"))}}catch(err){if(err.name!=="AbortError")alert(tx("errOther"))}});
 $("reset").addEventListener("click",()=>{$("results").classList.add("hidden");$("personaReport").classList.add("hidden");$("shareCard").classList.remove("hidden");$("samplePreview").classList.remove("hidden");$("plusPeek").classList.remove("hidden");lastResult=null;feedbackSent=false;$("feedbackStatus").textContent="";$("formCard").scrollIntoView({behavior:"smooth",block:"start"})});
-setLocale(langFromBrowser());chooseRelation("talking");chooseGoal("understand");chooseReplyTone("natural");updatePersonaUI();
+setLocale(langFromBrowser());chooseRelation("talking");chooseGoal("understand");chooseReplyTone("natural");updatePersonaUI();switchMode("image");
 })();
 </script>
 </body>
