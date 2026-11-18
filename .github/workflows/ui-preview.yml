@@ -34,6 +34,10 @@ jobs:
           node --check preview/demo-api.js
           node --check scripts/build-ui-preview.mjs
           node --check assets/screenshot-editor.js
+      - name: Verify messenger-free API and mobile layout regressions
+        run: |
+          node --check api/analyze.mjs
+          node --test tests/quality.test.mjs tests/mobile-focus.test.mjs
       - name: Build isolated static UI with no secret keys or API calls
         run: node scripts/build-ui-preview.mjs
       - name: Verify static paths, privacy, and demo-only behavior
