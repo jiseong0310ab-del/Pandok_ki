@@ -8,6 +8,7 @@ on:
       - 'preview/**'
       - 'scripts/build-ui-preview.mjs'
       - 'tests/preview-build.test.mjs'
+      - 'tests/mobile-focus.test.mjs'
       - '.github/workflows/ui-preview.yml'
   workflow_dispatch:
 
