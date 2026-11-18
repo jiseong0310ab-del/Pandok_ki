@@ -93,3 +93,41 @@ test("prompt injection in a pasted chat stays untrusted conversation data",async
     assert.equal(r.status,200);assert.equal(observed,true);
   }finally{global.fetch=orig;if(oldKey===undefined)delete process.env.GEMINI_API_KEY;else process.env.GEMINI_API_KEY=oldKey}
 });
+
+
+test("messenger-free submissions succeed and legacy messenger fields do not bias prompts",async()=>{
+  const before={GEMINI_API_KEY:process.env.GEMINI_API_KEY,UPSTASH_REDIS_REST_URL:process.env.UPSTASH_REDIS_REST_URL,UPSTASH_REDIS_REST_TOKEN:process.env.UPSTASH_REDIS_REST_TOKEN};
+  const originalFetch=global.fetch;
+  process.env.GEMINI_API_KEY="unit-test-only";
+  delete process.env.UPSTASH_REDIS_REST_URL;
+  delete process.env.UPSTASH_REDIS_REST_TOKEN;
+  const req=(body,ip)=>new Request("https://saynue.test/api/analyze",{
+    method:"POST",
+    headers:{"content-type":"application/json","x-vercel-forwarded-for":ip,"origin":"https://saynue.test"},
+    body:JSON.stringify(body)
+  });
+  const base={relation:"work",goal:"reply",replyTone:"direct",locale:"ko",chatText:"상사: 이번 주까지 보고서 초안을 알려 주세요. 나: 현재 검토 중이라 가능한 범위부터 정리해서 공유하겠습니다."};
+  const prompts=[];
+  global.fetch=async(_url,options)=>{
+    const body=JSON.parse(options.body);
+    prompts.push(body.contents[0].parts[0].text);
+    return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(mockReport)}]}}]}),{status:200});
+  };
+  try{
+    const noMessenger=await app.fetch(req(base,"192.0.2.130"));
+    assert.equal(noMessenger.status,200);
+    assert.equal((await noMessenger.json()).verdict,mockReport.verdict);
+    const legacyMessenger=await app.fetch(req({...base,platform:"line"},"192.0.2.131"));
+    assert.equal(legacyMessenger.status,200);
+    const unknownMessenger=await app.fetch(req({...base,platform:"arbitrary-new-app"},"192.0.2.132"));
+    assert.equal(unknownMessenger.status,400,"Unrecognized old-client values must remain invalid.");
+    assert.equal(prompts.length,2);
+    assert.equal(prompts[0],prompts[1],"Optional legacy app field must not affect analysis prompts.");
+    assert.doesNotMatch(prompts[0],/Messenger:|LINE|KakaoTalk/i);
+  }finally{
+    global.fetch=originalFetch;
+    for(const [key,value] of Object.entries(before)){
+      if(value===undefined)delete process.env[key];else process.env[key]=value;
+    }
+  }
+});
