@@ -28,7 +28,11 @@ test("mobile first-use flow foregrounds compact expert selection and one convers
  assert.doesNotMatch(form,/<details[^>]*id="analysisOptions"[^>]*\sopen(?:=|\s|>)/);
  assert.doesNotMatch(form,/<details[^>]*id="personaContextBox"[^>]*\sopen(?:=|\s|>)/);
  assert.match(script,/function updateSettingsSummary\(/);
- assert.match(script,/function choosePlatform\(p\).*updateSettingsSummary/);
+ assert.doesNotMatch(form,/id="platforms"|data-platform=/);
+ assert.doesNotMatch(script,/choosePlatform|PLATFORM_NAMES|reportPlatform/);
+ assert.match(script,/function updateSettingsSummary\(/);
+ assert.match(script,/function chooseRelation\(r\).*updateSettingsSummary/);
+ assert.match(script,/JSON\.stringify\(\{relation:relation,goal:goal,replyTone:replyTone,locale:locale,persona:persona,/);
  assert.match(script,/function chooseRelation\(r\).*updateSettingsSummary/);
 });
 test("expert reports foreground summary, next step and reply before deeper explanation",()=>{
