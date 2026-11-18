@@ -32,7 +32,7 @@ test("follow-up is hidden until analysis and screenshot content is cleared",()=>
  assert.match(home,/priorAnalysis:prior\?/);
  assert.match(home,/SESSION_TTL=30\*24\*60\*60\*1000/);
  assert.match(home,/situationLibrary\.upsert\(activeSession\)/);
- assert.match(home,/saynue.*situation-library\.js/);
+ assert.match(home,/src="\/assets\/situation-library\.js"/);
  assert.match(home,/id="saveContext"/);
  assert.doesNotMatch(home,/sessionStorage\.setItem/);
 });
