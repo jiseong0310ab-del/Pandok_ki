@@ -22,6 +22,9 @@ jobs:
       - run: node --check tests/feedback.test.mjs
       - run: node --check tests/monetization.test.mjs
       - run: node --check assets/screenshot-editor.js
+      - run: node --check assets/situation-library.js
+      - run: node --check api/simulate.mjs
+      - run: node --check tests/situations-rehearsal.test.mjs
       - run: node --check tests/screenshot-editor.test.mjs
       - run: node --check lib/plus-coach.mjs
       - run: node --check assets/plus-preview.js
@@ -59,3 +62,5 @@ jobs:
         run: node --test --test-reporter=spec tests/billing-auth.test.mjs
       - name: Follow-up context and privacy tests
         run: node --test --test-reporter=spec tests/followup.test.mjs
+      - name: Situation library and reply rehearsal tests
+        run: node --test --test-reporter=spec tests/situations-rehearsal.test.mjs

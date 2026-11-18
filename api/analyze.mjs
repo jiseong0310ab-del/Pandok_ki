@@ -316,3 +316,5 @@ export default {
     return json({error:"Temporarily unavailable",code:lastCode},503,{"Retry-After":"15"});
   }
 };
+// Reuse the existing request limiter for optional reply rehearsals.
+export {checkLimit,clientHash};

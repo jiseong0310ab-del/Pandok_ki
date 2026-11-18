@@ -31,7 +31,8 @@ test("follow-up is hidden until analysis and screenshot content is cleared",()=>
  assert.match(editor,/clear\(\)\{if\(busy\|\|drawing\)return false;shots\.splice\(0\)/);
  assert.match(home,/priorAnalysis:prior\?/);
  assert.match(home,/SESSION_TTL=30\*24\*60\*60\*1000/);
- assert.match(home,/localStorage\.setItem\(SESSION_KEY,JSON\.stringify\(activeSession\)\)/);
+ assert.match(home,/situationLibrary\.upsert\(activeSession\)/);
+ assert.match(home,/saynue.*situation-library\.js/);
  assert.match(home,/id="saveContext"/);
  assert.doesNotMatch(home,/sessionStorage\.setItem/);
 });
