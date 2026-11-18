@@ -47,7 +47,7 @@ test("all 30 synthetic inputs reach the correct localized and goal-scoped AI pro
         assert.ok(intro.includes("User goal: "+c.goal),c.id);
         assert.ok(intro.includes("Output language: "+c.locale),c.id);
         assert.ok(intro.includes("Relation context: "+c.relation),c.id);
-        assert.ok(intro.includes("Messenger: "+c.platform),c.id);
+        assert.ok(!intro.includes("Messenger:"),c.id);
         assert.ok(data.includes(c.chatText),c.id);
         assert.match(msg.systemInstruction.parts[0].text,/UNTRUSTED DATA/);
         assert.match(msg.systemInstruction.parts[0].text,/not a mind reader/);
