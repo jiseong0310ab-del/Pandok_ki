@@ -46,6 +46,16 @@ test("user tracking defaults off, requires explicit opt-in, and transmits only a
  assert.equal(store.data.size,0);
  assert.equal(counter.record("visit"),false);
 });
+test("failed metrics delivery is disclosed without transmitting any private text",async()=>{
+ const store=storage(),delivery=[];
+ const obj=browser(metricsSource,{localStorage:store,crypto:{getRandomValues(bytes){bytes.fill(42);return bytes}}});
+ const meter=obj.SaynueUsageMetrics.create({storage:store,now:()=>analyticDate,cryptoObj:obj.crypto,
+  onDelivery:ok=>delivery.push(ok),fetchFn:async()=>({ok:false,status:503})});
+ assert.equal(meter.enable(),true);
+ assert.equal(meter.record("visit"),true);
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.deepEqual(delivery,[false]);
+});
 test("style preferences store only enums, require an explicit save, and reject malformed data",()=>{
  const store=storage(),b=browser(styleSource,{localStorage:store}),style=b.SaynueReplyStyle.create({storage:store});
  assert.equal(style.load(),null);
@@ -127,6 +137,8 @@ test("aggregate endpoint uses HMAC pseudonyms, locked read token and does not st
 });
 test("mobile UI keeps extra settings collapsed and analytics opt-in independent from Gemini consent",()=>{
  assert.match(homepage,/id="replyLengths"/);assert.match(homepage,/id="replyEmojis"/);
+ assert.match(homepage,/#replyLengths \[data-reply-length\]/);
+ assert.match(homepage,/#replyEmojis \[data-reply-emoji\]/);
  assert.match(homepage,/id="styleSave"/);assert.match(homepage,/id="styleClear"/);
  assert.match(homepage,/<details class="metrics-consent"/);
  assert.match(homepage,/id="metricsOptin"/);

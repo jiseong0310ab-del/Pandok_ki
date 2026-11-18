@@ -3,7 +3,7 @@
 "use strict";
 const KEY="saynue:metrics-optin:v1";
 const EVENTS=new Set(["visit","analysis_started","analysis_completed","followup_started","followup_completed","library_saved","simulation_started","simulation_completed","plans_interest"]);
-function create({storage,fetchFn,cryptoObj,now}={}){
+function create({storage,fetchFn,cryptoObj,now,onDelivery}={}){
  const getStore=()=>{try{return storage||root.localStorage}catch{return null}};
  const network=fetchFn||((...args)=>root.fetch(...args));
  const source=cryptoObj||root.crypto;
@@ -42,7 +42,7 @@ function create({storage,fetchFn,cryptoObj,now}={}){
   try{
    Promise.resolve(network("/api/metrics",{method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({event,visitorId:current.id,firstDay:current.firstDay}),cache:"no-store",keepalive:false
-   })).catch(()=>{});
+   })).then(response=>{if(typeof onDelivery==="function")onDelivery(!!response?.ok)}).catch(()=>{if(typeof onDelivery==="function")onDelivery(false)});
    return true;
   }catch{return false}
  }
