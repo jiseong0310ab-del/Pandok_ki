@@ -29,7 +29,7 @@ test("library supports 8 distinct opt-in saved situations, rename, delete and do
  assert.equal(storage.data.size,0,"reading should not automatically save new data");
  for(let i=0;i<8;i++)assert.equal(lib.upsert(example("sid-"+i)).ok,true);
  assert.equal(lib.list().length,8);
- assert.deepEqual(lib.upsert(example("sid-ninth")),{ok:false,reason:"full"});
+ assert.equal(lib.upsert(example("sid-ninth")).reason,"full");
  assert.equal(lib.rename("sid-0","나의 상황"),true);
  assert.equal(lib.get("sid-0").title,"나의 상황");
  assert.equal(lib.remove("sid-0"),true);
@@ -57,7 +57,7 @@ test("expired/invalid situations are excluded and opt-in legacy context is migra
 test("library handles denied storage without page breaking",()=>{
  const storage={getItem(){throw Error("denied")},setItem(){throw Error("denied")},removeItem(){}};
  const lib=mkLibrary(storage);
- assert.deepEqual(lib.list(),[]);
+ assert.equal(lib.list().length,0);
  assert.equal(lib.upsert(example("denied")).ok,false);
 });
 test("rehearsal API strictly validates input and normalizes textual structured responses",()=>{

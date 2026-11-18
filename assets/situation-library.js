@@ -16,7 +16,7 @@ function clean(value,max){
 function normalize(raw,now){
  if(!raw||typeof raw!=="object"||Array.isArray(raw)||raw.version!==1)return null;
  if(typeof raw.id!=="string"||!/^[a-z0-9-]{2,40}$/i.test(raw.id))return null;
- if(!Number.isFinite(raw.at)||raw.at>now||now-raw.at>=TTL)return null;
+ if(!Number.isFinite(raw.at)||raw.at>now+60000||now-raw.at>=TTL)return null;
  if(!PERSONAS.includes(raw.persona)||!PLATFORMS.includes(raw.platform)||!RELATIONS.includes(raw.relation)||
  !GOALS.includes(raw.goal)||!TONES.includes(raw.replyTone)||!LOCALES.includes(raw.locale))return null;
  if(!Number.isInteger(raw.turn)||raw.turn<1||raw.turn>12)return null;
