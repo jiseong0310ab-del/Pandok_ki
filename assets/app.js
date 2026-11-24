@@ -399,7 +399,8 @@ $("analyze").addEventListener("click",async()=>{
  const epoch=++analysisEpoch,ctl=new AbortController();analysisController=ctl;
  lastResult=null;activeSession=null;simEpoch++;updateFollowUpActions();$("consent").checked=false;
  usageEvent("analysis_started");const btn=$("analyze");btn.disabled=true;$("loading").classList.remove("hidden");$("results").classList.add("hidden");
- const timer=setTimeout(()=>ctl.abort(),40000);
+ // Screenshots upload and read slower; the server gives them one long attempt.
+ const timer=setTimeout(()=>ctl.abort(),settings.images?.length?60000:40000);
  try{
   const response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(settings),signal:ctl.signal,cache:"no-store"});
   const payload=await response.json().catch(()=>({}));if(epoch!==analysisEpoch)return;

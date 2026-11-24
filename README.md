@@ -229,6 +229,7 @@ README에 빠져 있던 기능입니다. 자세한 내용은 각 문서를 참�
 - **공유 미리보기**: 1200×630 `assets/og-image.png`와 og:image·twitter 카드 메타를 공개 페이지에 추가.
 - **홈 예시 카드**: 업로드 없이 결과가 어떤 모습인지 보여 주는 정적 예시(API 호출 없음, 5개 언어).
 - **실제 모델 품질 점검**: `scripts/eval-quality.mjs` — 합성 30건 + 안전 5건을 실제 Gemini로 돌려 언어·인용·거절 존중·위기 판단·식별정보 노출을 자동 점검. 사용법은 [docs/quality-and-privacy.md](docs/quality-and-privacy.md).
+- **스크린샷 분석 할당량 낭비 수정**: 기존에는 Gemini 호출마다 8.7초 제한을 두고 같은 요청을 최대 3번 다시 보냈음. 스크린샷 3장은 이 시간을 자주 넘겨서, 분석 한 번에 Gemini 할당량을 최대 3배 썼음(중단된 요청도 Google은 사용량으로 셈). 이제 스크린샷은 26초 1회 + 예비 모델 1회, 시간 초과 뒤에는 같은 모델에 다시 보내지 않음. 브라우저는 스크린샷 분석을 60초까지 기다림. Redis 없이 쓰는 IP별 시간당 한도도 6회에서 12회로 늘림.
 - **정책 초안(미게시)**: [개인정보처리방침 초안](docs/privacy-policy-draft.md), [이용약관 초안](docs/terms-draft.md). 운영자 정보와 법률 검토 전에는 사이트에 올리지 않음.
 
 ## Cloudflare stability checklist
