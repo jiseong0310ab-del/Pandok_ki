@@ -105,6 +105,8 @@ img,svg,canvas{max-width:100%}
 ::selection{background:var(--accent-glow)}
 :focus-visible{outline:2px solid var(--focus);outline-offset:3px}
 .hidden,[hidden]{display:none!important}
+/* Held until assets/locale.js reports the page is translated (non-Korean visits). */
+html[data-i18n="pending"] body>*{visibility:hidden;content-visibility:hidden}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 
 /* ---------- Language-aware typography ----------
