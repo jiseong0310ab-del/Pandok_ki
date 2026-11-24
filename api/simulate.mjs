@@ -3,7 +3,7 @@ import {checkLimit,clientHash} from "./analyze.mjs";
 import {COACHING_RUBRIC} from "../lib/coaching-rubric.mjs";
 import {pickGeminiModels,sameOriginOrAbsent} from "../lib/server-guard.mjs";
 const PERSONAS=new Set(["standard","court","work","romance","mediator"]);
-const RELATIONS=new Set(["crush","talking","dating","ex","friends","work"]);
+const RELATIONS=new Set(["crush","talking","dating","ex","friends","work","unknown","family"]);
 const LOCALES=new Set(["ko","ja","en","zh-CN","zh-TW"]);
 const RESPONSE_SCHEMA={
  type:"OBJECT",
