@@ -22,7 +22,7 @@ test("automatic expert request with optional situation context",()=>{
 import {parseReplyLanguage,languageInstruction,withMessageLanguage,addMessageLanguage} from "../lib/message-language.mjs";
 import {parseSimulationInput} from "../api/simulate.mjs";
 test("report language and reply language are independent, with backward compatibility",()=>{
- const v=parseInput({locale:"ko",replyLanguage:"ja",chatText:"今週は忙しいけど、また今度会おうね。"});
+ const v=parseInput({locale:"ko",replyLanguage:"ja",chatText:"私：今週会える？\n相手：今週は忙しいけど、また今度会おうね。"});
  assert.equal(v.locale,"ko");assert.equal(v.replyLanguage,"ja");assert.match(languageInstruction(v),/explanations must be in ko/);assert.match(languageInstruction(v),/requested language ja/);
  assert.equal(parseInput({locale:"ko",replyLanguage:"invalid",chatText:"This is long enough for the test"}),null);
  assert.equal(parseReplyLanguage(undefined,"ko"),"ko");assert.equal(parseReplyLanguage("auto","ko"),"auto");
