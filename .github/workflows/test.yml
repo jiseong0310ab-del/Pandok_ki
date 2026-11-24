@@ -1,7 +1,7 @@
 name: SAYNUE quality and privacy checks
 on:
   push:
-    branches: [main]
+    branches: [main, migration/cloudflare-saynue]
   pull_request:
 permissions:
   contents: read
@@ -92,3 +92,13 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Mobile browser end-to-end tests
         run: node --test --test-reporter=spec tests/e2e-mobile.test.mjs
+  cloudflare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/cloudflare.test.mjs
+      - run: node scripts/build-cloudflare.mjs
+      - run: npx --yes wrangler@4 deploy --dry-run --outdir .wrangler-build
