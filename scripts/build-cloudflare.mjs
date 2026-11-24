@@ -6,9 +6,10 @@ import {configuredOrigin} from "../lib/site-origin.mjs";
 const root=fileURLToPath(new URL("../",import.meta.url));
 const out=join(root,".cloudflare-public");
 const oldOrigin="https://saynue.vercel.app";
-const origin=configuredOrigin(process.env.SAYNUE_PUBLIC_ORIGIN);
+const explicitOrigin=configuredOrigin(process.env.SAYNUE_PUBLIC_ORIGIN);
+const origin=explicitOrigin||"https://saynue.dark-smoke-6a9b.workers.dev";
 const indexable=process.env.SAYNUE_INDEXABLE==="true";
-if(indexable&&!origin)throw Error("Set SAYNUE_PUBLIC_ORIGIN before enabling indexing");
+if(indexable&&!explicitOrigin)throw Error("Set SAYNUE_PUBLIC_ORIGIN before enabling indexing");
 const pages=["index.html","account.html","guide.html","plans.html","data-notice.html","metrics.html","sandbox-checkout.html","favicon.svg","robots.txt","sitemap.xml"];
 for(const folder of ["assets","learn"]){
  for(const item of await readdir(join(root,folder),{withFileTypes:true})){

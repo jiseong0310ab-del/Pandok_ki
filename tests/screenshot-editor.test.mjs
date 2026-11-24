@@ -95,3 +95,13 @@ test("screenshot list is capped at three and supports per-image removal",async()
   assert.equal(nodes.shotList.children.length,2);
   assert.equal(editor.getImages().length,0);
 });
+
+test("reset during asynchronous decode discards old screenshots and permits fresh uploads",async()=>{
+ const {editor,nodes}=harness();const file=name=>({size:100,type:"image/jpeg",name});
+ const old=nodes.chatImage.events.change({target:{files:[file("old-private.jpg")],value:""}});
+ assert.equal(editor.isBusy(),true);assert.equal(editor.clear(),true);
+ const fresh=nodes.chatImage.events.change({target:{files:[file("fresh.jpg")],value:""}});
+ await Promise.all([old,fresh]);assert.equal(editor.isBusy(),false);assert.equal(nodes.shotList.children.length,1);
+ assert.match(nodes.shotList.children[0].children[0].textContent,/fresh\.jpg/);assert.equal(editor.isReady(),false);
+ nodes.shotConfirm.events.click();assert.equal(editor.getImages().length,1);editor.clear();assert.equal(editor.getImages().length,0);assert.equal(nodes.shotCanvas.width,1);
+});

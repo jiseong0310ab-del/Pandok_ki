@@ -48,6 +48,6 @@ en:{back:"Back to analyzer",title:"When replies are slow, what can you really kn
 "zh-TW":{back:"返回分析",title:"回覆變慢時，如何判斷更可靠？",subtitle:"重視對話事實與上下文，不要把猜測當作結論。",h1:"1. 不要憑一句訊息下結論",p1:"「最近很忙，下次再說」可能表示真的排不出時間，也可能想保持距離。觀察是否提出具體替代時間、雙方是否互相提問，以及有沒有明確約定。",ex1:"例如：「這週不行，下週二可以嗎？」提供可落實的安排；「改天再說」則尚未確定，但也不能憑此斷定感情。",h2:"2. 比速度更重要的是互動模式",p2:"回覆時間受工作、家庭、睡眠、通知設定影響。截圖沒有時間就無法推斷回覆速度，應觀察實際的提問與互動。",h3:"3. 尊重對方的選擇",p3:"反覆催促或試探感情可能造成壓力。情況不明時可以溫和詢問一次；若對方已明確拒絕，應尊重界線。",ex2:"例如：「沒關係，有空再告訴我。」如果已被清楚拒絕，不再傳訊息也可能是最恰當的選擇。",h4:"4. 將AI當作參考工具",p4:"AI可以整理語氣、提問與互動，但無法測量他人真實心意或交往機率。SAYNUE分數僅供參考。請先遮蔽姓名、電話與臉部等個資。",h5:"5. 問自己三個問題",p5:"哪些是真正看見的事實，哪些只是推測？有沒有其他合理解釋？我的回覆是否尊重對方的選擇與我自己的界線？",notice:"此指南僅供一般溝通參考，不代表個別關係的事實或專業建議。",start:"分析對話",plus:"了解 Plus"}
 };
 const lang=window.SaynueLocale.get();
-document.documentElement.lang=lang;
+document.documentElement.lang=lang;window.SaynueLocale.links(lang);
 document.querySelectorAll("[data-i]").forEach(el=>el.textContent=I[lang][el.dataset.i]||I.en[el.dataset.i]||"");
 })();</script></body></html>

@@ -42,7 +42,7 @@ function renderMeaning(id,data,draft){
 let locale="ko",platform="other",relation="unknown",goal="understand",replyTone="natural",replyLength="normal",replyEmoji="none",persona="standard",autoExpert=true,feedbackSent=false,resultGoal="understand",resultLocale="ko",mode="image",lastResult=null,activeSession=null,followUpContext=null,situationLibrary=null,simEpoch=0,stylePreferences=null,usageMetrics=null;
 function langFromBrowser(){return window.SaynueLocale.get()}
 function tx(k){return (T[locale]||T.en)[k]||T.en[k]||k}
-function setLocale(l){locale=T[l]?l:"en";$("locale").value=locale;document.documentElement.lang=locale;document.title=({"ko":"카톡 대화 분석 · AI 답장 추천 | SAYNUE","ja":"LINE会話分析・AI返信アドバイス | SAYNUE","en":"AI Text Message Analyzer & Reply Coach | SAYNUE","zh-CN":"微信聊天分析与AI回复建议 | SAYNUE","zh-TW":"聊天訊息分析與AI回覆建議 | SAYNUE"})[locale];document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=tx(el.dataset.i)});$("chatText").placeholder=tx("placeholder");updatePersonaUI();updateSettingsSummary();shots.refresh();if(!lastResult&&!$("error").classList.contains("hidden"))hideError();if(lastResult&&!$("results").classList.contains("hidden")){renderMeaning(lastResult.persona&&lastResult.persona!=="standard"?"personaMeaning":"replyMeaning",lastResult,!!lastResult.replyDraft);$("confidence").textContent=tx(({low:"low",medium:"medium",high:"high"})[lastResult.evidenceLevel]||"low");}updateFollowUpUI();updateSavedBar();window.SaynueLocale.links(locale)}
+function setLocale(l){locale=Object.prototype.hasOwnProperty.call(T,l)?l:"en";$("locale").value=locale;document.documentElement.lang=locale;document.title=({"ko":"카톡 대화 분석 · AI 답장 추천 | SAYNUE","ja":"LINE会話分析・AI返信アドバイス | SAYNUE","en":"AI Text Message Analyzer & Reply Coach | SAYNUE","zh-CN":"微信聊天分析与AI回复建议 | SAYNUE","zh-TW":"聊天訊息分析與AI回覆建議 | SAYNUE"})[locale];document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=tx(el.dataset.i)});$("chatText").placeholder=tx("placeholder");updatePersonaUI();updateSettingsSummary();shots.refresh();if(!lastResult&&!$("error").classList.contains("hidden"))hideError();if(lastResult&&!$("results").classList.contains("hidden")){renderMeaning(lastResult.persona&&lastResult.persona!=="standard"?"personaMeaning":"replyMeaning",lastResult,!!lastResult.replyDraft);$("confidence").textContent=tx(({low:"low",medium:"medium",high:"high"})[lastResult.evidenceLevel]||"low");}updateFollowUpUI();updateSavedBar();window.SaynueLocale.links(locale)}
 let analysisEpoch=0,analysisController=null,returnReport=null;
 function cancelAnalysis(){
  analysisEpoch++;if(analysisController){analysisController.abort();analysisController=null}
@@ -240,8 +240,8 @@ $("savedContextsList").addEventListener("click",event=>{
 $("cancelFollowUp").addEventListener("click",()=>{
  cancelAnalysis();followUpContext=null;shots.clear();$("chatText").value="";$("charCount").textContent="0 / 12,000";
  updateFollowUpUI();
- if(returnReport){const previous=returnReport;returnReport=null;activeSession=previous.session;resultLocale=previous.locale;resultGoal=previous.goal;render(previous.data,true);updateFollowUpActions()}
- else $("formCard").scrollIntoView({behavior:"smooth",block:"start"});
+ if(returnReport){const previous=returnReport;returnReport=null;activeSession=previous.session;resultLocale=previous.locale;resultGoal=previous.goal;if(activeSession){persona=activeSession.persona;autoExpert=false;chooseRelation(activeSession.relation);chooseGoal(activeSession.goal);choosePlatform(activeSession.platform);chooseReplyTone(activeSession.replyTone);$("replyLanguage").value=messageLanguage(activeSession,"auto");updatePersonaUI()}render(previous.data,true);updateFollowUpActions()}
+ else {activeSession=null;updateFollowUpActions();$("formCard").scrollIntoView({behavior:"smooth",block:"start"})}
 });
 $("saveContext").addEventListener("click",()=>{
  const status=$("saveStatus");
@@ -369,7 +369,7 @@ $("analyze").addEventListener("click",async()=>{
  const chatText=$("chatText").value.trim(),prior=followUpContext;
  if(mode==="text"&&chatText.length<(prior?1:20)){showError(chatText?tx("errShort"):tx("errInput"));return}
  if(mode==="image"&&!shots.isReady()){showError(shots.isBusy()?tx("shotPreparing"):shots.hasImages()?tx("shotMustReview"):tx("errInput"));return}
- const settings={platform,relation,goal,replyTone,replyLength,replyEmoji,locale,replyLanguage:selectedLanguage("replyLanguage"),persona,autoExpert,caseContext:$("personaContext").value.trim(),chatText:mode==="text"?chatText:"",images:mode==="image"?shots.getImages():undefined,priorAnalysis:prior?{summary:prior.summary,signal:prior.signal,nextStep:prior.nextStep,turn:prior.turn}:undefined};
+ const settings={platform,relation,goal,replyTone,replyLength:replyLength,replyEmoji:replyEmoji,locale,replyLanguage:selectedLanguage("replyLanguage"),persona,autoExpert,caseContext:$("personaContext").value.trim(),chatText:mode==="text"?chatText:"",images:mode==="image"?shots.getImages():undefined,priorAnalysis:prior?{summary:prior.summary,signal:prior.signal,nextStep:prior.nextStep,turn:prior.turn}:undefined};
  const epoch=++analysisEpoch,ctl=new AbortController();analysisController=ctl;
  lastResult=null;activeSession=null;simEpoch++;updateFollowUpActions();$("consent").checked=false;
  usageEvent("analysis_started");const btn=$("analyze");btn.disabled=true;$("loading").classList.remove("hidden");$("results").classList.add("hidden");
@@ -419,7 +419,7 @@ $("copyReply").addEventListener("click",async()=>{
   catch(_){$("copyStatus").textContent=tx("replyCopyFail")}
 });
 $("share").addEventListener("click",async()=>{if(!lastResult)return;const text=tx("shareTitle")+"\n"+tx("sharePrompt");try{if(navigator.share){await navigator.share({title:tx("shareTitle"),text:text,url:location.origin+location.pathname})}else{await navigator.clipboard.writeText(text+"\n"+location.origin+location.pathname);alert(tx("copied"))}}catch(err){if(err.name!=="AbortError")alert(tx("errOther"))}});
-$("reset").addEventListener("click",()=>{returnReport=null;cancelAnalysis();$("formCard").hidden=false;$("results").classList.add("hidden");$("personaReport").classList.add("hidden");$("shareCard").classList.remove("hidden");$("samplePreview").classList.remove("hidden");$("plusPeek").classList.remove("hidden");lastResult=null;activeSession=null;followUpContext=null;renderHistoryCompare(null,null);$("consent").checked=false;simEpoch++;$("replySimulator").classList.add("hidden");shots.clear();switchMode("image");$("chatText").value="";$("charCount").textContent="0 / 12,000";updateFollowUpActions();feedbackSent=false;$("feedbackStatus").textContent="";$("formCard").scrollIntoView({behavior:"smooth",block:"start"})});
+$("reset").addEventListener("click",()=>{returnReport=null;cancelAnalysis();$("personaContext").value="";$("formCard").hidden=false;$("results").classList.add("hidden");$("personaReport").classList.add("hidden");$("shareCard").classList.remove("hidden");$("samplePreview").classList.remove("hidden");$("plusPeek").classList.remove("hidden");lastResult=null;activeSession=null;followUpContext=null;renderHistoryCompare(null,null);$("consent").checked=false;simEpoch++;$("replySimulator").classList.add("hidden");shots.clear();switchMode("image");$("chatText").value="";$("charCount").textContent="0 / 12,000";updateFollowUpActions();feedbackSent=false;$("feedbackStatus").textContent="";$("formCard").scrollIntoView({behavior:"smooth",block:"start"})});
 situationLibrary=window.SaynueSituationLibrary.create();
 stylePreferences=window.SaynueReplyStyle.create();
 usageMetrics=window.SaynueUsageMetrics.create({onDelivery:ok=>{if(!ok&&usageMetrics?.enabled())$("metricsStatus").textContent=tx("metricsUnavailable")}});
@@ -434,7 +434,8 @@ if(window.SaynueTheme){showThemeChoice(window.SaynueTheme.get());$("themeChoice"
 if(usageMetrics.enabled())usageEvent("visit");
 updatePersonaUI();
 
-let screen="home",coachMode="reply",coachEpoch=0,coachResult=null,coachReportLocale="ko";
+let screen="home",coachMode="reply",coachEpoch=0,coachResult=null,coachReportLocale="ko",coachController=null;
+function cancelCoachRequest(){if(coachController){coachController.abort();coachController=null}}
 const screens={home:"homeScreen",analyze:"analysisScreen",reply:"coachScreen",counsel:"coachScreen",prepare:"coachScreen",reflect:"coachScreen",library:"libraryScreen",settings:"settingsScreen"};
 function updateCoachLabels(){
  const title={reply:"hubReply",counsel:"hubCounsel",prepare:"coachPrepare",reflect:"coachReflect"}[coachMode];
@@ -447,7 +448,7 @@ function updateCoachLabels(){
 }
 function setCoachMode(mode){
  if(!["reply","counsel","prepare","reflect"].includes(mode))return;
- if(mode!==coachMode){coachMode=mode;coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachStatus").textContent="";$("coachConsent").checked=false;$("coachRun").disabled=false}
+ if(mode!==coachMode){cancelCoachRequest();coachMode=mode;coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachStatus").textContent="";$("coachConsent").checked=false;$("coachRun").disabled=false}
  updateCoachLabels();
 }
 function showScreen(target){
@@ -471,14 +472,14 @@ function loadCoachStyle(){const s=stylePreferences.load();$("coachTone").value=s
 $("coachSaveStyle").addEventListener("click",()=>{const ok=stylePreferences.save({tone:$("coachTone").value,length:$("coachLength").value,emoji:$("coachEmoji").value});if(ok){chooseReplyTone($("coachTone").value);chooseReplyLength($("coachLength").value);chooseReplyEmoji($("coachEmoji").value)}$("coachStatus").textContent=tx(ok?"styleStored":"styleError")});
 function openDraftCoach(){
  if(!lastResult||lastResult.shouldReply===false||!lastResult.replyDraft)return;
- navigate("reply");coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachRun").disabled=false;$("coachConsent").checked=false;
+ navigate("reply");cancelCoachRequest();coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachRun").disabled=false;$("coachConsent").checked=false;
  $("coachContext").value=maskCommonInfo([lastResult.verdict||lastResult.summary,lastResult.nextStep].filter(Boolean).join("\n")).slice(0,1800);$("coachDraft").value=lastResult.replyDraft.slice(0,600);$("coachRelation").value=relation;$("coachReplyLanguage").value=messageLanguage(lastResult,selectedLanguage("replyLanguage"));loadCoachStyle();
 }
 $("editPersonaDraft").addEventListener("click",openDraftCoach);$("editStandardDraft").addEventListener("click",openDraftCoach);
 function openCounselFromSummary(source,sourceRelation,sourceLanguage){
  if(!source)return;
  const summary=maskCommonInfo([source.verdict||source.summary,source.keySignal||source.sectionOne||source.advice,source.nextStep].filter(Boolean).join("\n")).slice(0,1250);
- navigate("counsel");coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachRun").disabled=false;$("coachStatus").textContent="";
+ navigate("counsel");cancelCoachRequest();coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachRun").disabled=false;$("coachStatus").textContent="";
  $("coachContext").value=(tx("priorSummaryLabel")+":\n"+summary).slice(0,1800);$("coachDraft").value="";$("coachRelation").value=sourceRelation;$("coachReplyLanguage").value=sourceLanguage;$("coachConsent").checked=false;
 }
 $("analysisToCounsel").addEventListener("click",()=>openCounselFromSummary(lastResult,relation,messageLanguage(lastResult,selectedLanguage("replyLanguage"))));
@@ -506,7 +507,7 @@ function renderCoachExtras(data,reportLang){
     const why=document.createElement("p");why.className="variant-why";why.lang=reportLang;why.textContent=alt.why||"";card.appendChild(why);
     const button=document.createElement("button");button.type="button";button.className="secondary variant-use";button.textContent=tx("replyUse");button.addEventListener("click",()=>{
      if(coachResult!==data||!data.shouldReply)return;
-     coachEpoch++;$("coachRehearse").disabled=false;$("coachSimConsent").checked=false;$("coachMessage").value=alt.message;$("coachMessage").lang=messageLanguage(data,reportLang);$("coachWhy").textContent=alt.why||"";renderMeaning("coachMeaning",{replyLanguage:data.replyLanguage,replyMeaning:alt.meaning},true);$("coachRehearsal").hidden=true;$("coachCopyStatus").textContent="";$("coachMessageBox").scrollIntoView({behavior:"smooth",block:"start"});
+     cancelCoachRequest();coachEpoch++;$("coachRehearse").disabled=false;$("coachSimConsent").checked=false;$("coachMessage").value=alt.message;$("coachMessage").lang=messageLanguage(data,reportLang);$("coachWhy").textContent=alt.why||"";renderMeaning("coachMeaning",{replyLanguage:data.replyLanguage,replyMeaning:alt.meaning},true);$("coachRehearsal").hidden=true;$("coachCopyStatus").textContent="";$("coachMessageBox").scrollIntoView({behavior:"smooth",block:"start"});
     });card.appendChild(button);out.appendChild(card);
    }
   }
@@ -521,10 +522,10 @@ function renderCoachExtras(data,reportLang){
 }
 
 async function coachRequest(path,data){
- const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),33000);
- try{const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data),cache:"no-store",signal:ctl.signal});const v=await r.json();if(!r.ok)throw Error(((API_ERRORS[locale]||API_ERRORS.en)[v.code]||tx(r.status===429?"errLimit":"errOther"))+" ["+(typeof v.code==="string"&&/^[A-Z_]+$/.test(v.code)?v.code:"ERROR")+"]");return v}finally{clearTimeout(timer)}
+ cancelCoachRequest();const ctl=new AbortController();coachController=ctl;const timer=setTimeout(()=>ctl.abort(),40000);
+ try{const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data),cache:"no-store",signal:ctl.signal});const v=await r.json().catch(()=>null);if(!r.ok){const code=typeof v?.code==="string"&&/^[A-Z_]{3,50}$/.test(v.code)?v.code:"HTTP_"+r.status;throw Error(((API_ERRORS[locale]||API_ERRORS.en)[code]||tx(r.status===429?"errLimit":"errOther"))+" ["+code+"]")}if(!v||typeof v!=="object")throw Error(((API_ERRORS[locale]||API_ERRORS.en).AI_INVALID_OUTPUT));return v}finally{clearTimeout(timer);if(coachController===ctl)coachController=null}
 }
-function invalidateCoachInput(){coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachConsent").checked=false;$("coachRun").disabled=false;$("coachStatus").textContent="";$("coachRehearse").disabled=false}
+function invalidateCoachInput(){cancelCoachRequest();coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachConsent").checked=false;$("coachRun").disabled=false;$("coachStatus").textContent="";$("coachRehearse").disabled=false}
 for(const id of ["coachContext","coachDraft"])$(id).addEventListener("input",invalidateCoachInput);
 for(const id of ["coachRelation","coachTone","coachLength","coachEmoji","coachReplyLanguage"])$(id).addEventListener("change",invalidateCoachInput);
 $("coachRun").addEventListener("click",async()=>{
@@ -543,13 +544,13 @@ $("coachRun").addEventListener("click",async()=>{
  finally{if(epoch===coachEpoch)$("coachRun").disabled=false}
 });
 $("coachCopy").addEventListener("click",async()=>{if(!coachResult?.shouldReply||!$("coachMessage").value.trim())return;try{await navigator.clipboard.writeText($("coachMessage").value);$("coachCopyStatus").textContent=tx("replyCopied");usageEvent("reply_copied")}catch{$("coachCopyStatus").textContent=tx("replyCopyFail")}});
-$("coachRevise").addEventListener("click",()=>{if(!coachResult?.shouldReply)return;const message=$("coachMessage").value;$("coachReplyLanguage").value=messageLanguage(coachResult,selectedLanguage("coachReplyLanguage"));navigate("reply");coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachStatus").textContent="";$("coachRun").disabled=false;$("coachDraft").value=message;$("coachConsent").checked=false;$("coachStyle").open=true;$("coachDraft").focus();$("coachDraft").scrollIntoView({behavior:"smooth",block:"center"})});
-$("coachMessage").addEventListener("input",()=>{coachEpoch++;$("coachRehearse").disabled=false;$("coachSimConsent").checked=false;$("coachMeaningBox").hidden=true;$("coachWhy").textContent="";$("coachRehearsal").hidden=true});
+$("coachRevise").addEventListener("click",()=>{if(!coachResult?.shouldReply)return;const message=$("coachMessage").value;$("coachReplyLanguage").value=messageLanguage(coachResult,selectedLanguage("coachReplyLanguage"));navigate("reply");cancelCoachRequest();coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachStatus").textContent="";$("coachRun").disabled=false;$("coachDraft").value=message;$("coachConsent").checked=false;$("coachStyle").open=true;$("coachDraft").focus();$("coachDraft").scrollIntoView({behavior:"smooth",block:"center"})});
+$("coachMessage").addEventListener("input",()=>{cancelCoachRequest();coachEpoch++;$("coachRehearse").disabled=false;$("coachSimConsent").checked=false;$("coachMeaningBox").hidden=true;$("coachWhy").textContent="";$("coachRehearsal").hidden=true});
 $("coachRehearse").addEventListener("click",async()=>{
  if(!coachResult?.shouldReply)return;if(!$("coachSimConsent").checked){$("coachCopyStatus").textContent=tx("errConsent");return}
  const message=$("coachMessage").value.trim();if(message.length<4){$("coachCopyStatus").textContent=tx("simInputError");return}
- if($("coachRehearse").disabled)return;const epoch=++coachEpoch,btn=$("coachRehearse"),out=$("coachRehearsal");btn.disabled=true;out.hidden=false;out.textContent=tx("coachWorking");
- try{const data=await coachRequest("/api/simulate",{locale,replyLanguage:messageLanguage(coachResult,selectedLanguage("coachReplyLanguage")),persona:"standard",relation:$("coachRelation").value,draft:message,contextSummary:[coachResult.summary,coachResult.advice].join("\n").slice(0,650)});if(epoch!==coachEpoch)return;out.replaceChildren();for(const key of ["warm","neutral","reserved"]){const el=document.createElement("p");el.textContent=tx("sim"+key[0].toUpperCase()+key.slice(1))+": "+data[key].example+" — "+data[key].reading;out.appendChild(el)}const note=document.createElement("p");note.textContent=tx("simNotice")+" "+data.caution;out.appendChild(note)}
+ if($("coachRehearse").disabled)return;const requestLocale=locale,epoch=++coachEpoch,btn=$("coachRehearse"),out=$("coachRehearsal");btn.disabled=true;out.hidden=false;out.textContent=tx("coachWorking");
+ try{const data=await coachRequest("/api/simulate",{locale,replyLanguage:messageLanguage(coachResult,selectedLanguage("coachReplyLanguage")),persona:"standard",relation:$("coachRelation").value,draft:message,contextSummary:[coachResult.summary,coachResult.advice].join("\n").slice(0,650)});if(epoch!==coachEpoch)return;out.replaceChildren();for(const key of ["warm","neutral","reserved"]){const el=document.createElement("p"),label=document.createElement("span"),example=document.createElement("span"),reading=document.createElement("span");label.textContent=tx("sim"+key[0].toUpperCase()+key.slice(1))+": ";example.lang=messageLanguage(coachResult,coachReportLocale);example.textContent=data[key].example;reading.lang=requestLocale;reading.textContent=" — "+data[key].reading;el.append(label,example,reading);out.appendChild(el)}const note=document.createElement("p"),prefix=document.createElement("span"),body=document.createElement("span");prefix.textContent=tx("simNotice")+" ";body.lang=requestLocale;body.textContent=data.caution;note.append(prefix,body);out.appendChild(note)}
  catch(e){if(epoch===coachEpoch)out.textContent=e.message}finally{if(epoch===coachEpoch)btn.disabled=false}
 });
 loadCoachStyle();updateCoachLabels();fromHash();

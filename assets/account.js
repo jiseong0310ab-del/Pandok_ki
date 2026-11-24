@@ -13,7 +13,7 @@ en:{emailRateLimit:"Supabase's built-in email quota was reached (2 emails per pr
 const locale=window.SaynueLocale.get();
 const tx=k=>T[locale][k]||T.en[k]||k;
 const $=id=>document.getElementById(id);
-document.documentElement.lang=locale;
+document.documentElement.lang=locale;window.SaynueLocale.links(locale);
 document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=tx(el.dataset.i)});
 function showPanel(id){
  for(const name of ["setupPanel","signinPanel","loggedInPanel"])$(name).classList.toggle("hidden",name!==id);
