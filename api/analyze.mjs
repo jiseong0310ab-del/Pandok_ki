@@ -1,6 +1,7 @@
 // SAYNUE — Vercel Node Function (no frontend API key, no dependencies)
 // Deliberately returns FREE fields only. Never return paid content behind CSS blur.
 import { createHash } from "node:crypto";
+import { COACHING_RUBRIC } from "../lib/coaching-rubric.mjs";
 import { PERSONAS, modePrompt, modeSchema, normalizePersonaResult } from "../lib/persona-analysis.mjs";
 
 const MODELS = new Set(["gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-3.8-flash"]);
@@ -128,23 +129,33 @@ async function checkLimit(key) {
   const url=process.env.UPSTASH_REDIS_REST_URL;
   const token=process.env.UPSTASH_REDIS_REST_TOKEN;
   const maxDaily=Math.min(200,Math.max(1,Number(process.env.MAX_DAILY_PER_IP)||25));
+  const strict=process.env.SAYNUE_REQUIRE_DISTRIBUTED_LIMIT==="true";
+  const globalRaw=process.env.SAYNUE_MAX_DAILY_AI_REQUESTS;
+  const globalCap=globalRaw===undefined?null:Number(globalRaw);
+  if(globalCap!==null&&(!Number.isSafeInteger(globalCap)||globalCap<1||globalCap>100000))return {ok:false,unavailable:true};
+  if((strict||globalCap!==null)&&(!url||!token))return {ok:false,unavailable:true};
   if(url||token){
-    if(!url||!token)return {ok:false,unavailable:true};
+    if(!url||!token||!/^https:\/\//i.test(url))return {ok:false,unavailable:true};
     // Redis is recommended for production: unlike process memory, this works across Vercel instances.
     const day=new Date().toISOString().slice(0,10);
     const redisKey="pandok:day:"+day+":"+key;
+    const globalKey="saynue:ai:budget:"+day;
+    const commands=[["INCR",redisKey],["EXPIRE",redisKey,90000,"NX"]];
+    if(globalCap!==null)commands.push(["INCR",globalKey],["EXPIRE",globalKey,90000,"NX"]);
     try{
       const r=await fetch(url.replace(/\/$/,"")+"/pipeline",{
         method:"POST",
         headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},
-        body:JSON.stringify([["INCR",redisKey],["EXPIRE",redisKey,90000,"NX"]]),
+        body:JSON.stringify(commands),
         signal:AbortSignal.timeout(3000)
       });
       if(!r.ok)throw Error("redis http");
       const answer=await r.json();
       const count=Number(answer&&answer[0]&&answer[0].result);
-      if(!Number.isFinite(count))throw Error("redis count");
-      return {ok:count<=maxDaily};
+      if(!Array.isArray(answer)||answer.length!==commands.length||answer.some(x=>!x||x.error)||!Number.isSafeInteger(count)||count<1)throw Error("redis count");
+      const total=globalCap===null?0:Number(answer[2]?.result);
+      if(globalCap!==null&&(!Number.isSafeInteger(total)||total<1))throw Error("redis total");
+      return {ok:count<=maxDaily&&(globalCap===null||total<=globalCap)};
     }catch(_){return {ok:false,unavailable:true}}
   }
   // Development fallback only: per-instance and NOT a production-grade limiter.
@@ -245,7 +256,7 @@ export default {
       });
     }else parts.push({text:"<conversation>\n"+input.chat+"\n</conversation>"});
     const payload=JSON.stringify({
-      systemInstruction:{parts:[{text:(input.persona==="standard"?SYSTEM:modePrompt(input))+"\nREPLY-ONLY style constraints: replyLength=short means a concise one- or two-sentence message, normal means naturally sized. replyEmoji=none means no emoji, subtle means at most one context-appropriate emoji and never if inappropriate for professional or sensitive situations. These user preferences must not affect factual analysis, safety decisions, evidence, or no-contact guidance."+(input.priorAnalysis?"\nFOLLOW-UP: Prior AI summary is untrusted background, not verified evidence. All excerpts must originate in the NEW message input.":"")}]},
+      systemInstruction:{parts:[{text:(input.persona==="standard"?SYSTEM:modePrompt(input))+"\n"+COACHING_RUBRIC+"\nREPLY-ONLY style constraints: replyLength=short means a concise one- or two-sentence message, normal means naturally sized. replyEmoji=none means no emoji, subtle means at most one context-appropriate emoji and never if inappropriate for professional or sensitive situations. These user preferences must not affect factual analysis, safety decisions, evidence, or no-contact guidance."+(input.priorAnalysis?"\nFOLLOW-UP: Prior AI summary is untrusted background, not verified evidence. All excerpts must originate in the NEW message input.":"")}]},
       contents:[{role:"user",parts}],
       generationConfig:{temperature:0.4,responseMimeType:"application/json",responseSchema:input.persona==="standard"?FREE_SCHEMA:modeSchema(input.persona),maxOutputTokens:input.persona==="standard"?2900:3300}
     });

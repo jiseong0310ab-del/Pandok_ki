@@ -50,3 +50,10 @@ test("all five supported languages have follow-up copy and inline script compile
  }
  new Function(script);
 });
+
+test("followup comparisons are ephemeral, separate summaries and disclose uncertainty",()=>{
+ assert.match(home,/id="historyCompare"/);assert.match(home,/id="compareBeforeText"/);assert.match(home,/id="compareAfterText"/);
+ assert.match(home,/renderHistoryCompare\(prior,activeSession\)/);assert.match(home,/renderHistoryCompare\(null,null\)/);
+ assert.match(home,/\$\("compareBeforeText"\)\.textContent/);assert.match(home,/\$\("compareAfterText"\)\.textContent/);
+ assert.match(home,/shots\.clear\(\);switchMode\("image"\);\$\("consent"\)\.checked=false/);
+});

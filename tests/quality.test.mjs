@@ -93,3 +93,23 @@ test("prompt injection in a pasted chat stays untrusted conversation data",async
     assert.equal(r.status,200);assert.equal(observed,true);
   }finally{global.fetch=orig;if(oldKey===undefined)delete process.env.GEMINI_API_KEY;else process.env.GEMINI_API_KEY=oldKey}
 });
+
+import {COACHING_RUBRIC,SPECIALIST_DEPTH} from "../lib/coaching-rubric.mjs";
+import {checkLimit} from "../api/analyze.mjs";
+test("shared coaching rubric distinguishes evidence, locale and boundaries",()=>{
+ for(const phrase of ["observable","Korean","Japanese","English","Chinese","no-contact","prior AI summary"])assert.ok(COACHING_RUBRIC.includes(phrase),phrase);
+ assert.deepEqual(Object.keys(SPECIALIST_DEPTH),["court","work","romance","mediator"]);
+});
+test("strict distributed budget cannot silently fall back and caps aggregate requests",async()=>{
+ const keys=["SAYNUE_REQUIRE_DISTRIBUTED_LIMIT","SAYNUE_MAX_DAILY_AI_REQUESTS","UPSTASH_REDIS_REST_URL","UPSTASH_REDIS_REST_TOKEN"];
+ const original=Object.fromEntries(keys.map(k=>[k,process.env[k]])),old=global.fetch;
+ try{
+ for(const k of keys)delete process.env[k];process.env.SAYNUE_REQUIRE_DISTRIBUTED_LIMIT="true";
+ assert.equal((await checkLimit("test")).unavailable,true);
+ process.env.UPSTASH_REDIS_REST_URL="https://redis.example.test";process.env.UPSTASH_REDIS_REST_TOKEN="test";process.env.SAYNUE_MAX_DAILY_AI_REQUESTS="10";
+ global.fetch=async(_url,opts)=>{const cmds=JSON.parse(opts.body);assert.equal(cmds.length,4);assert.match(cmds[2][1],/saynue:ai:budget:/);return new Response(JSON.stringify([{result:1},{result:1},{result:11},{result:1}]),{status:200})};
+ assert.equal((await checkLimit("test")).ok,false);
+ global.fetch=async()=>new Response(JSON.stringify([{result:1},{result:1},{result:2},{error:"bad"}]),{status:200});
+ assert.equal((await checkLimit("test")).unavailable,true);
+ }finally{global.fetch=old;for(const k of keys){if(original[k]===undefined)delete process.env[k];else process.env[k]=original[k]}}
+});

@@ -99,3 +99,17 @@ test("all five locales have translations for progressive disclosure controls",()
  assert.doesNotMatch(sitemap,/sandbox-checkout|\/api\/|account\.html/);
  assert.match(script,/new URLSearchParams\(location\.search\)\.get\("lang"\)/);
  });
+
+test("all literal DOM lookups have an existing unique HTML id",()=>{
+ const ids=[...home.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
+ assert.equal(ids.length,new Set(ids).size);
+ for(const [,id] of script.matchAll(/\$\("([^"]+)"\)/g))assert.ok(ids.includes(id),"missing DOM id: "+id);
+});
+
+test("topic guides are crawlable, discoverable and self-canonical",()=>{
+ const sitemap=fs.readFileSync(new URL("../sitemap.xml",import.meta.url),"utf8");
+ for(const lang of ["ko","ja","en"])for(const topic of ["late-reply","work-reply"]){
+ const path="/learn/"+lang+"-"+topic+".html";const page=fs.readFileSync(new URL(".."+path,import.meta.url),"utf8");const hub=fs.readFileSync(new URL("../learn/"+lang+".html",import.meta.url),"utf8");
+ assert.ok(hub.includes(`href="${path}"`));assert.ok(sitemap.includes(`<loc>https://saynue.vercel.app${path}</loc>`));assert.ok(page.includes(`rel="canonical" href="https://saynue.vercel.app${path}"`));assert.equal([...page.matchAll(/<h2>/g)].length,3);assert.doesNotMatch(page,/<script|noindex/);
+ }
+});
