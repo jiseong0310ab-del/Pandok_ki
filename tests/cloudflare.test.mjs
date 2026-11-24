@@ -29,4 +29,10 @@ test("static build excludes backend, tests, configuration and secrets; staged se
  assert.match(await readFile(".cloudflare-public/_headers","utf8"),/X-Robots-Tag: noindex, nofollow/);
  assert.match(await readFile(".cloudflare-public/robots.txt","utf8"),/Disallow: \//);
  assert.match(await readFile(".cloudflare-public/index.html","utf8"),/https:\/\/saynue\.example\//);
+ // Self-hosted fonts ship with their licence and a year-long immutable cache.
+ const fonts=await readdir(".cloudflare-public/assets/fonts/pretendard-1.3.9");
+ assert.equal(fonts.filter(f=>f.endsWith(".woff2")).length,92);
+ assert.ok(fonts.includes("LICENSE.txt")&&fonts.includes("pretendard.css"));
+ assert.match(await readFile(".cloudflare-public/_headers","utf8"),/\/assets\/fonts\/\*\n  Cache-Control: public, max-age=31536000, immutable/);
+ assert.ok((await readdir(".cloudflare-public/assets")).includes("theme.js"));
 });
