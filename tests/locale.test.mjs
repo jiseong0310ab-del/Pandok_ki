@@ -11,3 +11,11 @@ test("locale preference overrides device, explicit links override saved locale, 
  assert.equal(setup({lang:"zh-Hant",stored:"bad"}).api.get(),"zh-TW");
  const b=setup({blocked:true});assert.equal(b.api.choose("ko"),false);assert.equal(b.api.get(),"ko");assert.equal(b.api.choose("__proto__"),false);
 });
+
+test("all homepage localization keys have a nonempty string in each supported locale",()=>{
+ const app=fs.readFileSync(new URL("../assets/app.js",import.meta.url),"utf8");
+ const html=fs.readFileSync(new URL("../index.html",import.meta.url),"utf8");
+ const dictionary=new Function(app.slice(app.indexOf("const T="),app.indexOf("const $=id"))+"\nreturn T")();
+ const keys=new Set([...html.matchAll(/data-i="([^"]+)"/g)].map(m=>m[1]));
+ for(const lang of ["ko","ja","en","zh-CN","zh-TW"])for(const key of keys)assert.ok(typeof dictionary[lang][key]==="string"&&dictionary[lang][key].trim(),lang+"."+key);
+});

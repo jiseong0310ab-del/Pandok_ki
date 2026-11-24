@@ -113,13 +113,13 @@ function create({t,onError,onChange=()=>{}}){
     shots.forEach((shot,i)=>{
       const row=el("div","shot-item"+(i===active?" active":""));
       const choose=el("button","shot-choice",(i+1)+". "+shot.name+" · "+t(shot.reviewed?"shotDone":"shotPending"));
-      choose.type="button";choose.disabled=busy;
+      choose.type="button";choose.disabled=busy||drawing;
       choose.addEventListener("click",()=>{active=i;paint();rerender()});
       row.appendChild(choose);
       const controls=el("div","shot-controls");
       for(const [action,symbol,disabled] of [["up","↑",i===0],["down","↓",i===shots.length-1],["remove","×",false]]){
         const b=el("button","shot-control",symbol);
-        b.type="button";b.disabled=busy||disabled;
+        b.type="button";b.disabled=busy||drawing||disabled;
         b.setAttribute("aria-label",t("shotAction"+action[0].toUpperCase()+action.slice(1))+" "+(i+1));
         b.addEventListener("click",()=>{
           if(action==="remove"){shots.splice(i,1);active=shots.length?Math.min(active>=i?Math.max(0,active-1):active,shots.length-1):-1}
@@ -172,7 +172,7 @@ function create({t,onError,onChange=()=>{}}){
   canvas.addEventListener("pointerup",end);
   canvas.addEventListener("pointercancel",end);
   undo.addEventListener("click",()=>{
-    if(busy||!current())return;
+    if(busy||drawing||!current())return;
     current().strokes.pop();current().reviewed=false;current().safeData=null;onChange();
     paint();rerender();notify(t("shotUndoHint"));
   });

@@ -42,7 +42,7 @@ function renderMeaning(id,data,draft){
 let locale="ko",platform="other",relation="unknown",goal="understand",replyTone="natural",replyLength="normal",replyEmoji="none",persona="standard",autoExpert=true,feedbackSent=false,resultGoal="understand",resultLocale="ko",mode="image",lastResult=null,activeSession=null,followUpContext=null,situationLibrary=null,simEpoch=0,stylePreferences=null,usageMetrics=null;
 function langFromBrowser(){return window.SaynueLocale.get()}
 function tx(k){return (T[locale]||T.en)[k]||T.en[k]||k}
-function setLocale(l){locale=Object.prototype.hasOwnProperty.call(T,l)?l:"en";$("locale").value=locale;document.documentElement.lang=locale;document.title=({"ko":"카톡 대화 분석 · AI 답장 추천 | SAYNUE","ja":"LINE会話分析・AI返信アドバイス | SAYNUE","en":"AI Text Message Analyzer & Reply Coach | SAYNUE","zh-CN":"微信聊天分析与AI回复建议 | SAYNUE","zh-TW":"聊天訊息分析與AI回覆建議 | SAYNUE"})[locale];document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=tx(el.dataset.i)});$("chatText").placeholder=tx("placeholder");updatePersonaUI();updateSettingsSummary();shots.refresh();if(!lastResult&&!$("error").classList.contains("hidden"))hideError();if(lastResult&&!$("results").classList.contains("hidden")){renderMeaning(lastResult.persona&&lastResult.persona!=="standard"?"personaMeaning":"replyMeaning",lastResult,!!lastResult.replyDraft);$("confidence").textContent=tx(({low:"low",medium:"medium",high:"high"})[lastResult.evidenceLevel]||"low");}updateFollowUpUI();updateSavedBar();window.SaynueLocale.links(locale)}
+function setLocale(l){locale=Object.prototype.hasOwnProperty.call(T,l)?l:"en";$("locale").value=locale;document.documentElement.lang=locale;document.title=({"ko":"카톡 대화 분석 · AI 답장 추천 | SAYNUE","ja":"LINE会話分析・AI返信アドバイス | SAYNUE","en":"AI Text Message Analyzer & Reply Coach | SAYNUE","zh-CN":"微信聊天分析与AI回复建议 | SAYNUE","zh-TW":"聊天訊息分析與AI回覆建議 | SAYNUE"})[locale];document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=tx(el.dataset.i)});$("chatText").placeholder=tx("placeholder");updatePersonaUI();updateSettingsSummary();shots.refresh();if(!lastResult&&!$("error").classList.contains("hidden"))hideError();if(lastResult&&!$("results").classList.contains("hidden")){if(lastResult.persona==="standard"||!lastResult.persona){renderEvidenceCards(lastResult.evidenceCards);markLang(["evidenceCardsList"],resultLocale)}renderMeaning(lastResult.persona&&lastResult.persona!=="standard"?"personaMeaning":"replyMeaning",lastResult,!!lastResult.replyDraft);$("confidence").textContent=tx(({low:"low",medium:"medium",high:"high"})[lastResult.evidenceLevel]||"low");}updateFollowUpUI();updateSavedBar();window.SaynueLocale.links(locale)}
 let analysisEpoch=0,analysisController=null,returnReport=null;
 function cancelAnalysis(){
  analysisEpoch++;if(analysisController){analysisController.abort();analysisController=null}
@@ -274,7 +274,7 @@ $("simRun").addEventListener("click",async()=>{
  const contextSummary=[lastResult.verdict||lastResult.summary,lastResult.nextStep].filter(x=>typeof x==="string").join("\n").slice(0,630);
  $("simResults").classList.add("hidden");$("simError").textContent=tx("simWorking");btn.disabled=true;
  try{
-  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),24000);
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),33000);
   let response;
   try{response=await fetch("/api/simulate",{method:"POST",headers:{"Content-Type":"application/json"},
    body:JSON.stringify({locale:requestLocale,persona:activeSession?.persona||persona,relation:activeSession?.relation||relation,draft,contextSummary,replyLanguage:replyLang}),signal:controller.signal,cache:"no-store"})}
@@ -369,7 +369,7 @@ $("analyze").addEventListener("click",async()=>{
  const chatText=$("chatText").value.trim(),prior=followUpContext;
  if(mode==="text"&&chatText.length<(prior?1:20)){showError(chatText?tx("errShort"):tx("errInput"));return}
  if(mode==="image"&&!shots.isReady()){showError(shots.isBusy()?tx("shotPreparing"):shots.hasImages()?tx("shotMustReview"):tx("errInput"));return}
- const settings={platform,relation,goal,replyTone,replyLength:replyLength,replyEmoji:replyEmoji,locale,replyLanguage:selectedLanguage("replyLanguage"),persona,autoExpert,caseContext:$("personaContext").value.trim(),chatText:mode==="text"?chatText:"",images:mode==="image"?shots.getImages():undefined,priorAnalysis:prior?{summary:prior.summary,signal:prior.signal,nextStep:prior.nextStep,turn:prior.turn}:undefined};
+ const settings={platform,relation,goal:goal,replyTone:replyTone,replyLength:replyLength,replyEmoji:replyEmoji,locale,replyLanguage:selectedLanguage("replyLanguage"),persona,autoExpert,caseContext:$("personaContext").value.trim(),chatText:mode==="text"?chatText:"",images:mode==="image"?shots.getImages():undefined,priorAnalysis:prior?{summary:prior.summary,signal:prior.signal,nextStep:prior.nextStep,turn:prior.turn}:undefined};
  const epoch=++analysisEpoch,ctl=new AbortController();analysisController=ctl;
  lastResult=null;activeSession=null;simEpoch++;updateFollowUpActions();$("consent").checked=false;
  usageEvent("analysis_started");const btn=$("analyze");btn.disabled=true;$("loading").classList.remove("hidden");$("results").classList.add("hidden");
@@ -523,7 +523,7 @@ function renderCoachExtras(data,reportLang){
 
 async function coachRequest(path,data){
  cancelCoachRequest();const ctl=new AbortController();coachController=ctl;const timer=setTimeout(()=>ctl.abort(),40000);
- try{const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data),cache:"no-store",signal:ctl.signal});const v=await r.json().catch(()=>null);if(!r.ok){const code=typeof v?.code==="string"&&/^[A-Z_]{3,50}$/.test(v.code)?v.code:"HTTP_"+r.status;throw Error(((API_ERRORS[locale]||API_ERRORS.en)[code]||tx(r.status===429?"errLimit":"errOther"))+" ["+code+"]")}if(!v||typeof v!=="object")throw Error(((API_ERRORS[locale]||API_ERRORS.en).AI_INVALID_OUTPUT));return v}finally{clearTimeout(timer);if(coachController===ctl)coachController=null}
+ try{const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data),cache:"no-store",signal:ctl.signal});const v=await r.json().catch(()=>null);if(ctl.signal.aborted)throw new DOMException("Aborted","AbortError");if(!r.ok){const code=typeof v?.code==="string"&&/^[A-Z_]{3,50}$/.test(v.code)?v.code:"HTTP_"+r.status;throw Error(((API_ERRORS[locale]||API_ERRORS.en)[code]||tx(r.status===429?"errLimit":"errOther"))+" ["+code+"]")}if(!v||typeof v!=="object")throw Error(((API_ERRORS[locale]||API_ERRORS.en).AI_INVALID_OUTPUT));return v}finally{clearTimeout(timer);if(coachController===ctl)coachController=null}
 }
 function invalidateCoachInput(){cancelCoachRequest();coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachConsent").checked=false;$("coachRun").disabled=false;$("coachStatus").textContent="";$("coachRehearse").disabled=false}
 for(const id of ["coachContext","coachDraft"])$(id).addEventListener("input",invalidateCoachInput);
