@@ -1,3 +1,4 @@
+import {publicSiteOrigin} from "../../lib/site-origin.mjs";
 // Creates a Paddle SANDBOX transaction only for a server-verified user.
 // Checkout must not open unless a server-owned transaction->user binding
 // has been persisted. Real payments are explicitly unsupported.
@@ -30,7 +31,7 @@ export default {async fetch(request){
    body:JSON.stringify({
     items:[{price_id:priceId,quantity:1}],
     collection_mode:"automatic",
-    checkout:{url:"https://saynue.vercel.app/sandbox-checkout.html"},
+    checkout:{url:publicSiteOrigin()+"/sandbox-checkout.html"},
     custom_data:{saynue_origin:"server-authenticated-sandbox"}
    }),
    signal:AbortSignal.timeout(9000),
@@ -49,7 +50,7 @@ export default {async fetch(request){
  // Construct an origin-pinned link only after the server-owned transaction
  // has been written to the database. The browser must NOT use the public price
  // when following this link; Paddle.js opens the transaction by ID.
- const checkout="https://saynue.vercel.app/sandbox-checkout.html?_ptxn="+encodeURIComponent(transaction.id);
+ const checkout=publicSiteOrigin()+"/sandbox-checkout.html?_ptxn="+encodeURIComponent(transaction.id);
  for(const [k,v] of Object.entries(base))headers.set(k,v);
  return new Response(JSON.stringify({code:"SANDBOX_TRANSACTION_CREATED",transactionId:transaction.id,checkoutUrl:checkout}),{status:200,headers});
 }};
