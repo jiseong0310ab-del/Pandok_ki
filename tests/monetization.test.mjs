@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {homeWithScript} from "./page-source.mjs";
 import vm from "node:vm";
 
 function load(name){return fs.readFileSync(new URL("../"+name,import.meta.url),"utf8")}
@@ -23,7 +24,7 @@ test("original public guide contains substantive content, not advertising placeh
   assert.doesNotMatch(page,/adsbygoogle|googlesyndication|ad-slot|paddle\.js|checkout\.open|track\(/i);
 });
 test("homepage links to educational guide and planned membership without exposing paid API",()=>{
-  const page=load("index.html");
+  const page=homeWithScript;
   assert.match(page,/href="\/plans\.html"/);
   assert.match(page,/href="\/guide\.html"/);
   assert.doesNotMatch(page,/paddle\.js|checkout\.open|stripe\.js|data-price-id/i);
@@ -58,7 +59,7 @@ test("SAYNUE Sandbox checkout can only open a simulated payment and never grant 
   assert.match(script,/eventCallback:onEvent/);
   assert.match(page,/Plus 기능은 아직 활성화되지 않아/);
   assert.doesNotMatch(page,/live_[a-z0-9]+|PADDLE_API_KEY|PADDLE_WEBHOOK_SECRET|grantPlus|localStorage\.setItem|sessionStorage\.setItem/);
-  assert.doesNotMatch(load("index.html")+load("plans.html"),/sandbox-checkout\.html|test_1e2da107b538595bfd8fb2d8923/);
+  assert.doesNotMatch(homeWithScript+load("plans.html"),/sandbox-checkout\.html|test_1e2da107b538595bfd8fb2d8923/);
 });
 
 test("Plus preview is a fictional interactive feature demo with no checkout and no AI request",()=>{
@@ -75,4 +76,15 @@ test("Plus preview is a fictional interactive feature demo with no checkout and 
   for(const key of ["engaged","uncertain","no_reply","refusal"])assert.match(preview,new RegExp(key+":"));
   assert.doesNotMatch(page+preview,/\/api\/plus|Paddle\.Checkout|Paddle\.Initialize|pri_01m7k4|test_1e2da|fetch\s*\(|XMLHttpRequest/i);
   assert.match(preview,/static demonstration|static demonstration/i);
+});
+test("data handling notice is linked, script-free and covers all five languages",()=>{
+  const page=load("data-notice.html");
+  assert.match(homeWithScript,/href="\/data-notice\.html" data-i="dataLink"/);
+  assert.match(page,/script-src 'none'/);
+  assert.doesNotMatch(page,/<script/);
+  for(const lang of ["ko","ja","en","zh-CN","zh-TW"])assert.match(page,new RegExp('<section id="'+lang+'" lang="'+lang+'">'));
+  // It must not pretend to be the formal policy, and must disclose Gemini processing.
+  assert.match(page,/정식 개인정보처리방침과 이용약관은 아직 준비 중/);
+  assert.match(page,/formal privacy policy and terms of service[^<]*still being prepared/);
+  assert.match(page,/Google Gemini API/);
 });

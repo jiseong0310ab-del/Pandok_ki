@@ -1,8 +1,9 @@
 // Paid AI route: always disabled unless server auth, RLS-backed entitlement and
 // atomic per-user quota are correctly configured. Sandbox only for now.
 import {checkSameOrigin,getAuthenticatedUser} from "../../lib/saynue-auth.mjs";
-import {supabaseConfig,claimPlusCredit} from "../../lib/saynue-storage.mjs";
+import {supabaseConfig,claimPlusCredit,refundPlusCredit} from "../../lib/saynue-storage.mjs";
 import {validatePlusInput,generatePlusReport} from "../../lib/plus-coach.mjs";
+import {pickGeminiModels} from "../../lib/server-guard.mjs";
 const base={"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store, max-age=0","X-Content-Type-Options":"nosniff"};
 const reply=(code,status,headers=new Headers())=>{
  for(const [k,v] of Object.entries(base))headers.set(k,v);
@@ -27,12 +28,24 @@ export default {async fetch(request){
  const priceId=process.env.SAYNUE_PADDLE_SANDBOX_PRICE_ID||"pri_01m7k4h86fsasy85vxy1w5d1bw";
  const perDay=Math.min(25,Math.max(1,Number(process.env.SAYNUE_PLUS_DAILY_QUOTA)||5));
  let allowed=false;
+ // The SQL quota is keyed by the UTC day; remember it for a possible refund.
+ const usageDate=new Date().toISOString().slice(0,10);
  try{allowed=await claimPlusCredit({userId:user.id,priceId,dailyLimit:perDay})}
  catch(_){return reply("STORAGE_UNAVAILABLE",503,headers)}
  if(!allowed)return reply("NO_ACTIVE_SUBSCRIPTION_OR_DAILY_LIMIT",403,headers);
  try{
-  const report=await generatePlusReport(body,{apiKey:process.env.GEMINI_API_KEY});
+  const {primary,fallback}=pickGeminiModels();
+  const report=await generatePlusReport(body,{apiKey:process.env.GEMINI_API_KEY,model:primary,fallbackModel:fallback});
   for(const [k,v] of Object.entries(base))headers.set(k,v);
   return new Response(JSON.stringify(report),{status:200,headers});
- }catch(_){return reply("AI_UNAVAILABLE",503,headers)}
+ }catch(error){
+  // A billed but invalid model answer keeps the credit (otherwise crafted
+  // input could buy unlimited model calls). Provider outages and rejected
+  // requests are not the user's fault, so the credit is returned.
+  const code=error?.message==="AI_INVALID_OUTPUT"?"AI_INVALID_OUTPUT":"AI_UNAVAILABLE";
+  if(code==="AI_UNAVAILABLE"){
+   try{await refundPlusCredit({userId:user.id,usageDate})}catch(_){}
+  }
+  return reply(code,code==="AI_INVALID_OUTPUT"?502:503,headers);
+ }
 }};

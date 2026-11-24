@@ -18,3 +18,10 @@ Free: core report, one draft, basic rehearsal and follow-up. Planned Plus: strat
 - Expired saved summaries are removed on next browser access; reset clears follow-up comparison and consent. Browser storage cannot be cleaned while the site is closed.
 - Opt-in reply copy and analysis failure metrics added to the protected owner dashboard. Copy is not a sent message; failures can overlap with later successful attempts. Redis configuration still required.
 - Five localized conflict guides added. Existing billing gates remain closed.
+
+## Stability and abuse hardening (2026-11-24)
+- Shared guards in `lib/server-guard.mjs`: one origin check, one model allowlist, purpose-derived secrets (the Gemini key is never reused verbatim as a salt), and contact masking that leaves dates and clock times intact.
+- Metrics: per-IP daily budget and per-instance memory limit; optional dedicated metrics Redis (`SAYNUE_METRICS_REDIS_REST_URL`/`_TOKEN`). Recommended before enabling `SAYNUE_REQUIRE_DISTRIBUTED_LIMIT`, because a drained shared Redis makes analysis fail closed.
+- Plus: per-attempt timeouts, fallback model, quota refund on provider failure only (`saynue_refund_plus_credit` must be added in Supabase before enabling Plus).
+- Homepage CSP no longer allows inline scripts; a Playwright phone-viewport E2E job runs in CI with all APIs mocked.
+

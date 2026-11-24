@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {homeWithScript} from "./page-source.mjs";
 import vm from "node:vm";
 import app from "../api/analyze.mjs";
 
@@ -12,7 +13,7 @@ const valid={platform:"line",relation:"talking",goal:"reply",locale:"ja",chatTex
 const mock={verdict:"A polite but undecided response",warmthScore:57,reciprocityScore:48,evidenceLevel:"medium",keySignal:"A reply but no date agreed.",evidence:"They said they will check their schedule.",alternative:"They may genuinely be busy.",nextStep:"Give them time and respect the boundary.",replyDraft:"No rush, let me know when you know your schedule.",replyWhy:"It acknowledges their busy schedule without pressuring them.",evidenceCards:[]};
 
 test("index HTML has a script with valid JavaScript syntax",()=>{
-  const page=fs.readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  const page=homeWithScript;
   const match=page.match(/<script>([\s\S]*?)<\/script>/);
   assert.ok(match,"Inline script must exist");
   assert.doesNotThrow(()=>new vm.Script(match[1]));
@@ -303,4 +304,15 @@ test("unconfigured local limiter throttles repeated calls",async()=>{
     for(let i=0;i<7;i++)last=await app.fetch(req(valid,{headers:{"x-vercel-forwarded-for":"198.51.100.89"}}));
     assert.equal(last.status,429);
   }finally{global.fetch=old}
+});
+test("homepage has no inline script, so its CSP forbids inline script execution",async()=>{
+  const {homeHtml}=await import("./page-source.mjs");
+  assert.doesNotMatch(homeHtml,/<script>/);
+  assert.doesNotMatch(homeHtml,/\son[a-z]+="/i);
+  const csp=homeHtml.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)[1];
+  const scriptSrc=csp.split(";").map(s=>s.trim()).find(s=>s.startsWith("script-src"));
+  assert.equal(scriptSrc,"script-src 'self'");
+  // The controller must run after the helper scripts it uses.
+  const order=["screenshot-editor.js","situation-library.js","reply-style.js","usage-metrics.js","app.js"].map(f=>homeHtml.indexOf("/assets/"+f));
+  assert.ok(order.every((v,i)=>v>0&&(i===0||v>order[i-1])),String(order));
 });

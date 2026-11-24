@@ -225,4 +225,26 @@ $$;
 REVOKE ALL ON FUNCTION public.saynue_claim_plus_credit(uuid,text,integer) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.saynue_claim_plus_credit(uuid,text,integer) TO service_role;
 
+-- Return one credit when the AI provider failed (outage, timeout, rejected
+-- request). Not used for billed-but-invalid model output. Never below zero.
+CREATE OR REPLACE FUNCTION public.saynue_refund_plus_credit(p_user_id uuid,p_usage_date date)
+RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public,pg_temp
+AS $refund$
+DECLARE
+  v_count integer;
+BEGIN
+  IF p_user_id IS NULL OR p_usage_date IS NULL THEN
+    RETURN false;
+  END IF;
+  UPDATE public.saynue_plus_usage
+    SET calls=calls-1
+    WHERE user_id=p_user_id AND usage_date=p_usage_date AND calls>0
+    RETURNING calls INTO v_count;
+  RETURN v_count IS NOT NULL;
+END;
+$refund$;
+REVOKE ALL ON FUNCTION public.saynue_refund_plus_credit(uuid,date) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.saynue_refund_plus_credit(uuid,date) TO service_role;
+
 COMMIT;

@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {homeWithScript} from "./page-source.mjs";
 import vm from "node:vm";
 import {parseInput} from "../api/analyze.mjs";
 import metrics,{EVENTS,parseMetricEvent,reportCommands,projectReport} from "../api/metrics.mjs";
 
-const homepage=fs.readFileSync(new URL("../index.html",import.meta.url),"utf8");
+const homepage=homeWithScript;
 const styleSource=fs.readFileSync(new URL("../assets/reply-style.js",import.meta.url),"utf8");
 const metricsSource=fs.readFileSync(new URL("../assets/usage-metrics.js",import.meta.url),"utf8");
 const dashboard=fs.readFileSync(new URL("../metrics.html",import.meta.url),"utf8");

@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {homeWithScript} from "./page-source.mjs";
 import vm from "node:vm";
 import simulator,{parseSimulationInput,normalizeSimulationResult} from "../api/simulate.mjs";
 
 const libraryCode=fs.readFileSync(new URL("../assets/situation-library.js",import.meta.url),"utf8");
-const home=fs.readFileSync(new URL("../index.html",import.meta.url),"utf8");
+const home=homeWithScript;
 const css=fs.readFileSync(new URL("../assets/site.css",import.meta.url),"utf8");
 const api=fs.readFileSync(new URL("../api/simulate.mjs",import.meta.url),"utf8");
 const script=home.match(/<script>([\s\S]*?)<\/script>/)?.[1]||"";

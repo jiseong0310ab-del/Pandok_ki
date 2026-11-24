@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {homeWithScript} from "./page-source.mjs";
 
-const home=fs.readFileSync(new URL("../index.html",import.meta.url),"utf8");
+const home=homeWithScript;
 const css=fs.readFileSync(new URL("../assets/site.css",import.meta.url),"utf8");
 const script=home.match(/<script>([\s\S]*?)<\/script>/)?.[1]||"";
 const slice=(start,end)=>{

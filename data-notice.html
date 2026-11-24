@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1020"><meta name="referrer" content="no-referrer">
+<title>데이터 처리 안내 | SAYNUE</title>
+<meta name="description" content="SAYNUE가 대화·스크린샷·설정 데이터를 어디로 보내고 무엇을 저장하는지에 대한 안내입니다.">
+<link rel="canonical" href="https://saynue.vercel.app/data-notice.html">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/assets/site.css">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<style>.notice{max-width:700px;margin:0 auto}.notice h1{font-size:clamp(26px,6vw,38px);line-height:1.35;margin:14px 0 8px;color:#f4f1ff}.notice h2{font-size:20px;margin:0 0 12px;color:#e4d9ff}.notice section{padding:26px 0;border-bottom:1px solid #41465c}.notice li,.notice p{font-size:15px;line-height:1.8;color:#c7cadb}.notice ul{padding-left:20px;margin:0}.notice li{margin:0 0 9px}.notice .langs{display:flex;flex-wrap:wrap;gap:12px;margin:10px 0 4px}.notice .status{font-size:13px;color:#b9b8ce;border:1px solid #41465c;border-radius:12px;padding:12px 14px}</style>
+</head><body><main class="wrap notice">
+<header class="nav"><a href="/" class="brand-lockup"><img src="/assets/saynue-mark.svg" alt="" width="36" height="36"><span class="brand-name">SAYNUE</span></a></header>
+<h1>데이터 처리 안내 · Data handling</h1>
+<nav class="langs" aria-label="Languages"><a href="#ko" hreflang="ko">한국어</a><a href="#ja" hreflang="ja">日本語</a><a href="#en" hreflang="en">English</a><a href="#zh-CN" hreflang="zh-CN">简体中文</a><a href="#zh-TW" hreflang="zh-TW">繁體中文</a></nav>
+
+<section id="ko" lang="ko">
+<h2>한국어</h2>
+<p class="status">이 페이지는 현재 서비스 코드가 실제로 하는 일을 설명하는 안내입니다. 운영자 정보·연락처·법적 근거를 담은 정식 개인정보처리방침과 이용약관은 아직 준비 중입니다.</p>
+<ul>
+<li><strong>분석할 때 보내는 것:</strong> 동의에 체크하고 분석 버튼을 눌렀을 때만, 입력한 대화 텍스트(최대 12,000자) 또는 직접 가린 뒤 JPEG로 변환한 스크린샷(최대 3장), 선택한 메신저·관계·목표·답장 스타일·언어를 보냅니다. 전문가 모드에서는 상황 메모(최대 500자), 이어서 분석할 때는 이전 AI 요약도 함께 보냅니다. 원본 사진과 파일 이름은 보내지 않습니다.</li>
+<li><strong>Google Gemini:</strong> 보낸 내용은 SAYNUE 서버를 거쳐 Google Gemini API로 전달되어 분석됩니다. 사용하는 Gemini 요금제(예: 무료 요금제)에 따라 Google이 입력과 결과를 제품 개선에 사용할 수 있습니다.</li>
+<li><strong>저장하지 않는 것:</strong> SAYNUE는 대화, 스크린샷, 분석 결과를 자체 데이터베이스에 저장하지 않습니다. 다만 Vercel(호스팅)과 Google의 처리·로그 정책은 별도이므로 즉시 완전 삭제나 "보관 0"을 약속하지 않습니다.</li>
+<li><strong>요청 횟수 제한:</strong> 남용을 막기 위해 IP 주소를 비밀값과 함께 해시한 값으로 요청 횟수를 셉니다. 원래 IP 주소는 저장하지 않으며, 카운터는 최대 약 25시간 뒤 만료됩니다.</li>
+<li><strong>이 기기(브라우저)에만 저장되는 것:</strong> 직접 선택했을 때만 저장합니다. ① 상황 보관함: 원문이 아닌 AI 요약·신호·다음 행동(연락처 등은 가림)과 설정값, 최대 8개, 30일이 지나면 다음 방문 때 삭제. ② 답장 스타일: 말투·길이·이모지 선택값 3개. ③ 사용 통계 동의: 무작위 ID와 첫 동의 날짜(30일 후 재동의 필요).</li>
+<li><strong>선택적 사용 통계(기본 꺼짐):</strong> 켜면 "분석 완료" 같은 정해진 이벤트 이름과 무작위 ID만 보냅니다. 서버는 ID를 다시 해시해 날짜별 합계로만 기록하고 45일 안에 만료됩니다. 체크를 끄면 이 기기의 ID는 즉시 지워지지만, 이미 합산된 익명 통계는 개별 삭제할 수 없습니다.</li>
+<li><strong>평가 버튼:</strong> "도움됐어요/아쉬웠어요", 분석 목표, 언어만 보냅니다. 대화나 답장 문장은 보내지 않습니다.</li>
+<li><strong>계정과 결제:</strong> 이메일 로그인과 Plus 구독은 아직 일반 사용자에게 열려 있지 않으며 실제 결제는 받지 않습니다. 로그인이 열리면 이메일 주소가 인증 서비스(Supabase)에 저장됩니다.</li>
+<li><strong>다른 사람이 나오는 대화를 올릴 때:</strong> 자동 익명화는 되지 않습니다. 이름·얼굴·전화번호·주소 등은 직접 가려 주세요. 가리지 않은 정보는 그대로 Gemini로 전송될 수 있습니다.</li>
+</ul>
+</section>
+
+<section id="ja" lang="ja">
+<h2>日本語</h2>
+<p class="status">このページは、現在のサービスのコードが実際に行っていることの説明です。運営者情報・連絡先・法的根拠を含む正式なプライバシーポリシーと利用規約は準備中です。</p>
+<ul>
+<li><strong>分析時に送信するもの:</strong> 同意にチェックして分析ボタンを押したときだけ、入力した会話テキスト（最大12,000字）または自分で隠したうえでJPEGに変換したスクリーンショット（最大3枚）と、選んだメッセンジャー・関係・目的・返信スタイル・言語を送信します。専門家モードでは状況メモ（最大500字）、続けて分析するときは前回のAI要約も送ります。元の写真とファイル名は送りません。</li>
+<li><strong>Google Gemini:</strong> 送信内容はSAYNUEのサーバーを経由してGoogle Gemini APIで分析されます。利用するGeminiの料金プラン（無料プランなど）によっては、Googleが入力と結果を製品改善に利用する場合があります。</li>
+<li><strong>保存しないもの:</strong> SAYNUEは会話・スクリーンショット・分析結果を独自のデータベースに保存しません。ただし Vercel（ホスティング）とGoogleの処理・ログのポリシーは別のため、即時の完全削除や「保存ゼロ」はお約束しません。</li>
+<li><strong>リクエスト回数の制限:</strong> 不正利用を防ぐため、IPアドレスを秘密値とともにハッシュ化した値で回数を数えます。元のIPアドレスは保存せず、カウンターは最大約25時間で期限切れになります。</li>
+<li><strong>この端末（ブラウザ）だけに保存されるもの:</strong> 自分で選んだ場合のみです。① 状況の保管箱: 原文ではなくAIの要約・シグナル・次の行動（連絡先などは伏せ字）と設定、最大8件、30日を過ぎると次回訪問時に削除。② 返信スタイル: 口調・長さ・絵文字の3つの選択値。③ 利用統計への同意: ランダムIDと最初の同意日（30日後に再同意が必要）。</li>
+<li><strong>任意の利用統計（初期設定はオフ）:</strong> オンにすると「分析完了」などの決められたイベント名とランダムIDだけを送ります。サーバーはIDを再度ハッシュ化し、日別の合計としてのみ記録し、45日以内に期限切れになります。オフにするとこの端末のIDはすぐ削除されますが、集計済みの匿名統計は個別に削除できません。</li>
+<li><strong>評価ボタン:</strong> 「役に立った／いまいち」、分析の目的、言語だけを送ります。会話や返信文は送りません。</li>
+<li><strong>アカウントと決済:</strong> メールログインとPlusはまだ一般公開されておらず、実際の決済は受け付けていません。ログインが公開されると、メールアドレスが認証サービス（Supabase）に保存されます。</li>
+<li><strong>他の人が写っている会話を送るとき:</strong> 自動で匿名化はされません。名前・顔・電話番号・住所などはご自身で隠してください。隠していない情報はそのままGeminiに送信される場合があります。</li>
+</ul>
+</section>
+
+<section id="en" lang="en">
+<h2>English</h2>
+<p class="status">This page describes what the current service code actually does. A formal privacy policy and terms of service with operator details, contact information and legal basis are still being prepared.</p>
+<ul>
+<li><strong>What is sent for analysis:</strong> only after you tick the consent box and press Analyze — the chat text you entered (up to 12,000 characters) or screenshots you redacted yourself and that were converted to JPEG (up to 3), plus your chosen messenger, relationship, goal, reply style and language. Specialist modes also send your situation note (up to 500 characters); follow-ups also send the previous AI summary. Original photos and file names are never sent.</li>
+<li><strong>Google Gemini:</strong> this content passes through the SAYNUE server to the Google Gemini API for analysis. Depending on the Gemini pricing tier in use (for example the free tier), Google may use inputs and outputs to improve its products.</li>
+<li><strong>What is not stored:</strong> SAYNUE does not keep conversations, screenshots or reports in its own database. Vercel (hosting) and Google have their own processing and logging policies, so we do not promise instant complete deletion or "zero retention".</li>
+<li><strong>Rate limiting:</strong> to prevent abuse, requests are counted under a salted hash of your IP address. The raw IP address is not stored, and counters expire within about 25 hours.</li>
+<li><strong>Stored only on this device (browser):</strong> only when you choose to. (1) Situation library: the AI summary, signal and next step (contacts masked) plus settings — not the original chat — up to 8 entries, removed on your next visit after 30 days. (2) Reply style: three choices (tone, length, emoji). (3) Usage-statistics consent: a random ID and the first consent date (re-consent after 30 days).</li>
+<li><strong>Optional usage statistics (off by default):</strong> when enabled, only a fixed event name such as "analysis completed" and the random ID are sent. The server hashes the ID again, records daily totals only, and expires them within 45 days. Turning it off deletes the ID on this device immediately, but already aggregated anonymous totals cannot be removed individually.</li>
+<li><strong>Rating buttons:</strong> send only "helpful / not helpful", the analysis goal and the language — never the chat or the reply text.</li>
+<li><strong>Accounts and payments:</strong> email sign-in and Plus are not open to the public yet, and no real payments are taken. Once sign-in opens, your email address is stored by the authentication service (Supabase).</li>
+<li><strong>Chats that include other people:</strong> nothing is anonymized automatically. Please cover names, faces, phone numbers, addresses and similar details yourself; anything left visible may be sent to Gemini as is.</li>
+</ul>
+</section>
+
+<section id="zh-CN" lang="zh-CN">
+<h2>简体中文</h2>
+<p class="status">本页说明当前服务代码实际会做什么。包含运营者信息、联系方式和法律依据的正式隐私政策与使用条款仍在准备中。</p>
+<ul>
+<li><strong>分析时发送的内容：</strong>仅在您勾选同意并点击分析按钮后发送：您输入的聊天文本（最多12,000字），或您自行遮挡并转换为JPEG的截图（最多3张），以及所选的聊天应用、关系、目标、回复风格和语言。专家模式还会发送情况说明（最多500字）；继续分析时还会发送上一次的AI摘要。不会发送原始照片和文件名。</li>
+<li><strong>Google Gemini：</strong>上述内容经由SAYNUE服务器发送到Google Gemini API进行分析。根据所用的Gemini资费方案（例如免费方案），Google可能会将输入和结果用于改进其产品。</li>
+<li><strong>不保存的内容：</strong>SAYNUE不会在自己的数据库中保存聊天、截图或分析结果。但Vercel（托管）和Google有各自的处理与日志政策，因此我们不承诺立即彻底删除或"零保留"。</li>
+<li><strong>请求次数限制：</strong>为防止滥用，我们使用IP地址与密钥一起哈希后的值来计数。不保存原始IP地址，计数器最长约25小时后失效。</li>
+<li><strong>仅保存在本设备（浏览器）中的内容：</strong>仅在您主动选择时保存。① 情况收藏：AI摘要、信号和下一步建议（联系方式已遮盖）及设置，不含聊天原文，最多8条，超过30天后在下次访问时删除。② 回复风格：语气、长度、表情三项选择。③ 使用统计同意：随机ID和首次同意日期（30天后需重新同意）。</li>
+<li><strong>可选的使用统计（默认关闭）：</strong>开启后仅发送"分析完成"等固定事件名和随机ID。服务器会再次哈希该ID，只按日期记录合计数，并在45天内失效。关闭后本设备上的ID会立即删除，但已汇总的匿名统计无法单独删除。</li>
+<li><strong>评价按钮：</strong>只发送"有帮助/不太满意"、分析目标和语言，不会发送聊天或回复内容。</li>
+<li><strong>账号与付款：</strong>邮箱登录和Plus尚未向公众开放，也不收取真实付款。登录开放后，您的邮箱地址将保存在认证服务（Supabase）中。</li>
+<li><strong>上传包含他人的聊天时：</strong>系统不会自动匿名化。请自行遮挡姓名、面部、电话号码、地址等信息；未遮挡的信息可能会原样发送给Gemini。</li>
+</ul>
+</section>
+
+<section id="zh-TW" lang="zh-TW">
+<h2>繁體中文</h2>
+<p class="status">本頁說明目前服務程式實際會做什麼。包含營運者資訊、聯絡方式與法律依據的正式隱私權政策和使用條款仍在準備中。</p>
+<ul>
+<li><strong>分析時傳送的內容：</strong>僅在您勾選同意並按下分析按鈕後傳送：您輸入的聊天文字（最多12,000字），或您自行遮蓋並轉換為JPEG的截圖（最多3張），以及所選的通訊軟體、關係、目標、回覆風格與語言。專家模式還會傳送情況說明（最多500字）；繼續分析時也會傳送上一次的AI摘要。不會傳送原始照片與檔名。</li>
+<li><strong>Google Gemini：</strong>上述內容經由SAYNUE伺服器傳送至Google Gemini API進行分析。依所使用的Gemini方案（例如免費方案），Google可能會將輸入與結果用於改善其產品。</li>
+<li><strong>不保存的內容：</strong>SAYNUE不會在自己的資料庫中保存聊天、截圖或分析結果。但Vercel（主機服務）與Google有各自的處理與日誌政策，因此我們不承諾立即完全刪除或「零保留」。</li>
+<li><strong>請求次數限制：</strong>為防止濫用，我們以IP位址與密鑰一起雜湊後的值來計數。不保存原始IP位址，計數器最長約25小時後失效。</li>
+<li><strong>只保存在本裝置（瀏覽器）的內容：</strong>僅在您主動選擇時保存。① 情況收藏：AI摘要、訊號與下一步建議（聯絡方式已遮蓋）及設定，不含聊天原文，最多8筆，超過30天後於下次造訪時刪除。② 回覆風格：語氣、長度、表情符號三項選擇。③ 使用統計同意：隨機ID與首次同意日期（30天後需重新同意）。</li>
+<li><strong>選擇性使用統計（預設關閉）：</strong>開啟後僅傳送「分析完成」等固定事件名稱與隨機ID。伺服器會再次雜湊該ID，只按日期記錄合計數，並在45天內失效。關閉後本裝置上的ID會立即刪除，但已彙總的匿名統計無法個別刪除。</li>
+<li><strong>評價按鈕：</strong>只傳送「有幫助／不太滿意」、分析目標與語言，不會傳送聊天或回覆內容。</li>
+<li><strong>帳號與付款：</strong>電子郵件登入與Plus尚未對大眾開放，也不收取真實付款。登入開放後，您的電子郵件地址將保存在驗證服務（Supabase）中。</li>
+<li><strong>上傳含有他人的聊天時：</strong>系統不會自動匿名化。請自行遮蓋姓名、臉部、電話號碼、地址等資訊；未遮蓋的資訊可能會原樣傳送給Gemini。</li>
+</ul>
+</section>
+<footer class="footer"><a href="/">SAYNUE</a> · Read Between the Lines</footer>
+</main></body></html>

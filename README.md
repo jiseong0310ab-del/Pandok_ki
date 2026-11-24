@@ -1,10 +1,16 @@
 # SAYNUE · Read Between the Lines
 
-스마트폰에서 관리하는 **SAYNUE** Vercel MVP. 기존 Pandok_ki GitHub 저장소와 Vercel 배포 연결은 유지합니다.\n\n**실서비스 주소: https://saynue.vercel.app** · 이전 주소 `https://pandokki.vercel.app`도 유지합니다.
+스마트폰에서 관리하는 **SAYNUE** Vercel MVP. 기존 Pandok_ki GitHub 저장소와 Vercel 배포 연결은 유지합니다.
 
-- **assets/site.css** / **assets/saynue-mark.svg** / **favicon.svg** — 절제된 Midnight/Lavender UI, 모바일 로고, 브라우저 아이콘\n- **index.html** — 모바일 UI, 한국어/일본어/영어/중국어 간체/번체, 메신저 7종, 텍스트/이미지 입력, 개인 정보 없는 결과 공유, 유료 기능 소개
+**실서비스 주소: https://saynue.vercel.app** · 이전 주소 `https://pandokki.vercel.app`도 유지합니다.
+
+- **assets/site.css** / **assets/saynue-mark.svg** / **favicon.svg** — 절제된 Midnight/Lavender UI, 모바일 로고, 브라우저 아이콘
+- **index.html** — 모바일 UI, 한국어/일본어/영어/중국어 간체/번체, 메신저 7종, 텍스트/이미지 입력, 개인 정보 없는 결과 공유, 유료 기능 소개
+- **assets/app.js** — 메인 화면 컨트롤러(5개 언어 문구 포함). index.html에서 분리해 CSP에서 인라인 스크립트를 금지
 - **api/analyze.mjs** — 서버에서만 Gemini 호출; 대화 입력 검증, 무료 결과만 반환, 속도 제한, API 오류 처리
-- **tests/smoke.mjs** / **.github/workflows/test.yml** — 무료 자동 테스트 (배포에 별도 설정 불필요)
+- **lib/server-guard.mjs** — 모든 API가 공유하는 Origin 검사, 요청 제한 키, 비밀값 파생, 연락처 마스킹, Gemini 모델 선택
+- **data-notice.html** — 실제 코드 기준 데이터 처리 안내(5개 언어). 정식 개인정보처리방침·약관 아님
+- **tests/** / **.github/workflows/test.yml** — 무료 자동 테스트 (배포에 별도 설정 불필요). 전체 목록은 4절 참고
 
 ## 1. iPhone에서 배포하기
 
@@ -36,7 +42,10 @@ Vercel이 api/analyze.mjs를 Node Function으로 감지합니다. 메신저 계�
 
 ## 3. 무료 / 유료 전략
 
-현재 무료: 요약, 호의적 대화 신호, 상호성, 근거량, 주요 근거, 다른 가능성, 다음 행동, **개인 목표에 따른 답장 예시 1개와 이유**.\n\n분석 목표 4종: 대화 이해 / 자연스러운 답장 / 어색한 분위기 회복 / 경계 표현.\n개인정보를 입력 전에 일부 가리는 **연락처·이메일·링크 간이 마스킹** 버튼 제공(이름·얼굴은 직접 가려야 하며 완전 익명화 아님).
+현재 무료: 요약, 호의적 대화 신호, 상호성, 근거량, 주요 근거, 다른 가능성, 다음 행동, **개인 목표에 따른 답장 예시 1개와 이유**.
+
+분석 목표 4종: 대화 이해 / 자연스러운 답장 / 어색한 분위기 회복 / 경계 표현.
+개인정보를 입력 전에 일부 가리는 **연락처·이메일·링크 간이 마스킹** 버튼 제공(이름·얼굴은 직접 가려야 하며 완전 익명화 아님).
 
 유료 예정: 실제 대화에 맞춘 답장 초안 3개, 상황별 대안 해석, 관계 흐름별 전략.
 
@@ -44,7 +53,12 @@ Vercel이 api/analyze.mjs를 Node Function으로 감지합니다. 메신저 계�
 
 ## 4. 테스트
 
-GitHub Actions가 main의 모든 푸시와 PR에 Node.js 22 환경으로 smoke tests를 실행합니다. 로컬 실행 명령은 **node --test tests/smoke.mjs**. **Gemini API 키가 없기 때문에 자동 테스트는 실제 Gemini 요청을 호출하지 않습니다.** 배포 후 안전한 가상 대화로 실서비스 통합 테스트가 필요합니다.
+GitHub Actions가 main의 모든 푸시와 PR에 Node.js 22 환경으로 두 개의 작업을 실행합니다.
+
+- **smoke**: 모든 서버/브라우저 스크립트 문법 검사 + `tests/*.test.mjs`, `tests/smoke.mjs` 단위·계약 테스트 (Gemini·Redis·Supabase는 모두 모의 응답)
+- **e2e**: Playwright Chromium으로 iPhone 화면 크기에서 실제 메인 페이지를 실행. 파일은 저장소에서 직접 제공하고 모든 API는 모의 응답, 외부 요청은 차단 (`tests/e2e-mobile.test.mjs`)
+
+로컬 실행: **node --test tests/*.test.mjs tests/smoke.mjs** (Playwright가 설치돼 있지 않으면 E2E는 자동 건너뜀). **Gemini API 키가 없기 때문에 자동 테스트는 실제 Gemini 요청을 호출하지 않습니다.** 배포 후 안전한 가상 대화로 실서비스 통합 테스트가 필요합니다.
 
 ### 참고 문서
 - [Gemini pricing / data use](https://ai.google.dev/gemini-api/docs/pricing)
@@ -163,3 +177,37 @@ GitHub Actions가 main의 모든 푸시와 PR에 Node.js 22 환경으로 smoke t
 - **테스트:** [tests/personas.test.mjs](tests/personas.test.mjs) 및 GitHub CI의 Persona specialist tests. 직접 아이폰 Safari 터치/카피, 복잡한 실제 사례의 판단 품질은 추가 검수 필요.
 - **Plus 관련:** 새 페르소나는 현재 일반 무료 분석 API를 사용하므로 결제나 회원가입을 요구하지 않음. Paddle Sandbox·Plus 유료 접근 제어는 별도이며 실판매는 아직 하지 않음.
 - [기능 설명·검증 기록·다음 단계](docs/persona-system.md)
+
+## 17. 이후 추가된 기능 (2026-11-18 ~ 11-24, 요약)
+
+README에 빠져 있던 기능입니다. 자세한 내용은 각 문서를 참고하세요.
+
+- **이어서 분석하기**: 이전 AI 요약(검증되지 않은 배경 정보로만 취급)과 새 메시지만으로 후속 분석. 인용은 새 메시지에서만 허용.
+- **상황 보관함(선택)**: 원문이 아닌 AI 요약·신호·다음 행동만 브라우저에 최대 8개, 30일 보관.
+- **답장 리허설** (`/api/simulate`): 초안에 대해 따뜻한/중립/유보적 반응 *예시*와 위험 문구, 더 부드러운 수정안. 예측이 아님.
+- **답장 스타일 기억**: 말투·길이·이모지 3개 선택값만 저장.
+- **선택적 사용 통계와 운영자 대시보드**: 기본 꺼짐, 무작위 ID + 이벤트 이름만 전송, `/metrics.html`. [docs/usage-retention.md](docs/usage-retention.md)
+- **증거 우선 코칭 기준** (`lib/coaching-rubric.mjs`): 일반·전문가·리허설·Plus에 공통 적용.
+- **스크린샷 우선 모바일 화면, 언어별 SEO 가이드** (`learn/*.html` 16개, `sitemap.xml`).
+- 운영 체크리스트: [docs/launch-operations.md](docs/launch-operations.md)
+
+## 18. 안정성·보안 정비 (2026-11-24)
+
+**버그 수정**
+- 후속 분석 프롬프트에 줄바꿈 대신 글자 그대로의 백슬래시+n이 들어가던 문제 수정 (`api/analyze.mjs`).
+- `2026-11-24` 같은 **날짜를 전화번호로 오인**하던 문제 수정. Plus·전문가 모드에서는 결과 전체가 실패했고(재시도 비용 발생), 무료 분석에서는 날짜가 `[phone]`으로 가려졌음. 이제 9자리 이상 숫자 중 날짜를 제외한 경우만 연락처로 판단 (`lib/server-guard.mjs`).
+- **Plus 텍스트 입력이 항상 실패하던 문제** 수정: 검증된 입력을 다시 검증할 때 `images: []` 때문에 거절되고, 선택한 말투가 `natural`로 바뀌었음. 검증 함수를 멱등하게 변경.
+- Plus Gemini 호출에 **시도별 타임아웃 + 예비 모델 재시도** 추가. 제공자 장애(타임아웃·429·5xx·요청 거절)일 때는 **사용 크레딧을 환불**하고, 비용이 이미 발생한 잘못된 모델 응답일 때만 차감 유지(악용 방지). Supabase에 `saynue_refund_plus_credit` 함수 추가 필요 — 아래 참고.
+
+**남용·보안**
+- `/api/metrics`: 방문자 ID를 바꿔 가며 보내면 1인 한도를 우회할 수 있었음 → **IP 해시 기준 일일 한도(600)와 인스턴스 메모리 한도(시간당 90)** 추가. 지표 전용 Redis(`SAYNUE_METRICS_REDIS_REST_URL`/`_TOKEN`)를 따로 두면 지표 트래픽이 분석 요청 제한용 Redis 할당량을 쓰지 않음.
+- `RATE_LIMIT_SALT`·`SAYNUE_ANALYTICS_SALT`가 없을 때 **Gemini API 키를 그대로 솔트/HMAC 키로 쓰던 것**을 용도별 HMAC 파생 키로 변경.
+- Origin 검사·모델 목록·IP 해시를 `lib/server-guard.mjs` 하나로 통합(4곳 중복 제거).
+- `vercel.json`: `simulate`(30초)·`plus/report`(60초) 실행 시간 한도 추가, 모든 페이지에 `frame-ancestors 'none'`/`X-Frame-Options: DENY`(클릭재킹 방지)와 `Permissions-Policy` 추가.
+- 메인 페이지 스크립트를 `assets/app.js`로 분리하고 CSP를 `script-src 'self'`로 강화(인라인 스크립트 실행 차단).
+
+**운영자가 직접 해야 할 일 (코드로 할 수 없음)**
+1. Supabase를 쓰게 되면 갱신된 [docs/supabase-billing-schema.sql](docs/supabase-billing-schema.sql) 전체를 실행 (`saynue_refund_plus_credit` 포함).
+2. Upstash Redis 연결 후 `SAYNUE_REQUIRE_DISTRIBUTED_LIMIT=true`, `SAYNUE_MAX_DAILY_AI_REQUESTS` 설정. 가능하면 지표용 Redis는 별도 DB로.
+3. `RATE_LIMIT_SALT`, `SAYNUE_ANALYTICS_SALT`를 각각 24자 이상 무작위 값으로 설정.
+4. 실제 사용자를 받기 전 유료 Gemini API 조건 적용, 운영자 정보가 들어간 정식 개인정보처리방침·이용약관 작성(현재 [data-notice.html](data-notice.html)은 사실 안내일 뿐).
