@@ -5,9 +5,9 @@ Secondary pages keep a small inline `<style>` block that only uses these tokens.
 
 ## Themes
 - Charcoal and lavender, with three soft accent families for the home tiles: lavender (analysis), peach (reply coaching), sage (relationship advice).
-- Dark tokens are the default. Light tokens apply when the system prefers light, unless the viewer pinned a theme.
-- The viewer can pin light or dark in MY → 화면 모드. `assets/theme.js` stores only `"light"` or `"dark"` under `saynue:theme:v1` in this browser and sets `data-theme` on `<html>` before the first paint. Learn pages and the data notice allow no scripts, so they always follow the system.
-- Every colour must come from a token. A new token has to be added to the dark set and both light sets (the media query and `[data-theme="light"]`); `tests/design-system.test.mjs` checks they stay in sync.
+- Light is the default on every device, including ones set to dark mode. Dark is opt-in.
+- MY → 화면 모드 offers 라이트 (default) · 다크 · 시스템 설정. `assets/theme.js` stores only `"dark"` or `"system"` under `saynue:theme:v1` in this browser (light stores nothing) and sets `data-theme` on `<html>` before the first paint, along with the `theme-color` and `color-scheme` meta tags. 시스템 설정 follows the device and switches live. Learn pages and the data notice allow no scripts, so they are always light.
+- Every colour must come from a token. A new token has to be added to the light `:root` set and both dark sets (`[data-theme="dark"]` and the `[data-theme="system"]` media query); `tests/design-system.test.mjs` checks they stay in sync.
 
 ## Typography by language
 | Language | Face | Notes |

@@ -193,25 +193,34 @@ test("Korean analysis can return a Japanese reply and Korean meaning separately"
  }finally{await browser.close()}
 });
 
-test("appearance follows the system and can be pinned to light or dark",{skip},async()=>{
+test("appearance is light by default, even on a dark device, and dark is opt-in",{skip},async()=>{
  const browser=await playwright.chromium.launch();
  try{
-  const {page,problems}=await openPage(browser,{colorScheme:"light"});
+  const {page,problems}=await openPage(browser,{colorScheme:"dark"});
   const theme=()=>page.evaluate(()=>document.documentElement.getAttribute("data-theme"));
   const bg=()=>page.evaluate(()=>getComputedStyle(document.body).backgroundColor);
+  const stored=()=>page.evaluate(()=>localStorage.getItem("saynue:theme:v1"));
   assert.equal(await theme(),null);
   assert.equal(await bg(),"rgb(246, 245, 250)");
   await page.click("#workspaceNav [data-nav=settings]");
+  assert.deepEqual(await page.$$eval("#themeChoice [data-theme-choice]",b=>b.map(x=>x.dataset.themeChoice+":"+x.getAttribute("aria-pressed"))),["light:true","dark:false","system:false"]);
   await page.click("[data-theme-choice=dark]");
   assert.equal(await theme(),"dark");
   assert.equal(await bg(),"rgb(15, 15, 20)");
   assert.equal(await page.getAttribute("[data-theme-choice=dark]","aria-pressed"),"true");
   await page.reload();
   assert.equal(await theme(),"dark","choice survives a reload");
+  assert.equal(await bg(),"rgb(15, 15, 20)");
   await page.click("#workspaceNav [data-nav=settings]");
   await page.click("[data-theme-choice=system]");
-  assert.equal(await theme(),null);
-  assert.equal(await page.evaluate(()=>localStorage.getItem("saynue:theme:v1")),null);
+  assert.equal(await theme(),"system");assert.equal(await stored(),"system");
+  assert.equal(await bg(),"rgb(15, 15, 20)","system follows this dark device");
+  await page.emulateMedia({colorScheme:"light"});
+  assert.equal(await bg(),"rgb(246, 245, 250)");
+  await page.emulateMedia({colorScheme:"dark"});
+  await page.click("[data-theme-choice=light]");
+  assert.equal(await theme(),null);assert.equal(await stored(),null);
+  assert.equal(await bg(),"rgb(246, 245, 250)");
   for(const nav of ["home","analyze","reply","library","settings"]){
    await page.click("#workspaceNav [data-nav="+nav+"]");
    assert.equal(await noHorizontalScroll(page),true,nav+" scrolls horizontally in light mode");
