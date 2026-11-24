@@ -27,8 +27,8 @@ const report={
  evidenceCards:[{quote:"다음 주 되면 다시 말해줄게",reading:"다음 기회를 열어 둔 표현일 수 있어요.",otherExplanation:"예의상 미루는 표현일 수도 있어요.",sourceType:"text",screenshotIndex:0}]
 };
 
-async function openPage(browser,{analyzeBody=report,analyzeStatus=200,colorScheme="dark",holdAnalyze=false}={}){
- const context=await browser.newContext({...playwright.devices["iPhone 13"],locale:"ko-KR",serviceWorkers:"block",colorScheme});
+async function openPage(browser,{analyzeBody=report,analyzeStatus=200,colorScheme="dark",holdAnalyze=false,browserLocale="ko-KR"}={}){
+ const context=await browser.newContext({...playwright.devices["iPhone 13"],locale:browserLocale,serviceWorkers:"block",colorScheme});
  const page=await context.newPage();
  const problems=[],requests=[];
  page.on("pageerror",e=>problems.push("pageerror: "+e.message));
@@ -253,5 +253,21 @@ test("analysis handoff to relationship advice requires fresh consent and carries
  await page.click("#analysisToCounsel");assert.equal(await page.isVisible("#coachScreen"),true);assert.equal(await page.isChecked("#coachConsent"),false);
  assert.doesNotMatch(await page.inputValue("#coachContext"),/PRIVATE SOURCE ONLY/);await page.check("#coachConsent");await page.click("#coachRun");await page.waitForSelector("#coachResult:visible");
  const sent=JSON.parse(requests.find(x=>x.path==="/api/coach").body);assert.equal(sent.mode,"counsel");assert.match(await page.textContent("#coachExtras"),/원하는 결과는 무엇인가요/);assert.deepEqual(problems,[]);
+ }finally{await browser.close()}
+});
+
+test("Japanese device remembers an explicit Korean choice across reload and secondary pages",{skip},async()=>{
+ const browser=await playwright.chromium.launch();
+ try{const {page,problems}=await openPage(browser,{browserLocale:"ja-JP"});
+ assert.equal(await page.inputValue("#locale"),"ja");
+ await page.selectOption("#locale","ko");await page.reload();
+ assert.equal(await page.inputValue("#locale"),"ko");
+ await page.click("#workspaceNav [data-nav=settings]");
+ await page.click(".settings-links a[href='/account.html']");
+ assert.equal(await page.locator("html").getAttribute("lang"),"ko");
+ await page.goto(ORIGIN+"/plans.html");assert.equal(await page.locator("html").getAttribute("lang"),"ko");
+ await page.goto(ORIGIN+"/guide.html");assert.equal(await page.locator("html").getAttribute("lang"),"ko");
+ await page.goto(ORIGIN+"/?lang=ja#formCard");assert.equal(await page.inputValue("#locale"),"ja");await page.selectOption("#locale","ko");await page.reload();assert.equal(await page.inputValue("#locale"),"ko");
+ assert.deepEqual(problems,[]);
  }finally{await browser.close()}
 });

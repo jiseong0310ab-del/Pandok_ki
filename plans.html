@@ -8,6 +8,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'">
 <link rel="canonical" href="https://saynue.vercel.app/plans.html"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <script src="/assets/theme.js"></script>
+<script src="/assets/locale.js"></script>
 <link rel="stylesheet" href="/assets/fonts/pretendard-1.3.9/pretendard.css">
 <link rel="stylesheet" href="/assets/site.css"><title>SAYNUE · Free & Plus</title>
 <style>
@@ -99,8 +100,7 @@ en:{demoEyebrow:"Plus preview · fictional example",demoTitle:"Why compare three
 "zh-CN":{demoEyebrow:"Plus 预览 · 虚构示例",demoTitle:"三种回复有什么不同？",demoIntro:"比较真正不同的沟通策略，而不只是改写句尾。",demoCaseTitle:"虚构对话",demoCase:"你：这周六有时间吗？\n对方：周六要上班，下周三晚上怎么样？",demoFreeTitle:"目前免费：1条回复",demoFreeMessage:"好呀，周三晚上可以！",demoThreeTitle:"三种不同的回复策略",demoGentle:"温柔",demoClear:"明确",demoLowPressure:"不施压",demoWhyTitle:"优势",demoTradeoffTitle:"注意事项",demoWhenTitle:"适合的情况",demoReactionTitle:"对方这样回复怎么办？",demoEngaged:"积极回应",demoUncertain:"还不确定",demoNoReply:"没有回复",demoRefusal:"明确拒绝",demoNextTitle:"建议的下一步",demoCautionTitle:"需要注意",demoDisclaimer:"这是虚构对话的静态示例，并非实时AI分析，也不是已开放的付费订阅。",home:"返回分析",heroFirst:"免费版和 Plus",heroSecond:"有什么不同？",subtitle:"基础分析免费，Plus 的深入解读与多种回复建议仍在规划中。",freeLabel:"当前可用",freeText:"用证据了解聊天内容。",free1:"互动信号与双方回应",free2:"聊天依据与其他可能",free3:"下一步建议与指定语气的回复1条",free4:"基础隐私信息遮挡",freeState:"可免费分析",plusLabel:"规划中·尚未出售",plusText:"帮助你找到更合适的表达。",plus1:"三种自然回复方案",plus2:"各方案语气与优缺点",plus3:"对方不同回应的后续选择",plus4:"三种回复策略、情境应对与更高额度（拟定）",plusState:"尚未开放付款",question:"关于广告和Plus",answer1:"不会根据私密聊天内容在分析页面投放广告，未来仅考虑在公开指南内容展示广告。",answer2:"Plus 的价格、额度、自动续费、取消与退款条款均未确定，目前无法付款或订阅。",guide:"阅读聊天解读指南",caution:"AI无法得知他人真正的想法。分析与分数不代表事实或概率。请先隐藏隐私信息。"},
 "zh-TW":{demoEyebrow:"Plus 預覽 · 虛構示例",demoTitle:"三種回覆有什麼不同？",demoIntro:"比較真正不同的溝通策略，而不只是改寫句尾。",demoCaseTitle:"虛構對話",demoCase:"你：這週六有時間嗎？\n對方：週六要上班，下週三晚上怎麼樣？",demoFreeTitle:"目前免費：1則回覆",demoFreeMessage:"好呀，週三晚上可以！",demoThreeTitle:"三種不同的回覆策略",demoGentle:"溫柔",demoClear:"明確",demoLowPressure:"不施壓",demoWhyTitle:"優點",demoTradeoffTitle:"注意事項",demoWhenTitle:"適合的情況",demoReactionTitle:"對方這樣回覆怎麼辦？",demoEngaged:"積極回應",demoUncertain:"還不確定",demoNoReply:"沒有回覆",demoRefusal:"明確拒絕",demoNextTitle:"建議的下一步",demoCautionTitle:"需要注意",demoDisclaimer:"這是虛構對話的靜態示例，並非即時AI分析，也不是已開放的付費訂閱。",home:"返回分析",heroFirst:"免費版和 Plus",heroSecond:"有什麼不同？",subtitle:"基礎分析免費，Plus 的深入解讀與多種回覆建議仍在規劃中。",freeLabel:"目前可用",freeText:"用依據理解對話。",free1:"互動訊號與雙方回應",free2:"對話依據與其他可能",free3:"下一步建議與指定語氣的回覆1則",free4:"基本個資遮蔽",freeState:"可免費分析",plusLabel:"規劃中·尚未販售",plusText:"協助找到更合適的表達方式。",plus1:"三種自然回覆方案",plus2:"各方案語氣與取捨",plus3:"不同回應下的後續選擇",plus4:"三種回覆策略、情境應對與更高額度（規劃中）",plusState:"尚未開放付款",question:"關於廣告與Plus",answer1:"不會依據私密對話內容在分析畫面投放廣告，未來僅考慮在公開指南內容展示廣告。",answer2:"Plus 的價格、額度、自動續訂、取消及退款條款尚未確定，目前無法付款或訂閱。",guide:"閱讀對話解讀指南",caution:"AI無法知道他人真正的想法，分析與分數不是事實或機率。請先遮蔽個資。"}
 };
-const l=(navigator.language||"en").toLowerCase();
-const lang=l.startsWith("ko")?"ko":l.startsWith("ja")?"ja":l.startsWith("zh")?(l.includes("tw")||l.includes("hk")?"zh-TW":"zh-CN"):"en";
+const lang=window.SaynueLocale.get();
 document.documentElement.lang=lang;
 document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=I[lang][el.dataset.i]||I.en[el.dataset.i]||""});
 })();

@@ -40,9 +40,9 @@ function renderMeaning(id,data,draft){
 }
 
 let locale="ko",platform="other",relation="unknown",goal="understand",replyTone="natural",replyLength="normal",replyEmoji="none",persona="standard",autoExpert=true,feedbackSent=false,resultGoal="understand",resultLocale="ko",mode="image",lastResult=null,activeSession=null,followUpContext=null,situationLibrary=null,simEpoch=0,stylePreferences=null,usageMetrics=null;
-function langFromBrowser(){const requested=new URLSearchParams(location.search).get("lang");if(requested&&Object.prototype.hasOwnProperty.call(T,requested))return requested;const l=(navigator.language||"en").toLowerCase();if(l.startsWith("ko"))return"ko";if(l.startsWith("ja"))return"ja";if(l.startsWith("zh"))return l.includes("tw")||l.includes("hk")||l.includes("mo")?"zh-TW":"zh-CN";return"en"}
+function langFromBrowser(){return window.SaynueLocale.get()}
 function tx(k){return (T[locale]||T.en)[k]||T.en[k]||k}
-function setLocale(l){locale=T[l]?l:"en";$("locale").value=locale;document.documentElement.lang=locale;document.title=({"ko":"카톡 대화 분석 · AI 답장 추천 | SAYNUE","ja":"LINE会話分析・AI返信アドバイス | SAYNUE","en":"AI Text Message Analyzer & Reply Coach | SAYNUE","zh-CN":"微信聊天分析与AI回复建议 | SAYNUE","zh-TW":"聊天訊息分析與AI回覆建議 | SAYNUE"})[locale];document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=tx(el.dataset.i)});$("chatText").placeholder=tx("placeholder");updatePersonaUI();updateSettingsSummary();shots.refresh();if(!lastResult&&!$("error").classList.contains("hidden"))hideError();if(lastResult)render(lastResult,false);updateFollowUpUI();updateSavedBar()}
+function setLocale(l){locale=T[l]?l:"en";$("locale").value=locale;document.documentElement.lang=locale;document.title=({"ko":"카톡 대화 분석 · AI 답장 추천 | SAYNUE","ja":"LINE会話分析・AI返信アドバイス | SAYNUE","en":"AI Text Message Analyzer & Reply Coach | SAYNUE","zh-CN":"微信聊天分析与AI回复建议 | SAYNUE","zh-TW":"聊天訊息分析與AI回覆建議 | SAYNUE"})[locale];document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=tx(el.dataset.i)});$("chatText").placeholder=tx("placeholder");updatePersonaUI();updateSettingsSummary();shots.refresh();if(!lastResult&&!$("error").classList.contains("hidden"))hideError();if(lastResult&&!$("results").classList.contains("hidden")){renderMeaning(lastResult.persona&&lastResult.persona!=="standard"?"personaMeaning":"replyMeaning",lastResult,!!lastResult.replyDraft);$("confidence").textContent=tx(({low:"low",medium:"medium",high:"high"})[lastResult.evidenceLevel]||"low");}updateFollowUpUI();updateSavedBar();window.SaynueLocale.links(locale)}
 function choose(group,dataKey,value){document.querySelectorAll("#"+group+" [data-"+dataKey+"]").forEach(el=>{el.setAttribute("aria-pressed",String(el.dataset[dataKey]===value))})}
 const PLATFORM_NAMES={kakao:"KakaoTalk",line:"LINE",wechat:"WeChat",whatsapp:"WhatsApp",imessage:"iMessage",instagram:"Instagram",other:"Other"};
 function updateSettingsSummary(){
@@ -138,7 +138,7 @@ $("maskText").addEventListener("click",()=>{
   $("charCount").textContent=after.length+" / 12,000";
   $("maskStatus").textContent=before===after?tx("maskNone"):tx("maskDone");
 });
-$("locale").addEventListener("change",e=>{setLocale(e.target.value);updateCoachLabels()});
+$("locale").addEventListener("change",e=>{window.SaynueLocale.choose(e.target.value);setLocale(e.target.value);updateCoachLabels()});
 function hideError(){$("error").classList.add("hidden");$("error").textContent=""}
 function showError(message){$("error").textContent=message;$("error").classList.remove("hidden");$("formCard").scrollIntoView({behavior:"smooth",block:"start"})}
 const shots=window.SaynueScreenshotEditor({t:tx,onError:()=>showError(tx("errImage"))});
@@ -150,7 +150,7 @@ function buildSession(data,previous){
  return {version:1,id:previous?.id||"s"+Date.now()+"-"+Math.random().toString(36).slice(2,8),
  at:Date.now(),persona,platform,relation,goal,replyTone,locale,replyLanguage:messageLanguage(data,selectedLanguage("replyLanguage")),turn:Math.min(12,(previous?.turn||0)+1),
  summary:safe(data.verdict||data.summary,240),signal:safe(data.keySignal||data.sectionOne,350),
- nextStep:safe(data.nextStep,350),title:safe(previous?.title||tx(personaNameKey(persona)),32),history:previous?[{at:previous.at,summary:previous.summary},...(previous.history||[])].slice(0,3):[]};
+ nextStep:safe(data.nextStep,350),title:safe(previous?.title||tx(personaNameKey(persona)),32),history:previous?[{at:previous.at,summary:previous.summary,locale:previous.locale},...(previous.history||[])].slice(0,3):[]};
 }
 function validSession(s){
  return !!(s&&s.version===1&&typeof s.id==="string"&&s.id.length<40&&Number.isFinite(s.at)&&Date.now()-s.at>=0&&Date.now()-s.at<SESSION_TTL&&["standard","court","work","romance","mediator"].includes(s.persona)&&["kakao","line","wechat","whatsapp","imessage","instagram","other"].includes(s.platform)&&["crush","talking","dating","ex","friends","work","unknown","family"].includes(s.relation)&&["understand","reply","repair","boundary"].includes(s.goal)&&["natural","warm","direct","light"].includes(s.replyTone)&&Object.prototype.hasOwnProperty.call(T,s.locale)&&Number.isInteger(s.turn)&&s.turn>=1&&s.turn<=12&&["summary","signal","nextStep"].every(k=>typeof s[k]==="string"&&s[k].length>0&&s[k].length<=400));
@@ -164,7 +164,7 @@ function updateSavedBar(){
   const row=document.createElement("article");row.className="situation-item";row.dataset.situationId=item.id;
   const title=document.createElement("strong");title.textContent=item.title||tx(personaNameKey(item.persona));row.appendChild(title);
   const meta=document.createElement("p");meta.textContent=new Date(item.at).toLocaleDateString(locale)+" · "+tx(personaNameKey(item.persona));row.appendChild(meta);
-  const details=document.createElement("details");details.className="library-history";const heading=document.createElement("summary");heading.textContent=tx("historyTitle");details.appendChild(heading);for(const entry of [{at:item.at,summary:item.summary},...(item.history||[])]){const p=document.createElement("p");p.textContent=new Date(entry.at).toLocaleDateString(locale)+" · "+entry.summary;details.appendChild(p)}row.appendChild(details);
+  const details=document.createElement("details");details.className="library-history";const heading=document.createElement("summary");heading.textContent=tx("historyTitle");details.appendChild(heading);for(const entry of [{at:item.at,summary:item.summary,locale:item.locale},...(item.history||[])]){const p=document.createElement("p");const stamp=document.createElement("span");stamp.textContent=new Date(entry.at).toLocaleDateString(locale)+" · ";const content=document.createElement("span");content.lang=entry.locale||item.locale;content.textContent=entry.summary;p.append(stamp,content);details.appendChild(p)}row.appendChild(details);
   const controls=document.createElement("div");controls.className="situation-controls";
   const action=(name,key)=>{const b=document.createElement("button");b.type="button";b.className="secondary";b.dataset.libraryAction=name;b.textContent=tx(key);return b};
   controls.appendChild(action("resume","libraryResume"));
@@ -431,6 +431,7 @@ function navigate(target){const hash=target==="analyze"?"#formCard":target==="ho
 function fromHash(){const hash=location.hash.slice(1);showScreen(hash==="formCard"?"analyze":hash)}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-nav]");if(b)navigate(b.dataset.nav)});
 window.addEventListener("popstate",fromHash);window.addEventListener("hashchange",fromHash);
+window.addEventListener("pageshow",event=>{if(event.persisted){const saved=window.SaynueLocale.stored();if(saved&&saved!==locale){window.SaynueLocale.choose(saved);setLocale(saved);updateCoachLabels()}}});
 $("editAnalysis").addEventListener("click",()=>{$("results").classList.add("hidden");$("formCard").hidden=false;$("consent").checked=false;window.scrollTo(0,0)});
 $("coachModes").addEventListener("click",e=>{const b=e.target.closest("[data-coach]");if(b)setCoachMode(b.dataset.coach)});
 $("coachMask").addEventListener("click",()=>{for(const id of ["coachContext","coachDraft"])$(id).value=maskCommonInfo($(id).value);$("coachMaskStatus").textContent=tx("maskDone")});
