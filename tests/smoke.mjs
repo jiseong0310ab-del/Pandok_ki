@@ -296,13 +296,36 @@ test("when all models are overloaded, return AI_BUSY rather than fake report",as
     assert.equal(count,3);
   }finally{global.fetch=old}
 });
+test("a timeout is never resent to the same model; screenshots get at most two calls",async()=>{
+  process.env.GEMINI_API_KEY="test-key";
+  const old=global.fetch;let models=[];
+  const timeout=()=>{const e=new Error("timed out");e.name="TimeoutError";throw e};
+  try{
+    // Text: primary times out, the same model is skipped, the fallback answers.
+    global.fetch=async url=>{models.push(String(url).match(/models\/([^:]+)/)[1]);if(models.length===1)timeout();return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(mock)}]}}]}),{status:200})};
+    let r=await app.fetch(req(valid,{headers:{"x-vercel-forwarded-for":"198.51.100.120"}}));
+    assert.equal(r.status,200);assert.equal(models.length,2);assert.notEqual(models[0],models[1]);
+    // Three screenshots that keep timing out cost two calls, not three.
+    models=[];global.fetch=async url=>{models.push(String(url).match(/models\/([^:]+)/)[1]);timeout()};
+    const shots=[1,2,3].map(i=>({mimeType:"image/jpeg",base64:"/9j/"+String(i).repeat(160)}));
+    r=await app.fetch(req({platform:"kakao",relation:"friends",goal:"understand",locale:"ko",images:shots},{headers:{"x-vercel-forwarded-for":"198.51.100.121"}}));
+    assert.equal(r.status,503);assert.equal((await r.json()).code,"AI_TIMEOUT");
+    assert.equal(models.length,2);assert.notEqual(models[0],models[1]);
+    // A transient 503 on screenshots still falls back once.
+    models=[];global.fetch=async url=>{models.push(String(url).match(/models\/([^:]+)/)[1]);return models.length===1?new Response("{}",{status:503}):new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(mock)}]}}]}),{status:200})};
+    r=await app.fetch(req({platform:"kakao",relation:"friends",goal:"understand",locale:"ko",images:shots},{headers:{"x-vercel-forwarded-for":"198.51.100.122"}}));
+    assert.equal(r.status,200);assert.equal(models.length,2);
+  }finally{global.fetch=old}
+});
 test("unconfigured local limiter throttles repeated calls",async()=>{
   process.env.GEMINI_API_KEY="test-key";
   const old=global.fetch;global.fetch=async()=>new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(mock)}]}}]}),{status:200});
   try{
     let last;
-    for(let i=0;i<7;i++)last=await app.fetch(req(valid,{headers:{"x-vercel-forwarded-for":"198.51.100.89"}}));
-    assert.equal(last.status,429);
+    const statuses=[];
+    for(let i=0;i<13;i++)statuses.push((await app.fetch(req(valid,{headers:{"x-vercel-forwarded-for":"198.51.100.89"}}))).status);
+    assert.deepEqual(statuses.slice(0,12),Array(12).fill(200),"twelve analyses an hour fit before Redis is configured");
+    assert.equal(statuses[12],429);
   }finally{global.fetch=old}
 });
 test("homepage has no inline script, so its CSP forbids inline script execution",async()=>{
