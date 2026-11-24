@@ -271,3 +271,14 @@ test("Japanese device remembers an explicit Korean choice across reload and seco
  assert.deepEqual(problems,[]);
  }finally{await browser.close()}
 });
+
+test("editing input revokes consent, changing locale does not resurrect a hidden report",{skip},async()=>{
+ const browser=await playwright.chromium.launch();
+ try{const {page,requests}=await openPage(browser);await page.click("#textTab");await page.fill("#chatText","나: 이번 주에 시간 있어?\n상대: 다음 주 되면 다시 말해줄게!");await page.check("#consent");await page.fill("#chatText","나: 내일 시간 있어?\n상대: 다음 주 되면 다시 말해줄게!");assert.equal(await page.isChecked("#consent"),false);await page.check("#consent");await page.click("#analyze");await page.waitForSelector("#results:visible");await page.click("#editAnalysis");await page.selectOption("#locale","ja");assert.equal(await page.isVisible("#results"),false);assert.equal(await page.isVisible("#formCard"),true);assert.equal(requests.filter(x=>x.path==="/api/analyze").length,1);
+ }finally{await browser.close()}
+});
+test("coach submodes survive browser history and revoke consent when input changes",{skip},async()=>{
+ const browser=await playwright.chromium.launch();
+ try{const {page}=await openPage(browser);await page.click("#workspaceNav [data-nav=reply]");await page.click("[data-coach=prepare]");await page.click("[data-coach=reflect]");await page.goBack();assert.equal(await page.getAttribute("[data-coach=prepare]","aria-pressed"),"true");await page.fill("#coachContext","상사에게 사과할 준비를 하고 싶어요");await page.check("#coachConsent");await page.fill("#coachContext","회의 일정에 관해 대화하고 싶어요");assert.equal(await page.isChecked("#coachConsent"),false);
+ }finally{await browser.close()}
+});
