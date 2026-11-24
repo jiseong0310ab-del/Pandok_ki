@@ -11,7 +11,7 @@ const slice=(start,end)=>{
  return home.slice(a,b);
 };
 
-test("mobile first-use flow foregrounds compact expert selection and one conversation input",()=>{
+test("mobile first-use flow foregrounds screenshot input and compact expert selection",()=>{
  const choices=[...home.matchAll(/<button[^>]*data-persona="([^"]+)"[^>]*>([\s\S]*?)<\/button>/g)];
  assert.equal(choices.length,5);
  assert.deepEqual(choices.map(x=>x[1]),["standard","court","work","romance","mediator"]);
@@ -21,7 +21,12 @@ test("mobile first-use flow foregrounds compact expert selection and one convers
  }
  const form=slice('<section class="card analyzer"','</section>\n<div class="trust-row"');
  assert.ok(form.indexOf('id="personas"')<form.indexOf('id="analysisOptions"'));
- assert.ok(form.indexOf('id="analysisOptions"')<form.indexOf('id="chatText"'));
+ assert.ok(form.indexOf('id="chatImage"')<form.indexOf('id="personas"'));
+ assert.ok(form.indexOf('id="imageTab"')<form.indexOf('id="textTab"'));
+ assert.match(form,/<button[^>]*id="imageTab"[^>]*aria-selected="true"/);
+ assert.match(form,/<div id="textBox" class="hidden">/);
+ assert.match(form,/<div id="imageBox">/);
+ assert.match(script,/mode="image",lastResult/);
  assert.ok(form.indexOf('id="chatText"')<form.indexOf('id="analyze"'));
  assert.match(form,/<details[^>]*id="analysisOptions"/);
  assert.match(form,/<details[^>]*id="personaContextBox"/);
@@ -73,3 +78,24 @@ test("all five locales have translations for progressive disclosure controls",()
  }
  new Function(script);
 });
+
+ test("localized static guides, canonical links and crawl discovery",()=>{
+ const langs=["ko","ja","en","zh-CN","zh-TW"];
+ const robots=fs.readFileSync(new URL("../robots.txt",import.meta.url),"utf8");
+ const sitemap=fs.readFileSync(new URL("../sitemap.xml",import.meta.url),"utf8");
+ assert.match(robots,/Sitemap: https:\/\/saynue\.vercel\.app\/sitemap\.xml/);
+ for(const lang of langs){
+ const path="/learn/"+lang+".html";
+ const page=fs.readFileSync(new URL(".."+path,import.meta.url),"utf8");
+ assert.ok(page.includes('<html lang="'+lang+'">'));
+ assert.ok(page.includes('rel="canonical" href="https://saynue.vercel.app'+path+'"'));
+ assert.ok(page.includes('href="/?lang='+lang+'#formCard"'));
+ assert.ok(home.includes('href="'+path+'"'));
+ assert.ok(sitemap.includes('<loc>https://saynue.vercel.app'+path+'</loc>'));
+ assert.equal([...page.matchAll(/<h2>/g)].length,4);
+ assert.doesNotMatch(page,/<script|noindex/);
+ for(const alt of langs)assert.ok(page.includes('hreflang="'+alt+'" href="https://saynue.vercel.app/learn/'+alt+'.html"'));
+ }
+ assert.doesNotMatch(sitemap,/sandbox-checkout|\/api\/|account\.html/);
+ assert.match(script,/new URLSearchParams\(location\.search\)\.get\("lang"\)/);
+ });

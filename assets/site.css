@@ -605,3 +605,11 @@ textarea::placeholder{color:#9299ae}
 .metrics-consent p{font-size:11px;line-height:1.7;color:#aab0c8;margin:8px 0}
 .metrics-consent #metricsStatus{color:#e0c9f0;min-height:0}
 @media(max-width:620px){.voice-preferences .chip{min-width:95px}.voice-buttons button{flex:1;padding:9px 7px}}
+
+/* Screenshot-first composition; preserve DOM order for keyboard and assistive technology. */
+.input-section-divider{height:1px;background:#41465c;margin:19px 0 16px}
+.analyzer .tabs{display:flex}.analyzer .tab{flex:1;min-height:44px}
+.analyzer #imageBox .filebox{min-height:120px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:7px}
+.analyzer .input-head .label{line-height:1.5}
+.locale-guides{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 15px;margin:12px 0 16px}.locale-guides a{color:#d5c9fc;text-decoration:underline;text-underline-offset:3px;font-size:12px}
+@media(max-width:620px){.analyzer #imageBox .filebox{min-height:112px}.input-section-divider{margin:15px 0}.analyzer .persona-heading{font-size:16px;margin:0 0 9px}.analyzer .persona-option,.analyzer .persona-option:first-child{min-height:44px}.analyzer .persona-caption{font-size:11px}.analyzer .tabs .tab{font-size:13px}}
