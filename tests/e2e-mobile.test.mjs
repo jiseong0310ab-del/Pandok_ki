@@ -45,7 +45,7 @@ async function openPage(browser,{analyzeBody=report,analyzeStatus=200}={}){
   if(!file.startsWith(ROOT+path.sep)||!fs.existsSync(file)||fs.statSync(file).isDirectory())return route.fulfill({status:404,body:"not found"});
   return route.fulfill({status:200,contentType:TYPES[path.extname(file)]||"application/octet-stream",body:fs.readFileSync(file)});
  });
- await page.goto(ORIGIN+"/");
+ await page.goto(ORIGIN+"/#formCard");
  return {context,page,problems,requests};
 }
 const noHorizontalScroll=page=>page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1);

@@ -1,0 +1,2 @@
+# Communication workspace
+Separate home, analysis, reply and relationship coaching, local library and settings. Messenger picker removed; legacy API platform remains accepted. Automatic expert selects a lens in the same call, not a separate classifier. Four independent coach modes share the existing rate limiter and consent. No new provider or billing. Saved situations retain up to three prior summaries, each expires after 30 days. Existing privacy, redaction, follow-up, metrics and disabled Plus remain. Cloudflare-only deployment configuration unchanged.

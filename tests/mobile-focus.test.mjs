@@ -14,8 +14,8 @@ const slice=(start,end)=>{
 
 test("mobile first-use flow foregrounds screenshot input and compact expert selection",()=>{
  const choices=[...home.matchAll(/<button[^>]*data-persona="([^"]+)"[^>]*>([\s\S]*?)<\/button>/g)];
- assert.equal(choices.length,5);
- assert.deepEqual(choices.map(x=>x[1]),["standard","court","work","romance","mediator"]);
+ assert.equal(choices.length,6);
+ assert.deepEqual(choices.map(x=>x[1]),["auto","standard","court","work","romance","mediator"]);
  for(const [,mode,content] of choices){
   assert.doesNotMatch(content,/\p{Extended_Pictographic}/u,"Decorative icon in "+mode);
   assert.match(content,/class="persona-title"/);
