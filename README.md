@@ -221,3 +221,9 @@ README에 빠져 있던 기능입니다. 자세한 내용은 각 문서를 참�
 - 분석 대기 화면은 단계형 진행 표시(가짜 퍼센트 없음). 본문 15~17px, 입력창 16px(iOS 확대 방지), 영어 장식 라벨·장식 기호·제목 끝 마침표 제거, 계정 화면 문구를 해요체로 통일.
 - 공유 버튼은 실제로 서비스 소개와 링크만 공유하므로 문구를 "친구에게 SAYNUE 알려주기"로 바로잡음. 분석 결과는 개인정보 위험 때문에 공유하지 않음.
 - 자세한 규칙: [docs/design-system.md](docs/design-system.md). 테스트: `tests/design-system.test.mjs`, `tests/e2e-mobile.test.mjs`.
+
+## Cloudflare stability checklist
+- Interface locale is stored as a five-value browser preference; raw chats/drafts/images are not persisted. The data notice remains script-free and links open at the chosen language section.
+- AI requests are scoped to input revisions; superseded requests are aborted and their results ignored. Screenshot resets discard pending decodes; editing input or rehearsal drafts requires fresh consent.
+- The staging static build uses the known workers.dev origin if no build origin is provided. Keep indexing disabled until ready. To enable indexing, explicitly set build variables SAYNUE_PUBLIC_ORIGIN and SAYNUE_INDEXABLE=true. Runtime authentication still requires explicit origin; no payment/auth gate has been loosened.
+- Distributed limits require real Upstash REST credentials. Until configured, the existing in-memory limiter is instance-local, not a global budget. Before public beta, configure Redis, RATE_LIMIT_SALT and an appropriate SAYNUE_MAX_DAILY_AI_REQUESTS. Do not enable strict mode without Redis (it would block requests).

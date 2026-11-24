@@ -32,7 +32,7 @@ test("homepage links to educational guide and planned membership without exposin
 test("all monetization informational pages translate their visible labels into five languages",()=>{
   for(const path of ["plans.html","guide.html"]){
     const page=load(path),code=codeFrom(page);
-    const marker=code.indexOf("const I="),end=code.indexOf("\nconst l=",marker);
+    const marker=code.indexOf("const I="),end=code.indexOf("\nconst lang=window.SaynueLocale.get();",marker);
     assert.ok(marker>=0&&end>marker,path);
     const dict=vm.runInNewContext("("+code.slice(marker+8,end).trim().replace(/;\s*$/,"")+")");
     const wanted=[...new Set([...page.matchAll(/data-i="([^"]+)"/g)].map(x=>x[1]))];

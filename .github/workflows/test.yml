@@ -18,6 +18,8 @@ jobs:
       - run: node --check lib/coaching-rubric.mjs
       - run: node --check assets/app.js
       - run: node --check assets/theme.js
+      - run: node --check assets/locale.js
+      - run: node --test tests/locale.test.mjs
       - run: node --check tests/design-system.test.mjs
       - run: node --check tests/server-guard.test.mjs
       - run: node --check tests/e2e-mobile.test.mjs

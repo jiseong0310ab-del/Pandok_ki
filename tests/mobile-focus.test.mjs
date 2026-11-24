@@ -98,7 +98,7 @@ test("all five locales have translations for progressive disclosure controls",()
  for(const alt of langs)assert.ok(page.includes('hreflang="'+alt+'" href="https://saynue.vercel.app/learn/'+alt+'.html"'));
  }
  assert.doesNotMatch(sitemap,/sandbox-checkout|\/api\/|account\.html/);
- assert.match(script,/new URLSearchParams\(location\.search\)\.get\("lang"\)/);
+ assert.match(script,/SaynueLocale\.get\(\)/);
  });
 
 test("all literal DOM lookups have an existing unique HTML id",()=>{

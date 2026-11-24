@@ -61,7 +61,7 @@ async function prepare(file){
     return {name:String(file.name||"Screenshot").slice(0,72),image:await imageFromURL("data:image/jpeg;base64,"+compressed),strokes:[],reviewed:false,safeData:null};
   }finally{URL.revokeObjectURL(url)}
 }
-function create({t,onError}){
+function create({t,onError,onChange=()=>{}}){
   const fileInput=document.getElementById("chatImage");
   const list=document.getElementById("shotList");
   const canvas=document.getElementById("shotCanvas");
@@ -78,7 +78,7 @@ function create({t,onError}){
   if(!ctx)throw Error("IMAGE");
   const shots=[];
   let active=-1;
-  let busy=false;
+  let busy=false,revision=0;
   let drawing=false;
   let pointerId=null;
   let brush=32;
@@ -113,26 +113,26 @@ function create({t,onError}){
     shots.forEach((shot,i)=>{
       const row=el("div","shot-item"+(i===active?" active":""));
       const choose=el("button","shot-choice",(i+1)+". "+shot.name+" · "+t(shot.reviewed?"shotDone":"shotPending"));
-      choose.type="button";choose.disabled=busy;
+      choose.type="button";choose.disabled=busy||drawing;
       choose.addEventListener("click",()=>{active=i;paint();rerender()});
       row.appendChild(choose);
       const controls=el("div","shot-controls");
       for(const [action,symbol,disabled] of [["up","↑",i===0],["down","↓",i===shots.length-1],["remove","×",false]]){
         const b=el("button","shot-control",symbol);
-        b.type="button";b.disabled=busy||disabled;
+        b.type="button";b.disabled=busy||drawing||disabled;
         b.setAttribute("aria-label",t("shotAction"+action[0].toUpperCase()+action.slice(1))+" "+(i+1));
         b.addEventListener("click",()=>{
           if(action==="remove"){shots.splice(i,1);active=shots.length?Math.min(active>=i?Math.max(0,active-1):active,shots.length-1):-1}
           else{const j=action==="up"?i-1:i+1;[shots[i],shots[j]]=[shots[j],shots[i]];active=j}
-          paint();rerender();notify(t("shotOrderHint"));
+          onChange();paint();rerender();notify(t("shotOrderHint"));
         });
         controls.appendChild(b);
       }
       row.appendChild(controls);list.appendChild(row);
     });
     filename.textContent=current()?(active+1)+". "+current().name:"";
-    confirm.disabled=busy||!current();
-    undo.disabled=busy||!current()||!current().strokes.length;
+    confirm.disabled=busy||drawing||!current();
+    undo.disabled=busy||drawing||!current()||!current().strokes.length;
     small.setAttribute("aria-pressed",String(brush===32));
     big.setAttribute("aria-pressed",String(brush===60));
   }
@@ -150,7 +150,7 @@ function create({t,onError}){
     if(!rect.width||!rect.height)return;
     const item=current();
     item.strokes.push({width:brush*canvas.width/rect.width,points:[point(e)]});
-    item.reviewed=false;item.safeData=null;
+    item.reviewed=false;item.safeData=null;onChange();
     drawing=true;pointerId=e.pointerId;
     if(canvas.setPointerCapture)canvas.setPointerCapture(e.pointerId);
     paint();rerender();
@@ -172,15 +172,15 @@ function create({t,onError}){
   canvas.addEventListener("pointerup",end);
   canvas.addEventListener("pointercancel",end);
   undo.addEventListener("click",()=>{
-    if(busy||!current())return;
-    current().strokes.pop();current().reviewed=false;current().safeData=null;
+    if(busy||drawing||!current())return;
+    current().strokes.pop();current().reviewed=false;current().safeData=null;onChange();
     paint();rerender();notify(t("shotUndoHint"));
   });
   small.addEventListener("click",()=>{brush=32;rerender()});
   big.addEventListener("click",()=>{brush=60;rerender()});
   confirm.addEventListener("click",()=>{
     const shot=current();
-    if(busy||!shot)return;
+    if(busy||drawing||!shot)return;
     try{
       // Render a new image from the canvas pixels AFTER black boxes are drawn.
       // Never submit the underlying original file or the preview image source.
@@ -200,18 +200,20 @@ function create({t,onError}){
     if(capacity<=0){notify(t("shotLimitReached"));return}
     if(incoming.length>capacity)notify(t("shotLimitReached"));
     else notify(t("shotPreparing"));
-    busy=true;rerender();
+    const ticket=++revision;busy=true;onChange();rerender();
     let failures=0;
     try{
       for(const file of incoming.slice(0,capacity)){
         try{
           const shot=await prepare(file);
+          if(ticket!==revision)return;
           shots.push(shot);
           active=shots.length-1;
           paint();
         }catch(_){failures++}
       }
     }finally{
+      if(ticket!==revision)return;
       busy=false;rerender();
       if(failures){onError();notify(t("shotImageError"))}
       else if(shots.length)notify(t("shotOrderHint"));
@@ -223,7 +225,7 @@ function create({t,onError}){
     isBusy(){return busy||drawing},
     isReady(){return shots.length>0&&!busy&&!drawing&&shots.every(s=>s.reviewed&&typeof s.safeData==="string"&&s.safeData.length<=MAX_BASE64)},
     getImages(){return this.isReady()?shots.map(s=>({mimeType:"image/jpeg",base64:s.safeData})):[]},
-    clear(){if(busy||drawing)return false;shots.splice(0);active=-1;fileInput.value="";notify("");rerender();return true},
+    clear(){revision++;busy=false;drawing=false;pointerId=null;shots.splice(0);active=-1;fileInput.value="";canvas.width=1;canvas.height=1;paint();notify("");rerender();onChange();return true},
     refresh(){rerender()}
   };
 }

@@ -27,8 +27,8 @@ const report={
  evidenceCards:[{quote:"다음 주 되면 다시 말해줄게",reading:"다음 기회를 열어 둔 표현일 수 있어요.",otherExplanation:"예의상 미루는 표현일 수도 있어요.",sourceType:"text",screenshotIndex:0}]
 };
 
-async function openPage(browser,{analyzeBody=report,analyzeStatus=200,colorScheme="dark",holdAnalyze=false}={}){
- const context=await browser.newContext({...playwright.devices["iPhone 13"],locale:"ko-KR",serviceWorkers:"block",colorScheme});
+async function openPage(browser,{analyzeBody=report,analyzeStatus=200,colorScheme="dark",holdAnalyze=false,browserLocale="ko-KR",delayAnalyze=null,delayCoach=null}={}){
+ const context=await browser.newContext({...playwright.devices["iPhone 13"],locale:browserLocale,serviceWorkers:"block",colorScheme});
  const page=await context.newPage();
  const problems=[],requests=[];
  page.on("pageerror",e=>problems.push("pageerror: "+e.message));
@@ -39,6 +39,8 @@ async function openPage(browser,{analyzeBody=report,analyzeStatus=200,colorSchem
   if(url.pathname.startsWith("/api/")){
    requests.push({path:url.pathname,body:route.request().postData()});
    if(url.pathname==="/api/analyze"&&holdAnalyze)return;
+   if(url.pathname==="/api/analyze"&&delayAnalyze)await delayAnalyze;
+   if(url.pathname==="/api/coach"&&delayCoach)await delayCoach;
    if(url.pathname==="/api/analyze")return route.fulfill({status:analyzeStatus,contentType:"application/json",body:JSON.stringify(analyzeBody)});
    if(url.pathname==="/api/coach"){const input=JSON.parse(route.request().postData());const common={summary:"말을 정리해 보세요",advice:"사실과 요청을 구분하세요.",steps:["원하는 결과를 정하세요."],shouldReply:input.mode!=="reflect",message:input.mode==="reflect"?"":"일정을 다시 확인해도 될까요?",why:"구체적으로 요청합니다.",caution:"결과는 보장되지 않아요."};const specific={reply:{alternatives:[{style:"short",message:"일정 확인 부탁드려요",meaning:"",why:"더 짧은 표현"}]},counsel:{perspectives:["일정 문제일 수 있어요"],questions:["원하는 결과는 무엇인가요?"]},prepare:{agenda:["요청을 설명하세요"],contingency:"대안을 준비하세요"},reflect:{pattern:"상황을 단정하는 습관",experiment:"한 번 더 확인하기",checkIn:"세 번의 대화 후 돌아보기"}};return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({...common,...specific[input.mode]})})}
    return route.fulfill({status:200,contentType:"application/json",body:"{\"ok\":true}"});
@@ -254,4 +256,42 @@ test("analysis handoff to relationship advice requires fresh consent and carries
  assert.doesNotMatch(await page.inputValue("#coachContext"),/PRIVATE SOURCE ONLY/);await page.check("#coachConsent");await page.click("#coachRun");await page.waitForSelector("#coachResult:visible");
  const sent=JSON.parse(requests.find(x=>x.path==="/api/coach").body);assert.equal(sent.mode,"counsel");assert.match(await page.textContent("#coachExtras"),/원하는 결과는 무엇인가요/);assert.deepEqual(problems,[]);
  }finally{await browser.close()}
+});
+
+test("Japanese device remembers an explicit Korean choice across reload and secondary pages",{skip},async()=>{
+ const browser=await playwright.chromium.launch();
+ try{const {page,problems}=await openPage(browser,{browserLocale:"ja-JP"});
+ assert.equal(await page.inputValue("#locale"),"ja");
+ await page.selectOption("#locale","ko");await page.reload();
+ assert.equal(await page.inputValue("#locale"),"ko");
+ await page.click("#workspaceNav [data-nav=settings]");
+ await page.click(".settings-links a[href='/account.html']");
+ assert.equal(await page.locator("html").getAttribute("lang"),"ko");
+ await page.goto(ORIGIN+"/plans.html");assert.equal(await page.locator("html").getAttribute("lang"),"ko");
+ await page.goto(ORIGIN+"/guide.html");assert.equal(await page.locator("html").getAttribute("lang"),"ko");
+ await page.goto(ORIGIN+"/?lang=ja#formCard");assert.equal(await page.inputValue("#locale"),"ja");await page.selectOption("#locale","ko");await page.reload();assert.equal(await page.inputValue("#locale"),"ko");
+ assert.deepEqual(problems,[]);
+ }finally{await browser.close()}
+});
+
+test("editing input revokes consent, changing locale does not resurrect a hidden report",{skip},async()=>{
+ const browser=await playwright.chromium.launch();
+ try{const {page,requests}=await openPage(browser);await page.click("#textTab");await page.fill("#chatText","나: 이번 주에 시간 있어?\n상대: 다음 주 되면 다시 말해줄게!");await page.check("#consent");await page.fill("#chatText","나: 내일 시간 있어?\n상대: 다음 주 되면 다시 말해줄게!");assert.equal(await page.isChecked("#consent"),false);await page.check("#consent");await page.click("#analyze");await page.waitForSelector("#results:visible");await page.click("#editAnalysis");await page.selectOption("#locale","ja");assert.equal(await page.isVisible("#results"),false);assert.equal(await page.isVisible("#formCard"),true);assert.equal(requests.filter(x=>x.path==="/api/analyze").length,1);
+ }finally{await browser.close()}
+});
+test("coach submodes survive browser history and revoke consent when input changes",{skip},async()=>{
+ const browser=await playwright.chromium.launch();
+ try{const {page}=await openPage(browser);await page.click("#workspaceNav [data-nav=reply]");await page.click("[data-coach=prepare]");await page.click("[data-coach=reflect]");await page.goBack();assert.equal(await page.getAttribute("[data-coach=prepare]","aria-pressed"),"true");await page.fill("#coachContext","상사에게 사과할 준비를 하고 싶어요");await page.check("#coachConsent");await page.fill("#coachContext","회의 일정에 관해 대화하고 싶어요");assert.equal(await page.isChecked("#coachConsent"),false);
+ }finally{await browser.close()}
+});
+
+test("analysis retains its request language when page language changes in flight",{skip},async()=>{
+ const browser=await playwright.chromium.launch();let release;const delayAnalyze=new Promise(r=>{release=r});
+ try{const {page,requests}=await openPage(browser,{delayAnalyze});await page.click("#textTab");await page.fill("#chatText","나: 이번 주에 시간 있어?\n상대: 다음 주 되면 다시 말해줄게!");await page.check("#consent");await page.click("#analyze");await page.waitForSelector("#loading:visible");await page.selectOption("#locale","ja");release();await page.waitForSelector("#results:visible");assert.equal(await page.locator("html").getAttribute("lang"),"ja");assert.equal(await page.locator("#verdict").getAttribute("lang"),"ko");assert.equal(JSON.parse(requests.find(x=>x.path==="/api/analyze").body).locale,"ko");
+ }finally{release();await browser.close()}
+});
+test("editing a coach input during a request prevents old results from appearing",{skip},async()=>{
+ const browser=await playwright.chromium.launch();let release;const delayCoach=new Promise(r=>{release=r});
+ try{const {page}=await openPage(browser,{delayCoach});await page.click("#workspaceNav [data-nav=reply]");await page.fill("#coachContext","상사에게 일정을 변경해 달라고 요청하고 싶어요");await page.check("#coachConsent");await page.click("#coachRun");await page.waitForFunction(()=>document.getElementById("coachRun").disabled);await page.fill("#coachContext","친구에게 약속을 취소하고 싶어요");release();await page.waitForTimeout(350);assert.equal(await page.isVisible("#coachResult"),false);assert.equal(await page.isDisabled("#coachRun"),false);assert.equal(await page.isChecked("#coachConsent"),false);
+ }finally{release();await browser.close()}
 });

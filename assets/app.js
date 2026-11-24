@@ -40,9 +40,15 @@ function renderMeaning(id,data,draft){
 }
 
 let locale="ko",platform="other",relation="unknown",goal="understand",replyTone="natural",replyLength="normal",replyEmoji="none",persona="standard",autoExpert=true,feedbackSent=false,resultGoal="understand",resultLocale="ko",mode="image",lastResult=null,activeSession=null,followUpContext=null,situationLibrary=null,simEpoch=0,stylePreferences=null,usageMetrics=null;
-function langFromBrowser(){const requested=new URLSearchParams(location.search).get("lang");if(requested&&Object.prototype.hasOwnProperty.call(T,requested))return requested;const l=(navigator.language||"en").toLowerCase();if(l.startsWith("ko"))return"ko";if(l.startsWith("ja"))return"ja";if(l.startsWith("zh"))return l.includes("tw")||l.includes("hk")||l.includes("mo")?"zh-TW":"zh-CN";return"en"}
+function langFromBrowser(){return window.SaynueLocale.get()}
 function tx(k){return (T[locale]||T.en)[k]||T.en[k]||k}
-function setLocale(l){locale=T[l]?l:"en";$("locale").value=locale;document.documentElement.lang=locale;document.title=({"ko":"카톡 대화 분석 · AI 답장 추천 | SAYNUE","ja":"LINE会話分析・AI返信アドバイス | SAYNUE","en":"AI Text Message Analyzer & Reply Coach | SAYNUE","zh-CN":"微信聊天分析与AI回复建议 | SAYNUE","zh-TW":"聊天訊息分析與AI回覆建議 | SAYNUE"})[locale];document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=tx(el.dataset.i)});$("chatText").placeholder=tx("placeholder");updatePersonaUI();updateSettingsSummary();shots.refresh();if(!lastResult&&!$("error").classList.contains("hidden"))hideError();if(lastResult)render(lastResult,false);updateFollowUpUI();updateSavedBar()}
+function setLocale(l){locale=Object.prototype.hasOwnProperty.call(T,l)?l:"en";$("locale").value=locale;document.documentElement.lang=locale;document.title=({"ko":"카톡 대화 분석 · AI 답장 추천 | SAYNUE","ja":"LINE会話分析・AI返信アドバイス | SAYNUE","en":"AI Text Message Analyzer & Reply Coach | SAYNUE","zh-CN":"微信聊天分析与AI回复建议 | SAYNUE","zh-TW":"聊天訊息分析與AI回覆建議 | SAYNUE"})[locale];document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=tx(el.dataset.i)});$("chatText").placeholder=tx("placeholder");updatePersonaUI();updateSettingsSummary();shots.refresh();if(!lastResult&&!$("error").classList.contains("hidden"))hideError();if(lastResult&&!$("results").classList.contains("hidden")){if(lastResult.persona==="standard"||!lastResult.persona){renderEvidenceCards(lastResult.evidenceCards);markLang(["evidenceCardsList"],resultLocale)}renderMeaning(lastResult.persona&&lastResult.persona!=="standard"?"personaMeaning":"replyMeaning",lastResult,!!lastResult.replyDraft);$("confidence").textContent=tx(({low:"low",medium:"medium",high:"high"})[lastResult.evidenceLevel]||"low");}updateFollowUpUI();updateSavedBar();window.SaynueLocale.links(locale)}
+let analysisEpoch=0,analysisController=null,returnReport=null;
+function cancelAnalysis(){
+ analysisEpoch++;if(analysisController){analysisController.abort();analysisController=null}
+ $("analyze").disabled=false;$("loading").classList.add("hidden");
+}
+function invalidateAnalysisInput(){cancelAnalysis();$("consent").checked=false}
 function choose(group,dataKey,value){document.querySelectorAll("#"+group+" [data-"+dataKey+"]").forEach(el=>{el.setAttribute("aria-pressed",String(el.dataset[dataKey]===value))})}
 const PLATFORM_NAMES={kakao:"KakaoTalk",line:"LINE",wechat:"WeChat",whatsapp:"WhatsApp",imessage:"iMessage",instagram:"Instagram",other:"Other"};
 function updateSettingsSummary(){
@@ -57,8 +63,8 @@ function chooseReplyTone(t){replyTone=t;choose("tones","tone",t)}
 function chooseReplyLength(v){if(!["short","normal"].includes(v))return;replyLength=v;document.querySelectorAll("#replyLengths [data-reply-length]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.replyLength===v)))}
 function chooseReplyEmoji(v){if(!["none","subtle"].includes(v))return;replyEmoji=v;document.querySelectorAll("#replyEmojis [data-reply-emoji]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.replyEmoji===v)))}
 function usageEvent(name){if(usageMetrics)usageMetrics.record(name)}
-$("replyLengths").addEventListener("click",e=>{const b=e.target.closest("[data-reply-length]");if(b)chooseReplyLength(b.dataset.replyLength)});
-$("replyEmojis").addEventListener("click",e=>{const b=e.target.closest("[data-reply-emoji]");if(b)chooseReplyEmoji(b.dataset.replyEmoji)});
+$("replyLengths").addEventListener("click",e=>{const b=e.target.closest("[data-reply-length]");if(b){cancelAnalysis();chooseReplyLength(b.dataset.replyLength)}});
+$("replyEmojis").addEventListener("click",e=>{const b=e.target.closest("[data-reply-emoji]");if(b){cancelAnalysis();chooseReplyEmoji(b.dataset.replyEmoji)}});
 $("styleSave").addEventListener("click",()=>{
  const ok=stylePreferences.save({tone:replyTone,length:replyLength,emoji:replyEmoji});
  $("styleStatus").textContent=tx(ok?"styleStored":"styleError");
@@ -101,15 +107,14 @@ function choosePersona(mode){
  if(mode!==persona||nextAuto!==autoExpert){
   autoExpert=nextAuto;
   persona=mode;
-  $("personaContext").value="";
-  $("personaContextBox").open=false;
+  invalidateAnalysisInput();
   const defaults=PERSONA_DEFAULTS[mode];
   chooseRelation(defaults.relation);
   chooseGoal(defaults.goal);
   $("results").classList.add("hidden");
   $("samplePreview").classList.remove("hidden");
   $("plusPeek").classList.remove("hidden");
-  lastResult=null;activeSession=null;followUpContext=null;renderHistoryCompare(null,null);$("consent").checked=false;simEpoch++;$("replySimulator").classList.add("hidden");updateFollowUpUI();
+  lastResult=null;activeSession=null;followUpContext=null;returnReport=null;renderHistoryCompare(null,null);$("consent").checked=false;simEpoch++;$("replySimulator").classList.add("hidden");updateFollowUpUI();
   hideError();
  }
  updatePersonaUI();
@@ -120,12 +125,12 @@ $("personas").addEventListener("click",event=>{
 });
 
 
-$("relations").addEventListener("click",e=>{const b=e.target.closest("[data-rel]");if(b)chooseRelation(b.dataset.rel)});
-$("goals").addEventListener("click",e=>{const b=e.target.closest("[data-goal]");if(b)chooseGoal(b.dataset.goal)});
-$("tones").addEventListener("click",e=>{const b=e.target.closest("[data-tone]");if(b)chooseReplyTone(b.dataset.tone)});
-function switchMode(m){mode=m;$("textTab").setAttribute("aria-selected",String(m==="text"));$("imageTab").setAttribute("aria-selected",String(m==="image"));$("textBox").classList.toggle("hidden",m!=="text");$("imageBox").classList.toggle("hidden",m!=="image");hideError()}
-$("textTab").addEventListener("click",()=>switchMode("text"));$("imageTab").addEventListener("click",()=>switchMode("image"));$("sample").addEventListener("click",()=>{switchMode("text");$("chatText").value=tx(persona==="standard"?"sampleText":"sample"+persona[0].toUpperCase()+persona.slice(1));$("charCount").textContent=$("chatText").value.length+" / 12,000";$("chatText").focus()});
-$("chatText").addEventListener("input",()=>{$("charCount").textContent=$("chatText").value.length+" / 12,000"});
+$("relations").addEventListener("click",e=>{const b=e.target.closest("[data-rel]");if(b){cancelAnalysis();chooseRelation(b.dataset.rel)}});
+$("goals").addEventListener("click",e=>{const b=e.target.closest("[data-goal]");if(b){cancelAnalysis();chooseGoal(b.dataset.goal)}});
+$("tones").addEventListener("click",e=>{const b=e.target.closest("[data-tone]");if(b){cancelAnalysis();chooseReplyTone(b.dataset.tone)}});
+function switchMode(m){if(mode!==m)invalidateAnalysisInput();mode=m;$("textTab").setAttribute("aria-selected",String(m==="text"));$("imageTab").setAttribute("aria-selected",String(m==="image"));$("textBox").classList.toggle("hidden",m!=="text");$("imageBox").classList.toggle("hidden",m!=="image");hideError()}
+$("textTab").addEventListener("click",()=>switchMode("text"));$("imageTab").addEventListener("click",()=>switchMode("image"));$("sample").addEventListener("click",()=>{invalidateAnalysisInput();switchMode("text");$("chatText").value=tx(persona==="standard"?"sampleText":"sample"+persona[0].toUpperCase()+persona.slice(1));$("charCount").textContent=$("chatText").value.length+" / 12,000";$("chatText").focus()});
+$("chatText").addEventListener("input",()=>{invalidateAnalysisInput();$("charCount").textContent=$("chatText").value.length+" / 12,000"});
 function maskCommonInfo(text) {
   return text
     .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi,"[email]")
@@ -134,23 +139,25 @@ function maskCommonInfo(text) {
 }
 $("maskText").addEventListener("click",()=>{
   const before=$("chatText").value,after=maskCommonInfo(before);
-  $("chatText").value=after;
+  if(before!==after)invalidateAnalysisInput();$("chatText").value=after;
   $("charCount").textContent=after.length+" / 12,000";
   $("maskStatus").textContent=before===after?tx("maskNone"):tx("maskDone");
 });
-$("locale").addEventListener("change",e=>{setLocale(e.target.value);updateCoachLabels()});
+$("locale").addEventListener("change",e=>{window.SaynueLocale.choose(e.target.value);setLocale(e.target.value);updateCoachLabels()});
 function hideError(){$("error").classList.add("hidden");$("error").textContent=""}
 function showError(message){$("error").textContent=message;$("error").classList.remove("hidden");$("formCard").scrollIntoView({behavior:"smooth",block:"start"})}
-const shots=window.SaynueScreenshotEditor({t:tx,onError:()=>showError(tx("errImage"))});
+const shots=window.SaynueScreenshotEditor({t:tx,onError:()=>showError(tx("errImage")),onChange:invalidateAnalysisInput});
+$("personaContext").addEventListener("input",invalidateAnalysisInput);
+$("replyLanguage").addEventListener("change",cancelAnalysis);
 
 
 const SESSION_TTL=30*24*60*60*1000;
-function buildSession(data,previous){
+function buildSession(data,previous,settings){
  const safe=(v,max)=>maskCommonInfo(typeof v==="string"?v:"").trim().slice(0,max);
  return {version:1,id:previous?.id||"s"+Date.now()+"-"+Math.random().toString(36).slice(2,8),
- at:Date.now(),persona,platform,relation,goal,replyTone,locale,replyLanguage:messageLanguage(data,selectedLanguage("replyLanguage")),turn:Math.min(12,(previous?.turn||0)+1),
+ at:Date.now(),persona:settings.persona,platform:settings.platform,relation:settings.relation,goal:settings.goal,replyTone:settings.replyTone,locale:settings.locale,replyLanguage:messageLanguage(data,settings.replyLanguage),turn:Math.min(12,(previous?.turn||0)+1),
  summary:safe(data.verdict||data.summary,240),signal:safe(data.keySignal||data.sectionOne,350),
- nextStep:safe(data.nextStep,350),title:safe(previous?.title||tx(personaNameKey(persona)),32),history:previous?[{at:previous.at,summary:previous.summary},...(previous.history||[])].slice(0,3):[]};
+ nextStep:safe(data.nextStep,350),title:safe(previous?.title||(T[settings.locale]||T.en)[personaNameKey(settings.persona)],32),history:previous?[{at:previous.at,summary:previous.summary,locale:previous.locale},...(previous.history||[])].slice(0,3):[]};
 }
 function validSession(s){
  return !!(s&&s.version===1&&typeof s.id==="string"&&s.id.length<40&&Number.isFinite(s.at)&&Date.now()-s.at>=0&&Date.now()-s.at<SESSION_TTL&&["standard","court","work","romance","mediator"].includes(s.persona)&&["kakao","line","wechat","whatsapp","imessage","instagram","other"].includes(s.platform)&&["crush","talking","dating","ex","friends","work","unknown","family"].includes(s.relation)&&["understand","reply","repair","boundary"].includes(s.goal)&&["natural","warm","direct","light"].includes(s.replyTone)&&Object.prototype.hasOwnProperty.call(T,s.locale)&&Number.isInteger(s.turn)&&s.turn>=1&&s.turn<=12&&["summary","signal","nextStep"].every(k=>typeof s[k]==="string"&&s[k].length>0&&s[k].length<=400));
@@ -164,7 +171,7 @@ function updateSavedBar(){
   const row=document.createElement("article");row.className="situation-item";row.dataset.situationId=item.id;
   const title=document.createElement("strong");title.textContent=item.title||tx(personaNameKey(item.persona));row.appendChild(title);
   const meta=document.createElement("p");meta.textContent=new Date(item.at).toLocaleDateString(locale)+" · "+tx(personaNameKey(item.persona));row.appendChild(meta);
-  const details=document.createElement("details");details.className="library-history";const heading=document.createElement("summary");heading.textContent=tx("historyTitle");details.appendChild(heading);for(const entry of [{at:item.at,summary:item.summary},...(item.history||[])]){const p=document.createElement("p");p.textContent=new Date(entry.at).toLocaleDateString(locale)+" · "+entry.summary;details.appendChild(p)}row.appendChild(details);
+  const details=document.createElement("details");details.className="library-history";const heading=document.createElement("summary");heading.textContent=tx("historyTitle");details.appendChild(heading);for(const entry of [{at:item.at,summary:item.summary,locale:item.locale},...(item.history||[])]){const p=document.createElement("p");const stamp=document.createElement("span");stamp.textContent=new Date(entry.at).toLocaleDateString(locale)+" · ";const content=document.createElement("span");content.lang=entry.locale||item.locale;content.textContent=entry.summary;p.append(stamp,content);details.appendChild(p)}row.appendChild(details);
   const controls=document.createElement("div");controls.className="situation-controls";
   const action=(name,key)=>{const b=document.createElement("button");b.type="button";b.className="secondary";b.dataset.libraryAction=name;b.textContent=tx(key);return b};
   controls.appendChild(action("resume","libraryResume"));
@@ -203,6 +210,7 @@ function saveCurrentSession(){
 }
 function startFollowUp(context){
  if(!validSession(context))return;
+ cancelAnalysis();returnReport=lastResult?{data:lastResult,session:activeSession,locale:resultLocale,goal:resultGoal}:null;lastResult=null;activeSession=context;
  usageEvent("followup_started");
  simEpoch++;
  navigate("analyze");$("formCard").hidden=false;followUpContext=context;persona=context.persona;autoExpert=false;
@@ -230,10 +238,10 @@ $("savedContextsList").addEventListener("click",event=>{
  }
 });
 $("cancelFollowUp").addEventListener("click",()=>{
- followUpContext=null;shots.clear();$("chatText").value="";$("charCount").textContent="0 / 12,000";
+ cancelAnalysis();followUpContext=null;shots.clear();$("chatText").value="";$("charCount").textContent="0 / 12,000";
  updateFollowUpUI();
- if(lastResult){$("formCard").hidden=true;$("results").classList.remove("hidden");$("results").scrollIntoView({behavior:"smooth",block:"start"})}
- else $("formCard").scrollIntoView({behavior:"smooth",block:"start"});
+ if(returnReport){const previous=returnReport;returnReport=null;activeSession=previous.session;resultLocale=previous.locale;resultGoal=previous.goal;if(activeSession){persona=activeSession.persona;autoExpert=false;chooseRelation(activeSession.relation);chooseGoal(activeSession.goal);choosePlatform(activeSession.platform);chooseReplyTone(activeSession.replyTone);$("replyLanguage").value=messageLanguage(activeSession,"auto");updatePersonaUI()}render(previous.data,true);updateFollowUpActions()}
+ else {activeSession=null;updateFollowUpActions();$("formCard").scrollIntoView({behavior:"smooth",block:"start"})}
 });
 $("saveContext").addEventListener("click",()=>{
  const status=$("saveStatus");
@@ -248,27 +256,28 @@ $("saveContext").addEventListener("click",()=>{
 
 
 function setupSimulator(data){
- simEpoch++;
+ simEpoch++;$("simConsent").checked=false;
  $("replySimulator").open=false;
  $("replySimulator").classList.toggle("hidden",data?.shouldReply===false||typeof data?.replyDraft!=="string"||!data.replyDraft.trim());
- $("simDraft").value=safeText(data?.replyDraft,600);
+ $("simDraft").value=safeText(data?.replyDraft,600);$("simDraft").lang=messageLanguage(data,resultLocale);
  $("simResults").classList.add("hidden");
  $("simError").textContent="";
  $("simRun").disabled=false;
 }
 $("simRun").addEventListener("click",async()=>{
- if(!lastResult)return;
+ if(!lastResult||$("simRun").disabled)return;
+ if(!$("simConsent").checked){$("simError").textContent=tx("errConsent");return}
  const draft=$("simDraft").value.trim();
  if(draft.length<4){$("simError").textContent=tx("simInputError");return}
- const original=lastResult,epoch=simEpoch,btn=$("simRun");
+ const original=lastResult,epoch=++simEpoch,btn=$("simRun"),requestLocale=locale,replyLang=messageLanguage(lastResult,resultLocale);
  usageEvent("simulation_started");
  const contextSummary=[lastResult.verdict||lastResult.summary,lastResult.nextStep].filter(x=>typeof x==="string").join("\n").slice(0,630);
  $("simResults").classList.add("hidden");$("simError").textContent=tx("simWorking");btn.disabled=true;
  try{
-  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),24000);
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),33000);
   let response;
   try{response=await fetch("/api/simulate",{method:"POST",headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({locale,persona,relation,draft,contextSummary,replyLanguage:messageLanguage(lastResult,selectedLanguage("replyLanguage"))}),signal:controller.signal,cache:"no-store"})}
+   body:JSON.stringify({locale:requestLocale,persona:activeSession?.persona||persona,relation:activeSession?.relation||relation,draft,contextSummary,replyLanguage:replyLang}),signal:controller.signal,cache:"no-store"})}
   finally{clearTimeout(timeout)}
   const data=await response.json().catch(()=>({}));
   if(!response.ok||!data.warm||!data.neutral||!data.reserved)throw Error("SIM_UNAVAILABLE");
@@ -276,16 +285,17 @@ $("simRun").addEventListener("click",async()=>{
   for(const part of ["Warm","Neutral","Reserved"]){
    const key=part.toLowerCase();
    $("sim"+part+"Example").textContent=safeText(data[key].example,240);
-   $("sim"+part+"Reading").textContent=safeText(data[key].reading,320);
+   $("sim"+part+"Reading").textContent=safeText(data[key].reading,320);markLang(["sim"+part+"Example"],replyLang);markLang(["sim"+part+"Reading"],requestLocale);
   }
   $("simCaution").textContent=safeText(data.caution,350);
-  $("simRevised").textContent=safeText(data.gentlerDraft,500);
+  $("simRevised").textContent=safeText(data.gentlerDraft,500);markLang(["simRevised","simDraft"],replyLang);markLang(["simCaution"],requestLocale);
   $("simRevisionBox").classList.toggle("hidden",!data.gentlerDraft);
   $("simResults").classList.remove("hidden");$("simError").textContent="";usageEvent("simulation_completed");
  }catch(_){if(epoch===simEpoch)$("simError").textContent=tx("simError")}
  finally{if(epoch===simEpoch)btn.disabled=false}
 });
-$("simApply").addEventListener("click",()=>{
+$("simDraft").addEventListener("input",()=>{$("simConsent").checked=false;simEpoch++;$("simRun").disabled=false;$("simResults").classList.add("hidden");$("simError").textContent=""});
+$("simApply").addEventListener("click",()=>{$("simConsent").checked=false;
  $("simDraft").value=$("simRevised").textContent;
  $("simResults").classList.add("hidden");
  $("simDraft").focus();
@@ -353,7 +363,29 @@ function renderPersona(data,scroll){
  if(scroll){$("formCard").hidden=true;$("results").scrollIntoView({behavior:"smooth",block:"start"})};
 }
 function render(data,scroll){if(data&&data.persona&&data.persona!=="standard"){renderPersona(data,scroll);return} if(scroll)$("standardExplain").open=false; $("shareCard").classList.remove("hidden");$("personaReport").classList.add("hidden");lastResult=data;setupSimulator(data);$("samplePreview").classList.add("hidden");$("plusPeek").classList.add("hidden");$("reportPlatform").classList.toggle("hidden",!data.recommendedExpert);$("reportPlatform").textContent=data.recommendedExpert?tx("autoApplied")+" · "+tx(personaNameKey(data.recommendedExpert)):"";$("verdict").textContent=safeText(data.verdict,220);$("warmth").textContent=clamp(data.warmthScore)+"/100";$("balance").textContent=clamp(data.reciprocityScore)+"/100";$("confidence").textContent=tx(({low:"low",medium:"medium",high:"high"})[data.evidenceLevel]||"low");$("signal").textContent=safeText(data.keySignal,850);$("evidence").textContent=safeText(data.evidence,950);renderEvidenceCards(data.evidenceCards);$("alternative").textContent=safeText(data.alternative,700);$("nextStep").textContent=safeText(data.nextStep,750);$("replyDraft").textContent=safeText(data.replyDraft,480);$("replyDraft").lang=messageLanguage(data,resultLocale);renderMeaning("replyMeaning",data,!!data.replyDraft);$("replyWhy").textContent=safeText(data.replyWhy,520);markLang(["verdict","signal","nextStep","replyWhy","replyMeaning","evidence","alternative","evidenceCardsList"],resultLocale);$("replyCard").classList.toggle("hidden",!data.replyDraft);$("replyUnavailable").classList.toggle("hidden",!!data.replyDraft);$("copyStatus").textContent="";$("results").classList.remove("hidden");if(scroll){$("formCard").hidden=true;$("results").scrollIntoView({behavior:"smooth",block:"start"})}}
-$("analyze").addEventListener("click",async()=>{hideError();if(!$("consent").checked){showError(tx("errConsent"));return}const chatText=$("chatText").value.trim();const prior=followUpContext;if(mode==="text"&&chatText.length<(prior?1:20)){showError(chatText?tx("errShort"):tx("errInput"));return}if(mode==="image"&&!shots.isReady()){showError(shots.isBusy()?tx("shotPreparing"):shots.hasImages()?tx("shotMustReview"):tx("errInput"));return}usageEvent("analysis_started");const btn=$("analyze");btn.disabled=true;$("loading").classList.remove("hidden");$("results").classList.add("hidden");try{const ctl=new AbortController();const timer=setTimeout(()=>ctl.abort(),33000);let response;try{response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({platform:platform,relation:relation,goal:goal,replyTone:replyTone,replyLength:replyLength,replyEmoji:replyEmoji,locale:locale,replyLanguage:selectedLanguage("replyLanguage"),persona:persona,autoExpert:autoExpert,caseContext:$("personaContext").value.trim(),chatText:mode==="text"?chatText:"",images:mode==="image"?shots.getImages():undefined,priorAnalysis:prior?{summary:prior.summary,signal:prior.signal,nextStep:prior.nextStep,turn:prior.turn}:undefined}),signal:ctl.signal,cache:"no-store"})}finally{clearTimeout(timer)}const payload=await response.json().catch(()=>({}));if(!response.ok){const code=typeof payload.code==="string"&&/^[A-Z_]{3,50}$/.test(payload.code)?payload.code:"HTTP_"+response.status;const kind=code==="NOT_CONFIGURED"?"errMissing":response.status===429?"errLimit":"errOther";throw Error(((API_ERRORS[locale]||API_ERRORS.en)[code]||tx(kind))+" ["+code+"]")}if(!payload||(persona==="standard"?typeof payload.verdict!=="string":payload.persona!==persona||typeof payload.summary!=="string"))throw Error(tx("errOther"));feedbackSent=false;resultGoal=goal;resultLocale=locale;$("feedbackStatus").textContent="";document.querySelectorAll("#feedbackButtons [data-feedback]").forEach(b=>b.disabled=false);usageEvent("analysis_completed");if(prior)usageEvent("followup_completed");activeSession=buildSession(payload,prior);renderHistoryCompare(prior,activeSession);if(prior&&situationLibrary.contains(prior.id))saveCurrentSession();followUpContext=null;render(payload,true);updateFollowUpActions()}catch(err){usageEvent("analysis_failed");showError(err.name==="AbortError"?tx("errServer"):(err.message||tx("errOther")))}finally{btn.disabled=false;$("loading").classList.add("hidden")}});
+$("analyze").addEventListener("click",async()=>{
+ hideError();if(analysisController)return;
+ if(!$("consent").checked){showError(tx("errConsent"));return}
+ const chatText=$("chatText").value.trim(),prior=followUpContext;
+ if(mode==="text"&&chatText.length<(prior?1:20)){showError(chatText?tx("errShort"):tx("errInput"));return}
+ if(mode==="image"&&!shots.isReady()){showError(shots.isBusy()?tx("shotPreparing"):shots.hasImages()?tx("shotMustReview"):tx("errInput"));return}
+ const settings={platform,relation,goal:goal,replyTone:replyTone,replyLength:replyLength,replyEmoji:replyEmoji,locale,replyLanguage:selectedLanguage("replyLanguage"),persona,autoExpert,caseContext:$("personaContext").value.trim(),chatText:mode==="text"?chatText:"",images:mode==="image"?shots.getImages():undefined,priorAnalysis:prior?{summary:prior.summary,signal:prior.signal,nextStep:prior.nextStep,turn:prior.turn}:undefined};
+ const epoch=++analysisEpoch,ctl=new AbortController();analysisController=ctl;
+ lastResult=null;activeSession=null;simEpoch++;updateFollowUpActions();$("consent").checked=false;
+ usageEvent("analysis_started");const btn=$("analyze");btn.disabled=true;$("loading").classList.remove("hidden");$("results").classList.add("hidden");
+ const timer=setTimeout(()=>ctl.abort(),40000);
+ try{
+  const response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(settings),signal:ctl.signal,cache:"no-store"});
+  const payload=await response.json().catch(()=>({}));if(epoch!==analysisEpoch)return;
+  if(!response.ok){const code=typeof payload.code==="string"&&/^[A-Z_]{3,50}$/.test(payload.code)?payload.code:"HTTP_"+response.status;const kind=code==="NOT_CONFIGURED"?"errMissing":response.status===429?"errLimit":"errOther";throw Error(((API_ERRORS[locale]||API_ERRORS.en)[code]||tx(kind))+" ["+code+"]")}
+  if(!payload||(settings.persona==="standard"?typeof payload.verdict!=="string":payload.persona!==settings.persona||typeof payload.summary!=="string"))throw Error(tx("errOther"));
+  feedbackSent=false;resultGoal=settings.goal;resultLocale=settings.locale;$("feedbackStatus").textContent="";document.querySelectorAll("#feedbackButtons [data-feedback]").forEach(b=>b.disabled=false);
+  usageEvent("analysis_completed");if(prior)usageEvent("followup_completed");
+  activeSession=buildSession(payload,prior,settings);renderHistoryCompare(prior,activeSession);if(prior&&situationLibrary.contains(prior.id))saveCurrentSession();
+  followUpContext=null;returnReport=null;render(payload,true);updateFollowUpActions();
+ }catch(err){if(epoch===analysisEpoch){usageEvent("analysis_failed");showError(ctl.signal.aborted?tx("errServer"):(err.message||tx("errOther")))}}
+ finally{clearTimeout(timer);if(epoch===analysisEpoch){analysisController=null;btn.disabled=false;$("loading").classList.add("hidden")}}
+});
 $("feedbackButtons").addEventListener("click",async(event)=>{
   const btn=event.target.closest("[data-feedback]");
   if(!btn||feedbackSent||!lastResult)return;
@@ -387,7 +419,7 @@ $("copyReply").addEventListener("click",async()=>{
   catch(_){$("copyStatus").textContent=tx("replyCopyFail")}
 });
 $("share").addEventListener("click",async()=>{if(!lastResult)return;const text=tx("shareTitle")+"\n"+tx("sharePrompt");try{if(navigator.share){await navigator.share({title:tx("shareTitle"),text:text,url:location.origin+location.pathname})}else{await navigator.clipboard.writeText(text+"\n"+location.origin+location.pathname);alert(tx("copied"))}}catch(err){if(err.name!=="AbortError")alert(tx("errOther"))}});
-$("reset").addEventListener("click",()=>{$("formCard").hidden=false;$("results").classList.add("hidden");$("personaReport").classList.add("hidden");$("shareCard").classList.remove("hidden");$("samplePreview").classList.remove("hidden");$("plusPeek").classList.remove("hidden");lastResult=null;activeSession=null;followUpContext=null;renderHistoryCompare(null,null);$("consent").checked=false;simEpoch++;$("replySimulator").classList.add("hidden");shots.clear();switchMode("image");$("chatText").value="";$("charCount").textContent="0 / 12,000";updateFollowUpActions();feedbackSent=false;$("feedbackStatus").textContent="";$("formCard").scrollIntoView({behavior:"smooth",block:"start"})});
+$("reset").addEventListener("click",()=>{returnReport=null;cancelAnalysis();$("personaContext").value="";$("formCard").hidden=false;$("results").classList.add("hidden");$("personaReport").classList.add("hidden");$("shareCard").classList.remove("hidden");$("samplePreview").classList.remove("hidden");$("plusPeek").classList.remove("hidden");lastResult=null;activeSession=null;followUpContext=null;renderHistoryCompare(null,null);$("consent").checked=false;simEpoch++;$("replySimulator").classList.add("hidden");shots.clear();switchMode("image");$("chatText").value="";$("charCount").textContent="0 / 12,000";updateFollowUpActions();feedbackSent=false;$("feedbackStatus").textContent="";$("formCard").scrollIntoView({behavior:"smooth",block:"start"})});
 situationLibrary=window.SaynueSituationLibrary.create();
 stylePreferences=window.SaynueReplyStyle.create();
 usageMetrics=window.SaynueUsageMetrics.create({onDelivery:ok=>{if(!ok&&usageMetrics?.enabled())$("metricsStatus").textContent=tx("metricsUnavailable")}});
@@ -402,8 +434,9 @@ if(window.SaynueTheme){showThemeChoice(window.SaynueTheme.get());$("themeChoice"
 if(usageMetrics.enabled())usageEvent("visit");
 updatePersonaUI();
 
-let screen="home",coachMode="reply",coachEpoch=0,coachResult=null,coachReportLocale="ko";
-const screens={home:"homeScreen",analyze:"analysisScreen",reply:"coachScreen",counsel:"coachScreen",library:"libraryScreen",settings:"settingsScreen"};
+let screen="home",coachMode="reply",coachEpoch=0,coachResult=null,coachReportLocale="ko",coachController=null;
+function cancelCoachRequest(){if(coachController){coachController.abort();coachController=null}}
+const screens={home:"homeScreen",analyze:"analysisScreen",reply:"coachScreen",counsel:"coachScreen",prepare:"coachScreen",reflect:"coachScreen",library:"libraryScreen",settings:"settingsScreen"};
 function updateCoachLabels(){
  const title={reply:"hubReply",counsel:"hubCounsel",prepare:"coachPrepare",reflect:"coachReflect"}[coachMode];
  const desc={reply:"hubReplyDesc",counsel:"hubCounselDesc",prepare:"coachPrepareDesc",reflect:"coachReflectDesc"}[coachMode];
@@ -415,37 +448,38 @@ function updateCoachLabels(){
 }
 function setCoachMode(mode){
  if(!["reply","counsel","prepare","reflect"].includes(mode))return;
- if(mode!==coachMode){coachMode=mode;coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachStatus").textContent="";$("coachConsent").checked=false;$("coachRun").disabled=false}
+ if(mode!==coachMode){cancelCoachRequest();coachMode=mode;coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachStatus").textContent="";$("coachConsent").checked=false;$("coachRun").disabled=false}
  updateCoachLabels();
 }
 function showScreen(target){
- if(!screens[target])target="home";screen=target;
+ if(!Object.prototype.hasOwnProperty.call(screens,target))target="home";screen=target;
  for(const id of new Set(Object.values(screens)))$(id).hidden=id!==screens[target];
  if(target==="analyze")$("formCard").hidden=!$("results").classList.contains("hidden");
  if(target==="library"){updateSavedBar();$("savedContextBar").open=true}
- if(target==="reply"||target==="counsel")setCoachMode(target);
- document.querySelectorAll("#workspaceNav [data-nav]").forEach(b=>b.setAttribute("aria-current",b.dataset.nav===(target==="counsel"?"reply":target)?"page":"false"));
+ if(["reply","counsel","prepare","reflect"].includes(target))setCoachMode(target);
+ document.querySelectorAll("#workspaceNav [data-nav]").forEach(b=>b.setAttribute("aria-current",b.dataset.nav===(["counsel","prepare","reflect"].includes(target)?"reply":target)?"page":"false"));
  window.scrollTo(0,0);
 }
 function navigate(target){const hash=target==="analyze"?"#formCard":target==="home"?"#home":"#"+target;if(location.hash!==hash)history.pushState(null,"",hash);showScreen(target)}
 function fromHash(){const hash=location.hash.slice(1);showScreen(hash==="formCard"?"analyze":hash)}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-nav]");if(b)navigate(b.dataset.nav)});
 window.addEventListener("popstate",fromHash);window.addEventListener("hashchange",fromHash);
-$("editAnalysis").addEventListener("click",()=>{$("results").classList.add("hidden");$("formCard").hidden=false;$("consent").checked=false;window.scrollTo(0,0)});
-$("coachModes").addEventListener("click",e=>{const b=e.target.closest("[data-coach]");if(b)setCoachMode(b.dataset.coach)});
-$("coachMask").addEventListener("click",()=>{for(const id of ["coachContext","coachDraft"])$(id).value=maskCommonInfo($(id).value);$("coachMaskStatus").textContent=tx("maskDone")});
+window.addEventListener("pageshow",event=>{if(event.persisted){const saved=window.SaynueLocale.stored();if(saved&&saved!==locale){window.SaynueLocale.choose(saved);setLocale(saved);updateCoachLabels()}}});
+$("editAnalysis").addEventListener("click",()=>{cancelAnalysis();lastResult=null;activeSession=null;simEpoch++;updateFollowUpActions();$("results").classList.add("hidden");$("formCard").hidden=false;$("consent").checked=false;window.scrollTo(0,0)});
+$("coachModes").addEventListener("click",e=>{const b=e.target.closest("[data-coach]");if(b)navigate(b.dataset.coach)});
+$("coachMask").addEventListener("click",()=>{invalidateCoachInput();for(const id of ["coachContext","coachDraft"])$(id).value=maskCommonInfo($(id).value);$("coachMaskStatus").textContent=tx("maskDone")});
 function loadCoachStyle(){const s=stylePreferences.load();$("coachTone").value=s?.tone||replyTone;$("coachLength").value=s?.length||replyLength;$("coachEmoji").value=s?.emoji||replyEmoji}
 $("coachSaveStyle").addEventListener("click",()=>{const ok=stylePreferences.save({tone:$("coachTone").value,length:$("coachLength").value,emoji:$("coachEmoji").value});if(ok){chooseReplyTone($("coachTone").value);chooseReplyLength($("coachLength").value);chooseReplyEmoji($("coachEmoji").value)}$("coachStatus").textContent=tx(ok?"styleStored":"styleError")});
 function openDraftCoach(){
  if(!lastResult||lastResult.shouldReply===false||!lastResult.replyDraft)return;
- navigate("reply");coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachRun").disabled=false;$("coachConsent").checked=false;
+ navigate("reply");cancelCoachRequest();coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachRun").disabled=false;$("coachConsent").checked=false;
  $("coachContext").value=maskCommonInfo([lastResult.verdict||lastResult.summary,lastResult.nextStep].filter(Boolean).join("\n")).slice(0,1800);$("coachDraft").value=lastResult.replyDraft.slice(0,600);$("coachRelation").value=relation;$("coachReplyLanguage").value=messageLanguage(lastResult,selectedLanguage("replyLanguage"));loadCoachStyle();
 }
 $("editPersonaDraft").addEventListener("click",openDraftCoach);$("editStandardDraft").addEventListener("click",openDraftCoach);
 function openCounselFromSummary(source,sourceRelation,sourceLanguage){
  if(!source)return;
  const summary=maskCommonInfo([source.verdict||source.summary,source.keySignal||source.sectionOne||source.advice,source.nextStep].filter(Boolean).join("\n")).slice(0,1250);
- navigate("counsel");coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachRun").disabled=false;$("coachStatus").textContent="";
+ navigate("counsel");cancelCoachRequest();coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachRun").disabled=false;$("coachStatus").textContent="";
  $("coachContext").value=(tx("priorSummaryLabel")+":\n"+summary).slice(0,1800);$("coachDraft").value="";$("coachRelation").value=sourceRelation;$("coachReplyLanguage").value=sourceLanguage;$("coachConsent").checked=false;
 }
 $("analysisToCounsel").addEventListener("click",()=>openCounselFromSummary(lastResult,relation,messageLanguage(lastResult,selectedLanguage("replyLanguage"))));
@@ -473,7 +507,7 @@ function renderCoachExtras(data,reportLang){
     const why=document.createElement("p");why.className="variant-why";why.lang=reportLang;why.textContent=alt.why||"";card.appendChild(why);
     const button=document.createElement("button");button.type="button";button.className="secondary variant-use";button.textContent=tx("replyUse");button.addEventListener("click",()=>{
      if(coachResult!==data||!data.shouldReply)return;
-     coachEpoch++;$("coachMessage").value=alt.message;$("coachMessage").lang=messageLanguage(data,reportLang);$("coachWhy").textContent=alt.why||"";renderMeaning("coachMeaning",{replyLanguage:data.replyLanguage,replyMeaning:alt.meaning},true);$("coachRehearsal").hidden=true;$("coachCopyStatus").textContent="";$("coachMessageBox").scrollIntoView({behavior:"smooth",block:"start"});
+     cancelCoachRequest();coachEpoch++;$("coachRehearse").disabled=false;$("coachSimConsent").checked=false;$("coachMessage").value=alt.message;$("coachMessage").lang=messageLanguage(data,reportLang);$("coachWhy").textContent=alt.why||"";renderMeaning("coachMeaning",{replyLanguage:data.replyLanguage,replyMeaning:alt.meaning},true);$("coachRehearsal").hidden=true;$("coachCopyStatus").textContent="";$("coachMessageBox").scrollIntoView({behavior:"smooth",block:"start"});
     });card.appendChild(button);out.appendChild(card);
    }
   }
@@ -488,34 +522,36 @@ function renderCoachExtras(data,reportLang){
 }
 
 async function coachRequest(path,data){
- const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),33000);
- try{const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data),cache:"no-store",signal:ctl.signal});const v=await r.json();if(!r.ok)throw Error(((API_ERRORS[locale]||API_ERRORS.en)[v.code]||tx(r.status===429?"errLimit":"errOther"))+" ["+(typeof v.code==="string"&&/^[A-Z_]+$/.test(v.code)?v.code:"ERROR")+"]");return v}finally{clearTimeout(timer)}
+ cancelCoachRequest();const ctl=new AbortController();coachController=ctl;const timer=setTimeout(()=>ctl.abort(),40000);
+ try{const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data),cache:"no-store",signal:ctl.signal});const v=await r.json().catch(()=>null);if(ctl.signal.aborted)throw new DOMException("Aborted","AbortError");if(!r.ok){const code=typeof v?.code==="string"&&/^[A-Z_]{3,50}$/.test(v.code)?v.code:"HTTP_"+r.status;throw Error(((API_ERRORS[locale]||API_ERRORS.en)[code]||tx(r.status===429?"errLimit":"errOther"))+" ["+code+"]")}if(!v||typeof v!=="object")throw Error(((API_ERRORS[locale]||API_ERRORS.en).AI_INVALID_OUTPUT));return v}finally{clearTimeout(timer);if(coachController===ctl)coachController=null}
 }
-for(const id of ["coachContext","coachDraft"])$(id).addEventListener("input",()=>{$("coachConsent").checked=false});
+function invalidateCoachInput(){cancelCoachRequest();coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachConsent").checked=false;$("coachRun").disabled=false;$("coachStatus").textContent="";$("coachRehearse").disabled=false}
+for(const id of ["coachContext","coachDraft"])$(id).addEventListener("input",invalidateCoachInput);
+for(const id of ["coachRelation","coachTone","coachLength","coachEmoji","coachReplyLanguage"])$(id).addEventListener("change",invalidateCoachInput);
 $("coachRun").addEventListener("click",async()=>{
  const context=$("coachContext").value.trim(),draft=coachMode==="reply"?$("coachDraft").value.trim():"";
  if(!($("coachConsent").checked&&(context.length>=3||draft.length>=3))){$("coachStatus").textContent=tx("coachMissing");return}
- const requestLocale=locale,epoch=++coachEpoch;coachResult=null;$("coachResult").hidden=true;$("coachRun").disabled=true;$("coachStatus").textContent=tx("coachWorking");
+ if($("coachRun").disabled)return;const requestLocale=locale,epoch=++coachEpoch;coachResult=null;$("coachResult").hidden=true;$("coachRun").disabled=true;$("coachStatus").textContent=tx("coachWorking");
  try{
   const data=await coachRequest("/api/coach",{mode:coachMode,locale,replyLanguage:selectedLanguage("coachReplyLanguage"),relation:$("coachRelation").value,context,draft,tone:$("coachTone").value,length:$("coachLength").value,emoji:$("coachEmoji").value});
   if(epoch!==coachEpoch)return;if(typeof data.summary!=="string"||!Array.isArray(data.steps)||typeof data.shouldReply!=="boolean")throw Error(tx("errOther"));
   coachResult=data;coachReportLocale=requestLocale;$("coachSummary").textContent=data.summary;$("coachAdvice").textContent=data.advice;
   $("coachSteps").replaceChildren(...data.steps.map(s=>{const el=document.createElement("li");el.textContent=s;return el}));
   $("coachMessageBox").hidden=coachMode==="reflect"||!data.shouldReply||!data.message;$("coachNoReply").hidden=data.shouldReply;$("coachMessage").value=data.shouldReply?data.message:"";$("coachMessage").lang=messageLanguage(data,requestLocale);renderMeaning("coachMeaning",data,data.shouldReply&&data.message);$("coachWhy").textContent=data.why;$("coachCaution").textContent=data.caution;markLang(["coachSummary","coachAdvice","coachSteps","coachWhy","coachCaution","coachMeaning"],requestLocale);renderCoachExtras(data,requestLocale);
-  $("coachCopyStatus").textContent="";$("coachRehearsal").hidden=true;$("coachResult").hidden=false;$("coachStatus").textContent=tx("coachDone");
-  if(screen==="reply"||screen==="counsel")$("coachResult").scrollIntoView({behavior:"smooth",block:"start"});
+  $("coachCopyStatus").textContent="";$("coachSimConsent").checked=false;$("coachRehearse").disabled=false;$("coachRehearsal").hidden=true;$("coachResult").hidden=false;$("coachStatus").textContent=tx("coachDone");
+  if(["reply","counsel","prepare","reflect"].includes(screen))$("coachResult").scrollIntoView({behavior:"smooth",block:"start"});
  }catch(e){if(epoch===coachEpoch)$("coachStatus").textContent=e.name==="AbortError"?tx("errServer"):e.message}
  finally{if(epoch===coachEpoch)$("coachRun").disabled=false}
 });
 $("coachCopy").addEventListener("click",async()=>{if(!coachResult?.shouldReply||!$("coachMessage").value.trim())return;try{await navigator.clipboard.writeText($("coachMessage").value);$("coachCopyStatus").textContent=tx("replyCopied");usageEvent("reply_copied")}catch{$("coachCopyStatus").textContent=tx("replyCopyFail")}});
-$("coachRevise").addEventListener("click",()=>{if(!coachResult?.shouldReply)return;const message=$("coachMessage").value;$("coachReplyLanguage").value=messageLanguage(coachResult,selectedLanguage("coachReplyLanguage"));setCoachMode("reply");coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachStatus").textContent="";$("coachRun").disabled=false;$("coachDraft").value=message;$("coachConsent").checked=false;$("coachStyle").open=true;$("coachDraft").focus();$("coachDraft").scrollIntoView({behavior:"smooth",block:"center"})});
-$("coachMessage").addEventListener("input",()=>{coachEpoch++;$("coachMeaningBox").hidden=true;$("coachWhy").textContent="";$("coachRehearsal").hidden=true});
+$("coachRevise").addEventListener("click",()=>{if(!coachResult?.shouldReply)return;const message=$("coachMessage").value;$("coachReplyLanguage").value=messageLanguage(coachResult,selectedLanguage("coachReplyLanguage"));navigate("reply");cancelCoachRequest();coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachStatus").textContent="";$("coachRun").disabled=false;$("coachDraft").value=message;$("coachConsent").checked=false;$("coachStyle").open=true;$("coachDraft").focus();$("coachDraft").scrollIntoView({behavior:"smooth",block:"center"})});
+$("coachMessage").addEventListener("input",()=>{cancelCoachRequest();coachEpoch++;$("coachRehearse").disabled=false;$("coachSimConsent").checked=false;$("coachMeaningBox").hidden=true;$("coachWhy").textContent="";$("coachRehearsal").hidden=true});
 $("coachRehearse").addEventListener("click",async()=>{
- if(!coachResult?.shouldReply)return;if(!$("coachConsent").checked){$("coachCopyStatus").textContent=tx("errConsent");return}
+ if(!coachResult?.shouldReply)return;if(!$("coachSimConsent").checked){$("coachCopyStatus").textContent=tx("errConsent");return}
  const message=$("coachMessage").value.trim();if(message.length<4){$("coachCopyStatus").textContent=tx("simInputError");return}
- const epoch=coachEpoch,btn=$("coachRehearse"),out=$("coachRehearsal");btn.disabled=true;out.hidden=false;out.textContent=tx("coachWorking");
- try{const data=await coachRequest("/api/simulate",{locale,replyLanguage:messageLanguage(coachResult,selectedLanguage("coachReplyLanguage")),persona:"standard",relation:$("coachRelation").value,draft:message,contextSummary:[coachResult.summary,coachResult.advice].join("\n").slice(0,650)});if(epoch!==coachEpoch)return;out.replaceChildren();for(const key of ["warm","neutral","reserved"]){const el=document.createElement("p");el.textContent=tx("sim"+key[0].toUpperCase()+key.slice(1))+": "+data[key].example+" — "+data[key].reading;out.appendChild(el)}const note=document.createElement("p");note.textContent=tx("simNotice")+" "+data.caution;out.appendChild(note)}
- catch(e){if(epoch===coachEpoch)out.textContent=e.message}finally{btn.disabled=false}
+ if($("coachRehearse").disabled)return;const requestLocale=locale,epoch=++coachEpoch,btn=$("coachRehearse"),out=$("coachRehearsal");btn.disabled=true;out.hidden=false;out.textContent=tx("coachWorking");
+ try{const data=await coachRequest("/api/simulate",{locale,replyLanguage:messageLanguage(coachResult,selectedLanguage("coachReplyLanguage")),persona:"standard",relation:$("coachRelation").value,draft:message,contextSummary:[coachResult.summary,coachResult.advice].join("\n").slice(0,650)});if(epoch!==coachEpoch)return;out.replaceChildren();for(const key of ["warm","neutral","reserved"]){const el=document.createElement("p"),label=document.createElement("span"),example=document.createElement("span"),reading=document.createElement("span");label.textContent=tx("sim"+key[0].toUpperCase()+key.slice(1))+": ";example.lang=messageLanguage(coachResult,coachReportLocale);example.textContent=data[key].example;reading.lang=requestLocale;reading.textContent=" — "+data[key].reading;el.append(label,example,reading);out.appendChild(el)}const note=document.createElement("p"),prefix=document.createElement("span"),body=document.createElement("span");prefix.textContent=tx("simNotice")+" ";body.lang=requestLocale;body.textContent=data.caution;note.append(prefix,body);out.appendChild(note)}
+ catch(e){if(epoch===coachEpoch)out.textContent=e.message}finally{if(epoch===coachEpoch)btn.disabled=false}
 });
 loadCoachStyle();updateCoachLabels();fromHash();
 

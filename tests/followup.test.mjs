@@ -29,7 +29,7 @@ test("follow-up is hidden until analysis and screenshot content is cleared",()=>
  assert.match(home,/id="followupBanner"/);
  assert.match(home,/function startFollowUp\(context\)/);
  assert.match(home,/shots\.clear\(\);switchMode\("image"\)/);
- assert.match(editor,/clear\(\)\{if\(busy\|\|drawing\)return false;shots\.splice\(0\)/);
+ assert.match(editor,/clear\(\)\{revision\+\+;busy=false;drawing=false;pointerId=null;shots\.splice\(0\)/);
  assert.match(home,/priorAnalysis:prior\?/);
  assert.match(home,/SESSION_TTL=30\*24\*60\*60\*1000/);
  assert.match(home,/situationLibrary\.upsert\(activeSession\)/);

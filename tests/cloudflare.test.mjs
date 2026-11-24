@@ -36,3 +36,11 @@ test("static build excludes backend, tests, configuration and secrets; staged se
  assert.match(await readFile(".cloudflare-public/_headers","utf8"),/\/assets\/fonts\/\*\n  Cache-Control: public, max-age=31536000, immutable/);
  assert.ok((await readdir(".cloudflare-public/assets")).includes("theme.js"));
 });
+
+test("staging canonical points to Cloudflare without enabling indexing",async()=>{
+ const env={...process.env,SAYNUE_PUBLIC_ORIGIN:"",SAYNUE_INDEXABLE:"false"};
+ execFileSync(process.execPath,["scripts/build-cloudflare.mjs"],{env});
+ const html=await readFile(".cloudflare-public/index.html","utf8");assert.match(html,/rel="canonical" href="https:\/\/saynue\.dark-smoke-6a9b\.workers\.dev\//);assert.doesNotMatch(html,/saynue\.vercel\.app/);
+ assert.ok((await readdir(".cloudflare-public/assets")).includes("locale.js"));
+ assert.throws(()=>execFileSync(process.execPath,["scripts/build-cloudflare.mjs"],{env:{...env,SAYNUE_INDEXABLE:"true"},stdio:"pipe"}));
+});

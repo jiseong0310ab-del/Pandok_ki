@@ -75,7 +75,9 @@ export default {async fetch(request){
   try{
    const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent",{method:"POST",headers:{"content-type":"application/json","x-goog-api-key":key},body,signal:AbortSignal.timeout(12500)});
    if(upstream.status===429)return response(429,{code:"AI_RATE_LIMITED"});
-   if([400,401,403].includes(upstream.status))return response(502,{code:"AI_REQUEST_REJECTED"});
+   if(upstream.status===400)return response(422,{code:"AI_REQUEST_REJECTED"});
+   if(upstream.status===401)return response(502,{code:"AI_KEY_INVALID"});
+   if(upstream.status===403)return response(502,{code:"AI_PERMISSION"});
    if(!upstream.ok)continue;
    const v=await upstream.json();const raw=v?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
    const parsed=JSON.parse(raw),normalized=normalizeCoachResult(parsed,input);if(normalized){const out=addMessageLanguage(normalized,parsed,input,"message");if(out.alternatives&&(!out.replyLanguage||out.replyLanguage===input.locale))for(const alt of out.alternatives)alt.meaning="";return response(200,out)}
