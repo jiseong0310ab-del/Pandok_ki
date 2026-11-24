@@ -20,6 +20,8 @@ const WORKSPACE_TEXT={"ko":{"hubHome":"홈","hubAnalyze":"대화 분석","hubAna
 for(const lang of Object.keys(WORKSPACE_TEXT))Object.assign(T[lang],WORKSPACE_TEXT[lang]);
 const MESSAGE_TEXT={"ko":{"replyLangTitle":"답장 언어","replyLangAuto":"자동 감지 (대화 기준)","replyLangHint":"분석은 페이지 언어로, 답장은 선택한 언어로 작성해요. 자동 감지는 대화나 초안을 참고해요.","replyMeaningTitle":"답장의 뜻","replyLangBadge":"답장 언어"},"ja":{"replyLangTitle":"返信言語","replyLangAuto":"自動検出（会話に合わせる）","replyLangHint":"分析はページの言語、返信は選んだ言語で。自動検出は会話や下書きを参考にします。","replyMeaningTitle":"返信の意味","replyLangBadge":"返信言語"},"en":{"replyLangTitle":"Reply language","replyLangAuto":"Auto-detect from conversation","replyLangHint":"Analysis follows the page language; replies use the selected language. Auto uses the conversation or draft.","replyMeaningTitle":"Reply meaning","replyLangBadge":"Reply language"},"zh-CN":{"replyLangTitle":"回复语言","replyLangAuto":"自动识别（根据对话）","replyLangHint":"分析使用页面语言，回复使用所选语言。自动识别参考对话或草稿。","replyMeaningTitle":"回复含义","replyLangBadge":"回复语言"},"zh-TW":{"replyLangTitle":"回覆語言","replyLangAuto":"自動辨識（依對話）","replyLangHint":"分析使用頁面語言，回覆使用所選語言。自動辨識參考對話或草稿。","replyMeaningTitle":"回覆含義","replyLangBadge":"回覆語言"}};
 for(const lang of Object.keys(MESSAGE_TEXT))Object.assign(T[lang],MESSAGE_TEXT[lang]);
+const DISTINCT_TEXT={"ko":{"hubAnalyzeDesc":"상대의 말과 대화 흐름이 궁금할 때","hubReplyDesc":"보낼 메시지를 만들거나 다듬고 싶을 때","hubCounselDesc":"관계의 고민과 앞으로의 행동을 정리할 때","replyContextLabel":"어떤 메시지를 보내고 싶나요?","replyContextHint":"받은 메시지, 전하고 싶은 내용, 원하는 결과를 적어주세요","counselContextLabel":"어떤 관계에서 무엇이 고민인가요?","prepareContextLabel":"어떤 중요한 대화를 앞두고 있나요?","prepareContextHint":"고백, 사과, 거절, 협상 등에서 원하는 결과와 걱정되는 점을 알려주세요","reflectContextLabel":"내 소통 습관 중 무엇을 돌아보고 싶나요?","runReply":"답장 제안 받기","runCounsel":"관계 상담 받기","runPrepare":"대화 준비하기","runReflect":"소통 습관 돌아보기","replyAlternatives":"다른 표현 방식","replyUse":"이 문장 사용","replyChecks":"보내기 전 확인할 점","counselPerspectives":"다른 관점에서 보기","counselQuestions":"스스로 돌아볼 질문","prepareAgenda":"대화 진행 순서","prepareContingency":"예상과 다르게 흘러간다면","prepareChecks":"준비할 행동","reflectPattern":"돌아볼 소통 습관","reflectExperiment":"작은 실천 과제","reflectCheckIn":"변화를 확인하는 방법","reflectSteps":"실천 방법","analysisToCounsel":"이 관계를 더 깊게 상담하기","coachToCounsel":"관계 고민으로 이어가기","priorSummaryLabel":"이전 AI 요약 (확인되지 않은 참고 정보)","toneShort":"짧고 간결하게","coachOpening":"대화를 시작하는 문장","coachNoContact":"지금은 추가 연락보다 다른 행동을 권해요","coachDraftFirst":"추천 답장"},"ja":{"hubAnalyzeDesc":"相手の言葉や会話の流れを理解したいとき","hubReplyDesc":"送るメッセージを作成・添削したいとき","hubCounselDesc":"関係の悩みと次の行動を整理したいとき","replyContextLabel":"どんなメッセージを送りたいですか？","replyContextHint":"受け取った言葉、伝えたい内容、望む結果を入力してください","counselContextLabel":"どんな関係で何に悩んでいますか？","prepareContextLabel":"どんな大切な会話を控えていますか？","prepareContextHint":"告白・謝罪・断り・交渉など、目的や心配な点を教えてください","reflectContextLabel":"どんなコミュニケーション習慣を振り返りたいですか？","runReply":"返信案を受け取る","runCounsel":"関係について相談する","runPrepare":"会話を準備する","runReflect":"習慣を振り返る","replyAlternatives":"別の表現","replyUse":"この文章を使う","replyChecks":"送信前に確認すること","counselPerspectives":"別の視点から見る","counselQuestions":"自分に問いかけること","prepareAgenda":"会話の進め方","prepareContingency":"想定と異なる場合","prepareChecks":"準備すること","reflectPattern":"振り返る習慣","reflectExperiment":"小さな実践課題","reflectCheckIn":"変化を確かめる方法","reflectSteps":"実践方法","analysisToCounsel":"この関係について相談する","coachToCounsel":"関係相談に進む","priorSummaryLabel":"以前のAI要約（未確認の参考情報）","toneShort":"短く簡潔に","coachOpening":"会話の切り出し方","coachNoContact":"今は追加連絡より別の行動をおすすめします","coachDraftFirst":"おすすめの返信"},"en":{"hubAnalyzeDesc":"Understand what someone said and how the conversation is going","hubReplyDesc":"Write or polish a message you want to send","hubCounselDesc":"Work through a relationship concern and decide what to do next","replyContextLabel":"What message do you want to send?","replyContextHint":"Add the message you received, what you want to say, or your desired outcome","counselContextLabel":"What is troubling you in this relationship?","prepareContextLabel":"What important conversation are you preparing for?","prepareContextHint":"Describe the goal and concerns for an apology, boundary, negotiation or other conversation","reflectContextLabel":"What communication habit do you want to reflect on?","runReply":"Get reply suggestions","runCounsel":"Get relationship advice","runPrepare":"Prepare the conversation","runReflect":"Reflect on my habits","replyAlternatives":"Other ways to say it","replyUse":"Use this message","replyChecks":"Before you send","counselPerspectives":"Other perspectives","counselQuestions":"Questions to reflect on","prepareAgenda":"Conversation sequence","prepareContingency":"If things go differently","prepareChecks":"Preparation steps","reflectPattern":"Communication habit to examine","reflectExperiment":"A small experiment","reflectCheckIn":"How to check progress","reflectSteps":"Practice steps","analysisToCounsel":"Explore this relationship further","coachToCounsel":"Continue with relationship advice","priorSummaryLabel":"Previous AI summary (unverified context)","toneShort":"Short and concise","coachOpening":"Opening line","coachNoContact":"Consider other actions instead of further contact","coachDraftFirst":"Recommended reply"},"zh-CN":{"hubAnalyzeDesc":"想理解对方的表达与对话走向时","hubReplyDesc":"想撰写或润色要发送的消息时","hubCounselDesc":"想梳理关系困扰与下一步行动时","replyContextLabel":"你想发送怎样的消息？","replyContextHint":"填写收到的消息、想表达的内容或期望结果","counselContextLabel":"这段关系中有什么困扰？","prepareContextLabel":"你即将面对怎样的重要对话？","prepareContextHint":"说说告白、道歉、拒绝、协商等的目标和顾虑","reflectContextLabel":"你想反思哪种沟通习惯？","runReply":"获取回复建议","runCounsel":"获取关系建议","runPrepare":"准备对话","runReflect":"反思沟通习惯","replyAlternatives":"其他表达方式","replyUse":"使用这句话","replyChecks":"发送前确认","counselPerspectives":"从其他角度看","counselQuestions":"自我反思问题","prepareAgenda":"对话进行顺序","prepareContingency":"如果进展与预期不同","prepareChecks":"准备事项","reflectPattern":"值得反思的习惯","reflectExperiment":"小小的实践任务","reflectCheckIn":"如何确认变化","reflectSteps":"实践方法","analysisToCounsel":"深入咨询这段关系","coachToCounsel":"继续关系咨询","priorSummaryLabel":"此前的 AI 摘要（未经核实的参考信息）","toneShort":"简短直接","coachOpening":"开启对话的句子","coachNoContact":"目前建议考虑其他行动，而非继续联系","coachDraftFirst":"推荐回复"},"zh-TW":{"hubAnalyzeDesc":"想理解對方的表達與對話走向時","hubReplyDesc":"想撰寫或潤飾要傳送的訊息時","hubCounselDesc":"想整理關係困擾與下一步行動時","replyContextLabel":"你想傳送怎樣的訊息？","replyContextHint":"填寫收到的訊息、想表達的內容或期望結果","counselContextLabel":"這段關係中有什麼困擾？","prepareContextLabel":"你即將面對怎樣的重要對話？","prepareContextHint":"說說告白、道歉、拒絕、協商等的目標和顧慮","reflectContextLabel":"你想反思哪種溝通習慣？","runReply":"取得回覆建議","runCounsel":"取得關係建議","runPrepare":"準備對話","runReflect":"反思溝通習慣","replyAlternatives":"其他表達方式","replyUse":"使用這句話","replyChecks":"傳送前確認","counselPerspectives":"從其他角度看","counselQuestions":"自我反思問題","prepareAgenda":"對話進行順序","prepareContingency":"如果進展與預期不同","prepareChecks":"準備事項","reflectPattern":"值得反思的習慣","reflectExperiment":"小小的實踐任務","reflectCheckIn":"如何確認變化","reflectSteps":"實踐方法","analysisToCounsel":"深入諮詢這段關係","coachToCounsel":"繼續關係諮詢","priorSummaryLabel":"先前的 AI 摘要（未經核實的參考資訊）","toneShort":"簡短直接","coachOpening":"開啟對話的句子","coachNoContact":"目前建議考慮其他行動，而非繼續聯絡","coachDraftFirst":"推薦回覆"}};
+for(const lang of Object.keys(DISTINCT_TEXT))Object.assign(T[lang],DISTINCT_TEXT[lang]);
 const $=id=>document.getElementById(id);
 const MESSAGE_LANGS=["ko","ja","en","zh-CN","zh-TW"];
 function selectedLanguage(id){const v=$(id).value;return MESSAGE_LANGS.includes(v)?v:"auto"}
@@ -400,13 +402,16 @@ if(window.SaynueTheme){showThemeChoice(window.SaynueTheme.get());$("themeChoice"
 if(usageMetrics.enabled())usageEvent("visit");
 updatePersonaUI();
 
-let screen="home",coachMode="reply",coachEpoch=0,coachResult=null;
+let screen="home",coachMode="reply",coachEpoch=0,coachResult=null,coachReportLocale="ko";
 const screens={home:"homeScreen",analyze:"analysisScreen",reply:"coachScreen",counsel:"coachScreen",library:"libraryScreen",settings:"settingsScreen"};
 function updateCoachLabels(){
  const title={reply:"hubReply",counsel:"hubCounsel",prepare:"coachPrepare",reflect:"coachReflect"}[coachMode];
  const desc={reply:"hubReplyDesc",counsel:"hubCounselDesc",prepare:"coachPrepareDesc",reflect:"coachReflectDesc"}[coachMode];
  $("coachHeading").textContent=tx(title);$("coachIntro").textContent=tx(desc);
- $("coachContext").placeholder=tx(coachMode==="reply"?"coachContextHint":coachMode==="reflect"?"coachReflectHint":"coachAdviceHint");$("coachDraft").placeholder=tx("coachDraftHint");$("coachDraftBox").hidden=coachMode!=="reply";choose("coachModes","coach",coachMode);
+ const labels={reply:["replyContextLabel","replyContextHint","runReply"],counsel:["counselContextLabel","coachAdviceHint","runCounsel"],prepare:["prepareContextLabel","prepareContextHint","runPrepare"],reflect:["reflectContextLabel","coachReflectHint","runReflect"]}[coachMode];
+ $("coachContextLabel").textContent=tx(labels[0]);$("coachContext").placeholder=tx(labels[1]);$("coachRun").textContent=tx(labels[2]);
+ $("coachDraft").placeholder=tx("coachDraftHint");$("coachDraftBox").hidden=coachMode!=="reply";$("coachStyle").hidden=coachMode==="reflect";$("coachReplyLanguage").closest(".reply-lang-control").hidden=coachMode==="reflect";
+ $("coachScreen").dataset.mode=coachMode;choose("coachModes","coach",coachMode);if(coachResult)renderCoachExtras(coachResult,coachReportLocale);
 }
 function setCoachMode(mode){
  if(!["reply","counsel","prepare","reflect"].includes(mode))return;
@@ -437,6 +442,51 @@ function openDraftCoach(){
  $("coachContext").value=maskCommonInfo([lastResult.verdict||lastResult.summary,lastResult.nextStep].filter(Boolean).join("\n")).slice(0,1800);$("coachDraft").value=lastResult.replyDraft.slice(0,600);$("coachRelation").value=relation;$("coachReplyLanguage").value=messageLanguage(lastResult,selectedLanguage("replyLanguage"));loadCoachStyle();
 }
 $("editPersonaDraft").addEventListener("click",openDraftCoach);$("editStandardDraft").addEventListener("click",openDraftCoach);
+function openCounselFromSummary(source,sourceRelation,sourceLanguage){
+ if(!source)return;
+ const summary=maskCommonInfo([source.verdict||source.summary,source.keySignal||source.sectionOne||source.advice,source.nextStep].filter(Boolean).join("\n")).slice(0,1250);
+ navigate("counsel");coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachRun").disabled=false;$("coachStatus").textContent="";
+ $("coachContext").value=(tx("priorSummaryLabel")+":\n"+summary).slice(0,1800);$("coachDraft").value="";$("coachRelation").value=sourceRelation;$("coachReplyLanguage").value=sourceLanguage;$("coachConsent").checked=false;
+}
+$("analysisToCounsel").addEventListener("click",()=>openCounselFromSummary(lastResult,relation,messageLanguage(lastResult,selectedLanguage("replyLanguage"))));
+$("coachToCounsel").addEventListener("click",()=>openCounselFromSummary(coachResult,$("coachRelation").value,messageLanguage(coachResult,selectedLanguage("coachReplyLanguage"))));
+function renderCoachExtras(data,reportLang){
+ const out=$("coachExtras"),root=$("coachResult");out.replaceChildren();root.dataset.mode=coachMode;
+ const section=(key,body,list=false)=>{
+  if(list?(!Array.isArray(body)||!body.length):typeof body!=="string"||!body.trim())return;
+  const el=document.createElement("section"),head=document.createElement("h3");el.className="coach-detail";head.textContent=tx(key);el.appendChild(head);
+  if(list){const ul=document.createElement(key==="prepareAgenda"?"ol":"ul");ul.lang=reportLang;for(const s of body){if(typeof s!=="string")continue;const li=document.createElement("li");li.textContent=s;ul.appendChild(li)}el.appendChild(ul)}
+  else{const p=document.createElement("p");p.lang=reportLang;p.textContent=body;el.appendChild(p)}out.appendChild(el);
+ };
+ const reply=coachMode==="reply",prepare=coachMode==="prepare";
+ $("coachStepsTitle").textContent=tx(reply?"replyChecks":prepare?"prepareChecks":coachMode==="reflect"?"reflectSteps":"coachSteps");
+ $("coachMessageBox").querySelector("h3").textContent=tx(prepare?"coachOpening":reply?"coachDraftFirst":"replyTitle");
+ if(reply){
+  root.append($("coachSummary"),$("coachNoReply"),$("coachMessageBox"),out,$("coachAdviceBlock"),$("coachStepsBlock"),$("coachCaution"),$("coachToCounsel"));
+  if(data.shouldReply&&Array.isArray(data.alternatives)&&data.alternatives.length){
+   const head=document.createElement("h3");head.className="coach-extra-heading";head.textContent=tx("replyAlternatives");out.appendChild(head);
+   for(const alt of data.alternatives.slice(0,2)){
+    if(!alt||typeof alt.message!=="string"||!alt.message.trim())continue;
+    const card=document.createElement("section");card.className="coach-variant";const title=document.createElement("h4");title.textContent=tx(({short:"toneShort",warm:"toneWarm",direct:"toneDirect",light:"toneLight"})[alt.style]||"replyAlternatives");card.appendChild(title);
+    const message=document.createElement("p");message.className="variant-message";message.lang=messageLanguage(data,reportLang);message.textContent=alt.message;card.appendChild(message);
+    if(alt.meaning){const p=document.createElement("p");p.className="variant-meaning";p.lang=reportLang;p.textContent=alt.meaning;card.appendChild(p)}
+    const why=document.createElement("p");why.className="variant-why";why.lang=reportLang;why.textContent=alt.why||"";card.appendChild(why);
+    const button=document.createElement("button");button.type="button";button.className="secondary variant-use";button.textContent=tx("replyUse");button.addEventListener("click",()=>{
+     if(coachResult!==data||!data.shouldReply)return;
+     coachEpoch++;$("coachMessage").value=alt.message;$("coachMessage").lang=messageLanguage(data,reportLang);$("coachWhy").textContent=alt.why||"";renderMeaning("coachMeaning",{replyLanguage:data.replyLanguage,replyMeaning:alt.meaning},true);$("coachRehearsal").hidden=true;$("coachCopyStatus").textContent="";$("coachMessageBox").scrollIntoView({behavior:"smooth",block:"start"});
+    });card.appendChild(button);out.appendChild(card);
+   }
+  }
+ }else{
+  if(coachMode==="counsel"){section("counselPerspectives",data.perspectives,true);section("counselQuestions",data.questions,true)}
+  if(prepare){section("prepareAgenda",data.agenda,true);section("prepareContingency",data.contingency)}
+  if(coachMode==="reflect"){section("reflectPattern",data.pattern);section("reflectExperiment",data.experiment);section("reflectCheckIn",data.checkIn)}
+  root.append($("coachSummary"),$("coachAdviceBlock"),out,$("coachStepsBlock"),$("coachNoReply"),$("coachMessageBox"),$("coachCaution"),$("coachToCounsel"));
+ }
+ $("coachNoReply").hidden=data.shouldReply||coachMode==="reflect";$("coachNoReply").textContent=tx("coachNoContact");
+ $("coachToCounsel").hidden=!reply;out.hidden=!out.children.length;
+}
+
 async function coachRequest(path,data){
  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),33000);
  try{const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data),cache:"no-store",signal:ctl.signal});const v=await r.json();if(!r.ok)throw Error(((API_ERRORS[locale]||API_ERRORS.en)[v.code]||tx(r.status===429?"errLimit":"errOther"))+" ["+(typeof v.code==="string"&&/^[A-Z_]+$/.test(v.code)?v.code:"ERROR")+"]");return v}finally{clearTimeout(timer)}
@@ -445,13 +495,13 @@ for(const id of ["coachContext","coachDraft"])$(id).addEventListener("input",()=
 $("coachRun").addEventListener("click",async()=>{
  const context=$("coachContext").value.trim(),draft=coachMode==="reply"?$("coachDraft").value.trim():"";
  if(!($("coachConsent").checked&&(context.length>=3||draft.length>=3))){$("coachStatus").textContent=tx("coachMissing");return}
- const epoch=++coachEpoch;coachResult=null;$("coachResult").hidden=true;$("coachRun").disabled=true;$("coachStatus").textContent=tx("coachWorking");
+ const requestLocale=locale,epoch=++coachEpoch;coachResult=null;$("coachResult").hidden=true;$("coachRun").disabled=true;$("coachStatus").textContent=tx("coachWorking");
  try{
   const data=await coachRequest("/api/coach",{mode:coachMode,locale,replyLanguage:selectedLanguage("coachReplyLanguage"),relation:$("coachRelation").value,context,draft,tone:$("coachTone").value,length:$("coachLength").value,emoji:$("coachEmoji").value});
   if(epoch!==coachEpoch)return;if(typeof data.summary!=="string"||!Array.isArray(data.steps)||typeof data.shouldReply!=="boolean")throw Error(tx("errOther"));
-  coachResult=data;$("coachSummary").textContent=data.summary;$("coachAdvice").textContent=data.advice;
+  coachResult=data;coachReportLocale=requestLocale;$("coachSummary").textContent=data.summary;$("coachAdvice").textContent=data.advice;
   $("coachSteps").replaceChildren(...data.steps.map(s=>{const el=document.createElement("li");el.textContent=s;return el}));
-  $("coachMessageBox").hidden=!data.shouldReply||!data.message;$("coachNoReply").hidden=data.shouldReply;$("coachMessage").value=data.shouldReply?data.message:"";$("coachMessage").lang=messageLanguage(data,locale);renderMeaning("coachMeaning",data,data.shouldReply&&data.message);$("coachWhy").textContent=data.why;$("coachCaution").textContent=data.caution;markLang(["coachSummary","coachAdvice","coachSteps","coachWhy","coachCaution","coachMeaning"],locale);
+  $("coachMessageBox").hidden=coachMode==="reflect"||!data.shouldReply||!data.message;$("coachNoReply").hidden=data.shouldReply;$("coachMessage").value=data.shouldReply?data.message:"";$("coachMessage").lang=messageLanguage(data,requestLocale);renderMeaning("coachMeaning",data,data.shouldReply&&data.message);$("coachWhy").textContent=data.why;$("coachCaution").textContent=data.caution;markLang(["coachSummary","coachAdvice","coachSteps","coachWhy","coachCaution","coachMeaning"],requestLocale);renderCoachExtras(data,requestLocale);
   $("coachCopyStatus").textContent="";$("coachRehearsal").hidden=true;$("coachResult").hidden=false;$("coachStatus").textContent=tx("coachDone");
   if(screen==="reply"||screen==="counsel")$("coachResult").scrollIntoView({behavior:"smooth",block:"start"});
  }catch(e){if(epoch===coachEpoch)$("coachStatus").textContent=e.name==="AbortError"?tx("errServer"):e.message}
@@ -459,7 +509,7 @@ $("coachRun").addEventListener("click",async()=>{
 });
 $("coachCopy").addEventListener("click",async()=>{if(!coachResult?.shouldReply||!$("coachMessage").value.trim())return;try{await navigator.clipboard.writeText($("coachMessage").value);$("coachCopyStatus").textContent=tx("replyCopied");usageEvent("reply_copied")}catch{$("coachCopyStatus").textContent=tx("replyCopyFail")}});
 $("coachRevise").addEventListener("click",()=>{if(!coachResult?.shouldReply)return;const message=$("coachMessage").value;$("coachReplyLanguage").value=messageLanguage(coachResult,selectedLanguage("coachReplyLanguage"));setCoachMode("reply");coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachStatus").textContent="";$("coachRun").disabled=false;$("coachDraft").value=message;$("coachConsent").checked=false;$("coachStyle").open=true;$("coachDraft").focus();$("coachDraft").scrollIntoView({behavior:"smooth",block:"center"})});
-$("coachMessage").addEventListener("input",()=>{$("coachMeaningBox").hidden=true});
+$("coachMessage").addEventListener("input",()=>{coachEpoch++;$("coachMeaningBox").hidden=true;$("coachWhy").textContent="";$("coachRehearsal").hidden=true});
 $("coachRehearse").addEventListener("click",async()=>{
  if(!coachResult?.shouldReply)return;if(!$("coachConsent").checked){$("coachCopyStatus").textContent=tx("errConsent");return}
  const message=$("coachMessage").value.trim();if(message.length<4){$("coachCopyStatus").textContent=tx("simInputError");return}

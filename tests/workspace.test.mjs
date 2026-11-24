@@ -33,3 +33,15 @@ test("report language and reply language are independent, with backward compatib
  assert.equal(out.replyLanguage,"ja");assert.equal(out.replyMeaning,"다시 만나요");
  const blocked=addMessageLanguage({replyDraft:"",shouldReply:false},{replyLanguage:"ja",replyMeaning:"연락해 봐"},{locale:"ko",replyLanguage:"ja"},"replyDraft");assert.equal(blocked.replyMeaning,"");
 });
+
+import {coachSchema} from "../api/coach.mjs";
+test("coach response schemas specialize each task",()=>{
+ const fields={reply:["alternatives"],counsel:["perspectives","questions"],prepare:["agenda","contingency"],reflect:["pattern","experiment","checkIn"]};
+ for(const [mode,expected] of Object.entries(fields)){const s=coachSchema(mode,true);for(const key of expected)assert.ok(s.required.includes(key));assert.ok(s.required.includes("replyLanguage"));for(const [other,foreign] of Object.entries(fields))if(other!==mode)for(const key of foreign)assert.equal(s.properties[key],undefined)}
+});
+test("reply variants are distinct and cannot bypass no-contact",()=>{
+ const raw={summary:"Consider the timing",advice:"Be clear and kind",steps:["Review your wording"],shouldReply:true,message:"また今度ね",why:"Simple and respectful",caution:"No guarantees",alternatives:[{style:"warm",message:"また会えると嬉しいな",meaning:"다시 만나면 좋겠어",why:"A warmer tone"},{style:"warm",message:"Duplicate style",why:"Not needed"},{style:"short",message:"また今度ね",why:"Duplicate text"},{style:"direct",message:"都合が合えば連絡してね",meaning:"시간이 맞으면 연락해 줘",why:"Leaves the choice open"},{style:"light",message:"Third alternative",why:"Too many"}]};
+ const out=normalizeCoachResult(raw,{mode:"reply"});assert.equal(out.alternatives.length,2);assert.equal(out.alternatives[0].meaning,"다시 만나면 좋겠어");
+ const blocked=normalizeCoachResult({...raw,shouldReply:false},{mode:"reply"});assert.equal(blocked.message,"");assert.deepEqual(blocked.alternatives,[]);
+ const reflection=normalizeCoachResult({...raw,pattern:"A reported habit",experiment:"Ask one clarifying question",checkIn:"Review after three conversations"},{mode:"reflect"});assert.equal(reflection.shouldReply,false);assert.equal(reflection.message,"");assert.match(reflection.experiment,/clarifying/);assert.equal(reflection.alternatives,undefined);
+});

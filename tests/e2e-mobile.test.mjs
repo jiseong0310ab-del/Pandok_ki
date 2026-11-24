@@ -40,7 +40,7 @@ async function openPage(browser,{analyzeBody=report,analyzeStatus=200,colorSchem
    requests.push({path:url.pathname,body:route.request().postData()});
    if(url.pathname==="/api/analyze"&&holdAnalyze)return;
    if(url.pathname==="/api/analyze")return route.fulfill({status:analyzeStatus,contentType:"application/json",body:JSON.stringify(analyzeBody)});
-   if(url.pathname==="/api/coach")return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({summary:"말을 정리해 보세요",advice:"사실과 요청을 구분하세요.",steps:["원하는 결과를 정하세요."],shouldReply:true,message:"일정을 다시 확인해도 될까요?",why:"구체적으로 요청합니다.",caution:"결과는 보장되지 않아요."})});
+   if(url.pathname==="/api/coach"){const input=JSON.parse(route.request().postData());const common={summary:"말을 정리해 보세요",advice:"사실과 요청을 구분하세요.",steps:["원하는 결과를 정하세요."],shouldReply:input.mode!=="reflect",message:input.mode==="reflect"?"":"일정을 다시 확인해도 될까요?",why:"구체적으로 요청합니다.",caution:"결과는 보장되지 않아요."};const specific={reply:{alternatives:[{style:"short",message:"일정 확인 부탁드려요",meaning:"",why:"더 짧은 표현"}]},counsel:{perspectives:["일정 문제일 수 있어요"],questions:["원하는 결과는 무엇인가요?"]},prepare:{agenda:["요청을 설명하세요"],contingency:"대안을 준비하세요"},reflect:{pattern:"상황을 단정하는 습관",experiment:"한 번 더 확인하기",checkIn:"세 번의 대화 후 돌아보기"}};return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({...common,...specific[input.mode]})})}
    return route.fulfill({status:200,contentType:"application/json",body:"{\"ok\":true}"});
   }
   const file=path.join(ROOT,url.pathname==="/"?"index.html":decodeURIComponent(url.pathname));
@@ -156,13 +156,15 @@ test("home navigation and independent coaching modes work without a screenshot",
   await page.click("#coachRun");
   await page.waitForSelector("#coachResult:visible");
   assert.equal(await page.inputValue("#coachMessage"),"일정을 다시 확인해도 될까요?");
+  assert.equal(await page.evaluate(()=>!!(document.querySelector("#coachMessageBox").compareDocumentPosition(document.querySelector("#coachStepsBlock"))&Node.DOCUMENT_POSITION_FOLLOWING)),true);
+  await page.click(".variant-use");assert.equal(await page.inputValue("#coachMessage"),"일정 확인 부탁드려요");await page.fill("#coachMessage","일정을 다시 확인해도 될까요?");
   let sent=JSON.parse(requests.find(x=>x.path==="/api/coach").body);
   assert.equal(sent.mode,"reply");assert.equal(sent.relation,"unknown");assert.equal(sent.locale,"ko");assert.equal(sent.replyLanguage,"ja");
   await page.click("#coachRevise");assert.equal(await page.inputValue("#coachDraft"),"일정을 다시 확인해도 될까요?");
   assert.equal(await page.isChecked("#coachConsent"),false);
   await page.click("[data-coach=reflect]");assert.equal(await page.isVisible("#coachDraftBox"),false);
   await page.check("#coachConsent");await page.click("#coachRun");await page.waitForSelector("#coachResult:visible");
-  sent=JSON.parse(requests.filter(x=>x.path==="/api/coach").at(-1).body);assert.equal(sent.mode,"reflect");assert.equal(sent.draft,"");
+  sent=JSON.parse(requests.filter(x=>x.path==="/api/coach").at(-1).body);assert.equal(sent.mode,"reflect");assert.equal(sent.draft,"");assert.equal(await page.isVisible("#coachMessageBox"),false);assert.match(await page.textContent("#coachExtras"),/한 번 더 확인하기/);
   await page.click("#workspaceNav [data-nav=library]");assert.equal(await page.isVisible("#libraryEmpty"),true);
   await page.click("#workspaceNav [data-nav=analyze]");assert.equal(await page.isVisible("#formCard"),true);
   assert.equal(await page.locator("#platforms").count(),0);
@@ -242,3 +244,14 @@ test("analysis shows staged progress while waiting and no spinner text ellipsis"
  }finally{await browser.close()}
 });
 
+
+test("analysis handoff to relationship advice requires fresh consent and carries only summary",{skip},async()=>{
+ const browser=await playwright.chromium.launch();
+ try{const {page,requests,problems}=await openPage(browser);
+ await page.click("#textTab");await page.fill("#chatText","나: 이번 주에 시간 있어?\n상대: 다음 주 되면 다시 말해줄게!\nPRIVATE SOURCE ONLY");
+ await page.check("#consent");await page.click("#analyze");await page.waitForSelector("#results:visible");
+ await page.click("#analysisToCounsel");assert.equal(await page.isVisible("#coachScreen"),true);assert.equal(await page.isChecked("#coachConsent"),false);
+ assert.doesNotMatch(await page.inputValue("#coachContext"),/PRIVATE SOURCE ONLY/);await page.check("#coachConsent");await page.click("#coachRun");await page.waitForSelector("#coachResult:visible");
+ const sent=JSON.parse(requests.find(x=>x.path==="/api/coach").body);assert.equal(sent.mode,"counsel");assert.match(await page.textContent("#coachExtras"),/원하는 결과는 무엇인가요/);assert.deepEqual(problems,[]);
+ }finally{await browser.close()}
+});

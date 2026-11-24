@@ -667,3 +667,13 @@ textarea::placeholder,input::placeholder{color:var(--text-3)}
  .history-grid{grid-template-columns:1fr 1fr}
  .workspace-nav{padding-left:calc(50% - 300px);padding-right:calc(50% - 300px)}
 }
+
+/* Task-specific result hierarchy, retaining the shared appearance tokens. */
+#coachResult[data-mode="reply"] #coachMessageBox{background:var(--peach-tile);border:1px solid var(--line);border-radius:var(--radius-xl);padding:16px;scroll-margin-top:12px}
+#coachResult[data-mode="reply"] #coachMessage{background:var(--bg-raised);font-size:18px;line-height:var(--leading);min-height:112px}
+#coachResult[data-mode="reply"] #coachCopy{background:var(--peach-ink);color:var(--peach-tile)}
+#coachExtras{display:grid;gap:12px;min-width:0}#coachExtras[hidden]{display:none}
+.coach-extra-heading{margin:6px 0 0!important}.coach-variant,.coach-detail{border:1px solid var(--line);border-radius:var(--radius-lg);padding:14px;min-width:0;background:var(--bg-raised)}
+.coach-variant h4{font-size:14px;font-weight:650;margin:0 0 8px;color:var(--peach-ink)}.coach-variant p{margin:8px 0}.coach-variant .variant-message{font-size:17px;font-weight:600}.coach-variant .variant-why,.coach-variant .variant-meaning{font-size:14px;color:var(--text-2)}
+.variant-use,.feature-bridge{width:100%;min-height:44px;white-space:normal}.coach-detail h3{color:var(--sage-ink)}.coach-detail p{margin:0}.coach-detail ul{padding-inline-start:20px;margin:0}.coach-detail li+li{margin-top:8px}
+#coachNoReply:not([hidden]){background:var(--surface-2);border-radius:var(--radius);padding:12px}#coachScreen[data-mode="reflect"] #coachMessageBox{display:none}

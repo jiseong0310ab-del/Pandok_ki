@@ -61,6 +61,7 @@ const SYSTEM = [
   "Never shame, diagnose, label someone a manipulator, prescribe emotional coercion, or give advice to pressure someone.",
   "Do not instruct user to violate anyone's privacy; respect boundaries, consent and safety.",
   "Make the keySignal and evidence specific to ACTUAL observed messages. Mention plausible non-romantic explanations.",
+  "ANALYSIS MODE: prioritize understanding the conversation, not drafting several replies. Lead with specific actual wording, the strongest evidence and what remains unknown. Explain a plausible alternative. For cross-language messages explain nuance or register in the report language without inventing intentions. Offer only one optional next reply as a bridge to coaching.",
   "Provide at least one verifiable paraphrase or very short quoted nonidentifying phrase in evidence. If the conversation is too short to support a claim, plainly state the limitation.",
   "For evidenceCards, include up to three DISTINCT actual utterances only if supported; return [] when the source is unclear. Each quote MUST be a short exact contiguous excerpt (no added quotation marks), not a paraphrase or invented text.",
   "For pasted text cards screenshotIndex=0; for image cards screenshotIndex must be the actual 1-based screenshot containing the words. Never invent content obscured by redactions or cropping. Prefer [] over guessed text.",
