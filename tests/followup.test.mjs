@@ -1,9 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import {homeWithScript} from "./page-source.mjs";
 import { parseInput } from "../api/analyze.mjs";
 
-const home=fs.readFileSync(new URL("../index.html",import.meta.url),"utf8");
+const home=homeWithScript;
 const editor=fs.readFileSync(new URL("../assets/screenshot-editor.js",import.meta.url),"utf8");
 const api=fs.readFileSync(new URL("../api/analyze.mjs",import.meta.url),"utf8");
 const prior={summary:"The conversation was inconclusive.",signal:"They asked a follow-up question.",nextStep:"Reply without pressure.",turn:1};

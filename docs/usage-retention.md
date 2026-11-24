@@ -13,7 +13,8 @@ Existing Upstash Redis REST variables are used:
 
 - `UPSTASH_REDIS_REST_URL`
 - `UPSTASH_REDIS_REST_TOKEN`
-- `SAYNUE_ANALYTICS_SALT` (recommended dedicated secret, 24+ random characters; otherwise existing `RATE_LIMIT_SALT` or `GEMINI_API_KEY` is used as the HMAC key)
+- `SAYNUE_ANALYTICS_SALT` (recommended dedicated secret, 24+ random characters; otherwise a purpose-specific key is derived with HMAC from `RATE_LIMIT_SALT` or `GEMINI_API_KEY` — neither is used verbatim)
+- `SAYNUE_METRICS_REDIS_REST_URL` / `SAYNUE_METRICS_REDIS_REST_TOKEN` (optional, recommended: a separate Upstash database for analytics, so analytics traffic can never use up the quota of the Redis that guards Gemini requests)
 - `SAYNUE_ANALYTICS_READ_TOKEN` (**required for dashboard access**; at least 24 unpredictable characters)
 
 Use Vercel project environment settings to add them for the production deployment, then redeploy. Generate the dashboard token privately with a secure random generator, such as `openssl rand -hex 32`. Never commit or paste tokens into source code or URL query strings. The dashboard sends the token only as an Authorization bearer header, and stores it nowhere.
@@ -24,7 +25,7 @@ If Redis is unconfigured, the new metrics POST endpoint returns HTTP 503 and **c
 
 No consent: no pseudonymous ID, no new metrics HTTP requests, no metrics stored. An explicitly enabled checkbox saves a random 128-bit ID and the UTC first-consent date in localStorage. The ID and one allowlisted event name are transmitted. **Never** send raw conversations, screenshots, generated replies, situation summaries, names, email, user agent or page URLs to metrics.
 
-The server HMAC-hashes IDs using a server-side secret and records aggregate daily counts and HyperLogLog approximate unique visitors. The server does not store raw IDs or IPs in analytics keys. Each pseudonymous ID is rate-capped at 65 reported events/day. Local consent ID expires after 30 days (reconsent required). Server aggregation buckets and hashed rate-limit keys expire within 45 days.
+The server HMAC-hashes IDs using a server-side secret and records aggregate daily counts and HyperLogLog approximate unique visitors. The server does not store raw IDs or IPs in analytics keys. Each pseudonymous ID is rate-capped at 65 reported events/day. Because IDs are browser-generated, each salted IP hash is also capped at 600 events/day, and each server instance answers at most 90 events per IP hash per hour before touching Redis. Local consent ID expires after 30 days (reconsent required). Server aggregation buckets and hashed rate-limit keys expire within 45 days.
 
 Consent can be revoked at any time using the same checkbox. Revoking deletes the local identifier immediately and stops future reporting; previously contributed **anonymous aggregates cannot be individually removed**. Browser or hosting provider logs are governed separately by their own policies.
 

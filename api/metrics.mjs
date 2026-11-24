@@ -1,19 +1,20 @@
 // SAYNUE opt-in aggregate metrics. No chat, draft, screenshot, email, IP or raw identifier is stored.
 import {createHmac,timingSafeEqual} from "node:crypto";
+import {createMemoryLimiter,hashedClient,sameOriginOrAbsent,serverSecret} from "../lib/server-guard.mjs";
 export const EVENTS=Object.freeze(["visit","analysis_started","analysis_completed","followup_started","followup_completed","library_saved","simulation_started","simulation_completed","plans_interest","reply_copied","analysis_failed"]);
 const eventSet=new Set(EVENTS);
 const RETENTION_SECONDS=45*86400,MAX_DAYS=30;
+// Visitor IDs are browser-generated, so the per-visitor budget alone can be
+// bypassed by rotating IDs. A per-IP budget (salted hash) and a per-instance
+// memory limiter stop one client from draining the shared Redis quota.
+const MAX_EVENTS_PER_VISITOR_DAY=65,MAX_EVENTS_PER_IP_DAY=600;
+const instanceLimiter=createMemoryLimiter({max:90,windowMs:3600000,maxKeys:5000});
 const headers={"content-type":"application/json; charset=utf-8","cache-control":"no-store, max-age=0","x-content-type-options":"nosniff","referrer-policy":"no-referrer","x-robots-tag":"noindex"};
 const respond=(status,value)=>new Response(JSON.stringify(value),{status,headers});
 const dayString=(date)=>date.toISOString().slice(0,10);
 const dayMillis=(value)=>Date.parse(value+"T00:00:00.000Z");
 const dayDiff=(from,to)=>Math.round((dayMillis(to)-dayMillis(from))/86400000);
 const shiftDay=(value,n)=>dayString(new Date(dayMillis(value)+n*86400000));
-function originAllowed(request){
- const origin=request.headers.get("origin");
- if(!origin)return true;
- try{return new URL(origin).origin===new URL(request.url).origin}catch{return false}
-}
 export function parseMetricEvent(raw,now=new Date()){
  if(!raw||typeof raw!=="object"||Array.isArray(raw))return null;
  if(Object.keys(raw).length!==3||Object.keys(raw).some(k=>!["event","visitorId","firstDay"].includes(k)))return null;
@@ -25,8 +26,12 @@ export function parseMetricEvent(raw,now=new Date()){
  if(offset<0||offset>=MAX_DAYS)return null;
  return {event:raw.event,visitorId:raw.visitorId,firstDay:raw.firstDay,ageDays:offset};
 }
+// Optional dedicated Redis for analytics, so analytics traffic can never use up
+// the quota of the Redis database that guards Gemini requests.
 function config(){
- const url=process.env.UPSTASH_REDIS_REST_URL,token=process.env.UPSTASH_REDIS_REST_TOKEN;
+ const dedicated=process.env.SAYNUE_METRICS_REDIS_REST_URL&&process.env.SAYNUE_METRICS_REDIS_REST_TOKEN;
+ const url=dedicated?process.env.SAYNUE_METRICS_REDIS_REST_URL:process.env.UPSTASH_REDIS_REST_URL;
+ const token=dedicated?process.env.SAYNUE_METRICS_REDIS_REST_TOKEN:process.env.UPSTASH_REDIS_REST_TOKEN;
  if(!url||!token||!/^https:\/\//i.test(url))return null;
  return {url:url.replace(/\/$/,""),token};
 }
@@ -43,17 +48,19 @@ async function pipeline(commands){
  return results.map(r=>r.result);
 }
 function hashedVisitor(id){
- const secret=process.env.SAYNUE_ANALYTICS_SALT||process.env.RATE_LIMIT_SALT||process.env.GEMINI_API_KEY;
- if(!secret||secret.length<12)throw Error("NOT_CONFIGURED");
+ const secret=serverSecret("analytics",["SAYNUE_ANALYTICS_SALT"]);
+ if(!secret)throw Error("NOT_CONFIGURED");
  return createHmac("sha256",secret).update(id).digest("hex").slice(0,40);
 }
-async function recordEvent(metric,now=new Date()){
+async function recordEvent(metric,clientKey,now=new Date()){
  const visitor=hashedVisitor(metric.visitorId);
  const day=dayString(now);
  const bucket="saynue:usage:v1:",prefix=bucket+day+":";
  const budget=bucket+"budget:"+day+":"+visitor;
- const [count]=await pipeline([["INCR",budget],["EXPIRE",budget,86400,"NX"]]).then(x=>[x[0]]);
- if(!Number.isFinite(Number(count))||Number(count)>65)return {limited:true};
+ const ipBudget=bucket+"ipbudget:"+day+":"+clientKey;
+ const [visitorCount,,ipCount]=await pipeline([["INCR",budget],["EXPIRE",budget,86400,"NX"],["INCR",ipBudget],["EXPIRE",ipBudget,86400,"NX"]]);
+ const over=(value,max)=>!Number.isFinite(Number(value))||Number(value)>max;
+ if(over(visitorCount,MAX_EVENTS_PER_VISITOR_DAY)||over(ipCount,MAX_EVENTS_PER_IP_DAY))return {limited:true};
  const commands=[
   ["INCR",prefix+"count:"+metric.event],
   ["EXPIRE",prefix+"count:"+metric.event,RETENTION_SECONDS,"NX"],
@@ -108,14 +115,16 @@ async function readReport(days){
  return projectReport(await pipeline(commands),pointer);
 }
 export default {async fetch(req){
- if(!originAllowed(req))return respond(403,{code:"ORIGIN_FORBIDDEN"});
+ if(!sameOriginOrAbsent(req))return respond(403,{code:"ORIGIN_FORBIDDEN"});
  if(req.method==="POST"){
   if(!(req.headers.get("content-type")||"").toLowerCase().includes("application/json"))return respond(415,{code:"JSON_REQUIRED"});
   if(Number(req.headers.get("content-length")||0)>400)return respond(413,{code:"TOO_LARGE"});
   let raw;try{raw=await req.text();if(raw.length>400)return respond(413,{code:"TOO_LARGE"})}catch{return respond(400,{code:"INVALID_INPUT"})}
   let metric;try{metric=parseMetricEvent(JSON.parse(raw))}catch{}
   if(!metric)return respond(400,{code:"INVALID_EVENT"});
-  try{const result=await recordEvent(metric);return result.limited?respond(429,{code:"RATE_LIMITED"}):respond(200,{ok:true})}
+  const clientKey=hashedClient(req,"metrics-ip",24);
+  if(!instanceLimiter(clientKey))return respond(429,{code:"RATE_LIMITED"});
+  try{const result=await recordEvent(metric,clientKey);return result.limited?respond(429,{code:"RATE_LIMITED"}):respond(200,{ok:true})}
   catch{return respond(503,{code:"METRICS_UNAVAILABLE"})}
  }
  if(req.method==="GET"){

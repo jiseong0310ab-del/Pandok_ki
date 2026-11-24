@@ -1,6 +1,7 @@
 // SAYNUE reply rehearsal: plausible reactions, never a prediction.
 import {checkLimit,clientHash} from "./analyze.mjs";
 import {COACHING_RUBRIC} from "../lib/coaching-rubric.mjs";
+import {pickGeminiModels,sameOriginOrAbsent} from "../lib/server-guard.mjs";
 const PERSONAS=new Set(["standard","court","work","romance","mediator"]);
 const RELATIONS=new Set(["crush","talking","dating","ex","friends","work"]);
 const LOCALES=new Set(["ko","ja","en","zh-CN","zh-TW"]);
@@ -60,15 +61,10 @@ export function normalizeSimulationResult(raw){
  if(out.caution.length<8)return null;
  return out;
 }
-function originAllowed(req){
- const from=req.headers.get("origin");
- if(!from)return true;
- try{return new URL(from).origin===new URL(req.url).origin}catch(_){return false}
-}
 export default {
  async fetch(request){
   if(request.method!=="POST")return error(405,"METHOD_NOT_ALLOWED");
-  if(!originAllowed(request))return error(403,"ORIGIN_FORBIDDEN");
+  if(!sameOriginOrAbsent(request))return error(403,"ORIGIN_FORBIDDEN");
   if(!(request.headers.get("content-type")||"").toLowerCase().includes("application/json"))return error(415,"JSON_REQUIRED");
   if(Number(request.headers.get("content-length")||0)>4096)return error(413,"INPUT_TOO_LARGE");
   let raw;
@@ -81,8 +77,7 @@ export default {
   const allowed=await checkLimit(clientHash(request));
   if(allowed.unavailable)return error(503,"RATE_LIMIT_UNAVAILABLE");
   if(!allowed.ok)return json({error:"Rate limited",code:"RATE_LIMITED"},429,{"retry-after":"3600"});
-  const model=["gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-3.8-flash"].includes(process.env.GEMINI_MODEL)?process.env.GEMINI_MODEL:"gemini-3.5-flash-lite";
-  const fallback=model==="gemini-3.1-flash-lite"?"gemini-3.5-flash-lite":"gemini-3.1-flash-lite";
+  const {primary:model,fallback}=pickGeminiModels();
   const prompt=JSON.stringify({locale:input.locale,persona:input.persona,relation:input.relation,previousAnalysisSummary:input.contextSummary,proposedMessage:input.draft});
   const payload=JSON.stringify({
    systemInstruction:{parts:[{text:SYSTEM}]},

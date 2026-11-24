@@ -74,6 +74,11 @@ SAYNUE Vercel 프로젝트 → Settings → Environment Variables. 다음 이름
 5. `api/auth/state`에서 서버 구독 상태 확인. 로그인 사용자와 관계없는 거래로는 Plus를 열어주지 않아야 함.
 6. `SAYNUE_ENABLE_PLUS_ENGINE=true`는 위의 **정상/실패/환불/취소/권한우회/한도초과** 흐름을 실제로 검증한 뒤에만 켜기.
 
+## 2026-11-24 추가 적용 사항
+
+- **이미 SQL을 실행한 Supabase 프로젝트**에는 새 함수 `saynue_refund_plus_credit`만 추가하면 됩니다. `docs/supabase-billing-schema.sql`의 `saynue_refund_plus_credit` 블록(`CREATE OR REPLACE FUNCTION` ~ `GRANT EXECUTE`)을 SQL Editor에서 실행하세요. 파일 전체를 다시 실행해도 `IF NOT EXISTS`/`CREATE OR REPLACE` 구조라 기존 데이터는 유지됩니다. 함수가 없어도 Plus가 꺼져 있으면 영향이 없고, 켜져 있으면 환불만 조용히 실패합니다(차감은 정상).
+- `/api/auth/start`에 인스턴스별 1차 한도 추가: 같은 IP 해시 시간당 6회, 같은 이메일 주소(해시) 시간당 3회. Supabase 자체 메일 한도 앞단의 보조 장치이며, 분산 공격 방어(CAPTCHA·분산 rate limit)는 여전히 출시 전 필요합니다.
+
 ## 현재 제약과 출시 차단 조건
 
 - **2026-11-17 사용자 설정 진행:** Supabase SQL은 성공 화면이 확인됐고 Vercel에 프로젝트 URL·공개키·Secret key도 등록했음. 실제 링크 로그인의 종단 간 테스트는 아직 필요. Paddle Sandbox 서버 API 키·웹훅 비밀키·활성화 플래그는 별개.

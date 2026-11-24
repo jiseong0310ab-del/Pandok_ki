@@ -1,31 +1,16 @@
 // SAYNUE voluntary feedback: only allowlisted ratings and categorical metadata.
 // Never accept or store conversation text, generated replies, emails, or raw IP.
-import { createHash } from "node:crypto";
+import { createMemoryLimiter, hashedClient, sameOriginOrAbsent } from "../lib/server-guard.mjs";
 
 const HEADERS={"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store, max-age=0","X-Content-Type-Options":"nosniff"};
 const GOALS=new Set(["understand","reply","repair","boundary"]);
 const LOCALES=new Set(["ko","ja","en","zh-CN","zh-TW"]);
 const RATINGS=new Set(["helpful","not_helpful"]);
-const seen=new Map();
+const feedbackLimiter=createMemoryLimiter({max:5,windowMs:3600000,maxKeys:1500});
 
 function result(status,body){return new Response(JSON.stringify(body),{status,headers:HEADERS})}
-function sameOrigin(req){
-  const origin=req.headers.get("origin");
-  if(!origin)return true;
-  try {return new URL(origin).origin===new URL(req.url).origin} catch {return false}
-}
-function allowed(req){
-  const ip=(req.headers.get("x-vercel-forwarded-for")||req.headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
-  const salt=process.env.RATE_LIMIT_SALT||process.env.GEMINI_API_KEY||"saynue-public";
-  const hash=createHash("sha256").update(salt+":"+ip).digest("hex").slice(0,24);
-  const now=Date.now();
-  if(seen.size>1500)seen.clear();
-  let item=seen.get(hash);
-  if(!item||now-item.started>3600000)item={started:now,count:0};
-  item.count++;
-  seen.set(hash,item);
-  return item.count<=5;
-}
+// Per-instance limit on a salted IP hash (never the raw IP or the Gemini key).
+function allowed(req){return feedbackLimiter(hashedClient(req,"feedback",24))}
 async function persistCategoricalFeedback(rating,goal,locale){
   const url=process.env.UPSTASH_REDIS_REST_URL,token=process.env.UPSTASH_REDIS_REST_TOKEN;
   if(!url&&!token){
@@ -51,7 +36,7 @@ async function persistCategoricalFeedback(rating,goal,locale){
 }
 export default {async fetch(req){
   if(req.method!=="POST")return result(405,{code:"METHOD_NOT_ALLOWED"});
-  if(!sameOrigin(req))return result(403,{code:"ORIGIN_FORBIDDEN"});
+  if(!sameOriginOrAbsent(req))return result(403,{code:"ORIGIN_FORBIDDEN"});
   if(!(req.headers.get("content-type")||"").toLowerCase().includes("application/json"))return result(415,{code:"JSON_REQUIRED"});
   if(Number(req.headers.get("content-length")||"0")>512)return result(413,{code:"TOO_LARGE"});
   let raw;

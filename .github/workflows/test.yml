@@ -14,6 +14,13 @@ jobs:
         with:
           node-version: '22'
       - run: node --check lib/persona-analysis.mjs
+      - run: node --check lib/server-guard.mjs
+      - run: node --check lib/coaching-rubric.mjs
+      - run: node --check assets/app.js
+      - run: node --check tests/server-guard.test.mjs
+      - run: node --check tests/e2e-mobile.test.mjs
+      - run: node --check tests/page-source.mjs
+      - run: node --check tests/followup.test.mjs
       - run: node --check tests/personas.test.mjs
       - run: node --check tests/mobile-focus.test.mjs
       - run: node --check api/analyze.mjs
@@ -70,3 +77,18 @@ jobs:
         run: node --test --test-reporter=spec tests/situations-rehearsal.test.mjs
       - name: Opt-in metrics and style personalization tests
         run: node --test --test-reporter=spec tests/usage-metrics.test.mjs
+      - name: Shared server guards, Plus retries and abuse limits
+        run: node --test --test-reporter=spec tests/server-guard.test.mjs
+  e2e:
+    # Real Chromium on a phone viewport. Files are served from the checkout and
+    # every API is mocked: no secrets, no Gemini calls, no external requests.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-package-lock playwright@1.63.0
+      - run: npx playwright install --with-deps chromium
+      - name: Mobile browser end-to-end tests
+        run: node --test --test-reporter=spec tests/e2e-mobile.test.mjs
