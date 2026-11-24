@@ -10,6 +10,7 @@ import route8 from "../api/auth/verify.mjs";
 import route9 from "../api/plus/checkout.mjs";
 import route10 from "../api/plus/report.mjs";
 import route11 from "../api/webhooks/paddle.mjs";
+import coach from "../api/coach.mjs";
 import {configuredOrigin} from "../lib/site-origin.mjs";
 const ROUTES=new Map([
  ["/api/analyze",route0],
@@ -23,7 +24,8 @@ const ROUTES=new Map([
  ["/api/auth/verify",route8],
  ["/api/plus/checkout",route9],
  ["/api/plus/report",route10],
- ["/api/webhooks/paddle",route11]
+ ["/api/webhooks/paddle",route11],
+ ["/api/coach",coach]
 ]);
 function reply(status,code){
  return new Response(JSON.stringify({code}),{status,headers:{"content-type":"application/json; charset=utf-8","cache-control":"no-store","x-content-type-options":"nosniff","x-robots-tag":"noindex"}});

@@ -16,8 +16,21 @@ const API_ERRORS={
   "zh-CN":{NOT_CONFIGURED:"尚未配置 Gemini API 密钥。",AI_KEY_INVALID:"Gemini API 密钥无效，请检查 AI Studio。",AI_PERMISSION:"没有 Gemini API 的访问权限。",AI_RATE_LIMITED:"已达到 Gemini 使用配额，请查看 AI Studio。",RATE_LIMITED:"已达到本站每小时使用上限，请稍后再试。",AI_MODEL_UNAVAILABLE:"Gemini 模型不可用。",AI_REQUEST_REJECTED:"Gemini 拒绝了请求格式，需要修复服务器配置。",AI_INVALID_OUTPUT:"AI 返回内容格式有误，请重试。",AI_TIMEOUT:"Gemini 响应超时，请重试。",AI_BUSY:"Gemini 服务器暂时繁忙，请稍后重试。",AI_UNAVAILABLE:"目前无法连接 Gemini。",RATE_LIMIT_UNAVAILABLE:"请求限制服务暂不可用。"},
   "zh-TW":{NOT_CONFIGURED:"尚未設定 Gemini API 金鑰。",AI_KEY_INVALID:"Gemini API 金鑰無效，請檢查 AI Studio。",AI_PERMISSION:"無 Gemini API 存取權限。",AI_RATE_LIMITED:"已達 Gemini 使用額度，請查看 AI Studio。",RATE_LIMITED:"已達本站每小時使用上限，請稍後再試。",AI_MODEL_UNAVAILABLE:"Gemini 模型目前不可用。",AI_REQUEST_REJECTED:"Gemini 拒絕請求格式，需修正伺服器設定。",AI_INVALID_OUTPUT:"AI 回傳格式有誤，請重試。",AI_TIMEOUT:"Gemini 回應逾時，請重試。",AI_BUSY:"Gemini 伺服器暫時忙碌，請稍後重試。",AI_UNAVAILABLE:"目前無法連線 Gemini。",RATE_LIMIT_UNAVAILABLE:"使用限制服務暫時無法使用。"}
 };
+const WORKSPACE_TEXT={"ko":{"hubHome":"홈","hubAnalyze":"대화 분석","hubAnalyzeDesc":"캡처나 텍스트에서 표현과 관계의 맥락을 이해해요.","hubReply":"답장 코칭","hubReplyDesc":"메시지 작성·첨삭과 보내기 전 점검","hubCounsel":"관계 상담","hubCounselDesc":"갈등 해결과 인간관계 고민을 함께 정리해요.","hubLibrary":"내 대화","hubSettings":"MY","hubPrivacy":"개인정보를 가리고 필요한 상황만 기기에 저장하세요.","libraryEmpty":"아직 저장한 상황이 없어요. 분석 후 저장하면 여기에서 이어갈 수 있어요.","expertAuto":"AI 자동 추천","expertAutoDesc":"대화에 맞는 전문 분석 관점을 적용","relUnknown":"선택 안 함","relFamily":"가족","editDraft":"답장 다듬기","editAnalysis":"입력으로 돌아가기","coachPrepare":"중요한 대화 준비","coachReflect":"소통 습관 돌아보기","coachContext":"상황과 원하는 결과","coachDraft":"작성한 메시지 (선택)","coachRun":"코칭 받기","coachSteps":"실천할 다음 행동","accountLink":"회원 계정","coachMissing":"상황 또는 메시지를 입력하고 동의해 주세요.","coachWorking":"코칭하고 있어요…","coachDone":"코칭 완료","coachContextHint":"누구에게 어떤 이야기를 전하고 싶은가요?","coachDraftHint":"작성한 문장을 붙여넣거나 비워 두세요.","coachAdviceHint":"어떤 관계에서 어떤 문제가 생겼나요?","coachReflectHint":"내가 반복하는 행동과 바꾸고 싶은 점은 무엇인가요?","historyTitle":"최근 분석 기록","autoApplied":"AI 추천 관점","coachBlocked":"추가 연락 대신 아래 행동을 참고하세요.","coachPrepareDesc":"사과·거절·협상·면접 등을 준비해요.","coachReflectDesc":"내 표현과 반응 습관을 돌아봐요."},"ja":{"hubHome":"ホーム","hubAnalyze":"会話分析","hubAnalyzeDesc":"画像やテキストから会話の文脈を整理","hubReply":"返信コーチ","hubReplyDesc":"文章作成・添削と送信前の確認","hubCounsel":"関係相談","hubCounselDesc":"対人関係やすれ違いを整理","hubLibrary":"マイ会話","hubSettings":"マイページ","hubPrivacy":"個人情報を隠し、必要な要約だけ端末に保存。","libraryEmpty":"保存した会話はありません。分析後に保存できます。","expertAuto":"AI自動おすすめ","expertAutoDesc":"会話に合う専門的な視点を適用","relUnknown":"選択しない","relFamily":"家族","editDraft":"返信を整える","editAnalysis":"入力に戻る","coachPrepare":"大切な会話の準備","coachReflect":"コミュニケーションの振り返り","coachContext":"状況と希望する結果","coachDraft":"作成した文章（任意）","coachRun":"コーチングを受ける","coachSteps":"次にできる行動","accountLink":"アカウント","coachMissing":"状況または文章を入力し、同意してください。","coachWorking":"コーチング中…","coachDone":"完了","coachContextHint":"誰に何を伝えたいですか？","coachDraftHint":"文章を貼り付けるか空欄にしてください。","coachAdviceHint":"どんな関係で何が起きましたか？","coachReflectHint":"繰り返す行動や変えたい点は？","historyTitle":"最近の分析履歴","autoApplied":"AIおすすめの視点","coachBlocked":"追加連絡ではなく、以下の行動を参考に。","coachPrepareDesc":"謝罪・断り・交渉・面接などの準備","coachReflectDesc":"自分の表現や反応を振り返る"},"en":{"hubHome":"Home","hubAnalyze":"Analyze","hubAnalyzeDesc":"Understand conversation signals and context from screenshots or text.","hubReply":"Reply coach","hubReplyDesc":"Write, polish and check messages before sending.","hubCounsel":"Relationship advice","hubCounselDesc":"Work through disagreements and interpersonal concerns.","hubLibrary":"My chats","hubSettings":"My","hubPrivacy":"Hide private details and save only the summaries you choose.","libraryEmpty":"No saved situations yet. Save an analysis to continue here.","expertAuto":"Auto expert","expertAutoDesc":"Use an analysis perspective suited to the exchange","relUnknown":"Not specified","relFamily":"Family","editDraft":"Polish reply","editAnalysis":"Back to input","coachPrepare":"Prepare a conversation","coachReflect":"Reflect on habits","coachContext":"Situation and desired outcome","coachDraft":"Your draft (optional)","coachRun":"Get coaching","coachSteps":"Practical next steps","accountLink":"Account","coachMissing":"Enter a situation or message and provide consent.","coachWorking":"Preparing coaching…","coachDone":"Coaching ready","coachContextHint":"Who do you want to talk to, and what do you want to convey?","coachDraftHint":"Paste a draft or leave this blank.","coachAdviceHint":"What happened and what is your relationship?","coachReflectHint":"What behavior repeats, and what would you like to change?","historyTitle":"Recent analyses","autoApplied":"Suggested perspective","coachBlocked":"Consider the next steps instead of further contact.","coachPrepareDesc":"Prepare apologies, boundaries, negotiations or interviews.","coachReflectDesc":"Reflect on your own communication patterns."},"zh-CN":{"hubHome":"首页","hubAnalyze":"对话分析","hubAnalyzeDesc":"通过截图或文字理解对话中的表达与语境。","hubReply":"回复教练","hubReplyDesc":"撰写、润色和发送前检查消息。","hubCounsel":"关系咨询","hubCounselDesc":"梳理人际关系困扰和冲突。","hubLibrary":"我的对话","hubSettings":"我的","hubPrivacy":"隐藏隐私信息，仅在选择保存时保留摘要。","libraryEmpty":"还没有保存的情况。分析后可保存并继续。","expertAuto":"AI 自动推荐","expertAutoDesc":"采用适合对话的专业分析角度","relUnknown":"未选择","relFamily":"家人","editDraft":"润色回复","editAnalysis":"返回输入","coachPrepare":"准备重要对话","coachReflect":"反思沟通习惯","coachContext":"情况与期望结果","coachDraft":"已写消息（可选）","coachRun":"获取建议","coachSteps":"可执行的下一步","accountLink":"账号","coachMissing":"请输入情况或消息并同意处理。","coachWorking":"正在生成建议…","coachDone":"建议已完成","coachContextHint":"想对谁说什么？","coachDraftHint":"粘贴草稿或留空。","coachAdviceHint":"是什么关系，发生了什么？","coachReflectHint":"哪些行为重复出现，想改变什么？","historyTitle":"近期分析记录","autoApplied":"AI 推荐视角","coachBlocked":"请参考后续行动，而非继续联系。","coachPrepareDesc":"准备道歉、拒绝、协商或面试。","coachReflectDesc":"反思自己的表达和反应习惯。"},"zh-TW":{"hubHome":"首頁","hubAnalyze":"對話分析","hubAnalyzeDesc":"透過截圖或文字理解對話中的表達與語境。","hubReply":"回覆教練","hubReplyDesc":"撰寫、潤飾與傳送前檢查訊息。","hubCounsel":"關係諮詢","hubCounselDesc":"整理人際關係困擾和衝突。","hubLibrary":"我的對話","hubSettings":"我的","hubPrivacy":"隱藏隱私資訊，僅在選擇儲存時保留摘要。","libraryEmpty":"尚無儲存的情境。分析後可儲存並繼續。","expertAuto":"AI 自動推薦","expertAutoDesc":"採用適合對話的專業分析角度","relUnknown":"未選擇","relFamily":"家人","editDraft":"潤飾回覆","editAnalysis":"返回輸入","coachPrepare":"準備重要對話","coachReflect":"反思溝通習慣","coachContext":"情境與期望結果","coachDraft":"已寫訊息（選填）","coachRun":"取得建議","coachSteps":"可執行的下一步","accountLink":"帳號","coachMissing":"請輸入情境或訊息並同意處理。","coachWorking":"正在產生建議…","coachDone":"建議已完成","coachContextHint":"想對誰說什麼？","coachDraftHint":"貼上草稿或留空。","coachAdviceHint":"是什麼關係，發生了什麼？","coachReflectHint":"哪些行為重複出現，想改變什麼？","historyTitle":"近期分析紀錄","autoApplied":"AI 推薦視角","coachBlocked":"請參考後續行動，而非繼續聯絡。","coachPrepareDesc":"準備道歉、拒絕、協商或面試。","coachReflectDesc":"反思自己的表達與反應習慣。"}};
+for(const lang of Object.keys(WORKSPACE_TEXT))Object.assign(T[lang],WORKSPACE_TEXT[lang]);
+const MESSAGE_TEXT={"ko":{"replyLangTitle":"답장 언어","replyLangAuto":"자동 감지 (대화 기준)","replyLangHint":"분석은 페이지 언어로, 답장은 선택한 언어로 작성해요. 자동 감지는 대화나 초안을 참고해요.","replyMeaningTitle":"답장의 뜻","replyLangBadge":"답장 언어"},"ja":{"replyLangTitle":"返信言語","replyLangAuto":"自動検出（会話に合わせる）","replyLangHint":"分析はページの言語、返信は選んだ言語で。自動検出は会話や下書きを参考にします。","replyMeaningTitle":"返信の意味","replyLangBadge":"返信言語"},"en":{"replyLangTitle":"Reply language","replyLangAuto":"Auto-detect from conversation","replyLangHint":"Analysis follows the page language; replies use the selected language. Auto uses the conversation or draft.","replyMeaningTitle":"Reply meaning","replyLangBadge":"Reply language"},"zh-CN":{"replyLangTitle":"回复语言","replyLangAuto":"自动识别（根据对话）","replyLangHint":"分析使用页面语言，回复使用所选语言。自动识别参考对话或草稿。","replyMeaningTitle":"回复含义","replyLangBadge":"回复语言"},"zh-TW":{"replyLangTitle":"回覆語言","replyLangAuto":"自動辨識（依對話）","replyLangHint":"分析使用頁面語言，回覆使用所選語言。自動辨識參考對話或草稿。","replyMeaningTitle":"回覆含義","replyLangBadge":"回覆語言"}};
+for(const lang of Object.keys(MESSAGE_TEXT))Object.assign(T[lang],MESSAGE_TEXT[lang]);
 const $=id=>document.getElementById(id);
-let locale="ko",platform="kakao",relation="talking",goal="understand",replyTone="natural",replyLength="normal",replyEmoji="none",persona="standard",feedbackSent=false,resultGoal="understand",resultLocale="ko",mode="image",lastResult=null,activeSession=null,followUpContext=null,situationLibrary=null,simEpoch=0,stylePreferences=null,usageMetrics=null;
+const MESSAGE_LANGS=["ko","ja","en","zh-CN","zh-TW"];
+function selectedLanguage(id){const v=$(id).value;return MESSAGE_LANGS.includes(v)?v:"auto"}
+function messageLanguage(result,fallback){return MESSAGE_LANGS.includes(result?.replyLanguage)?result.replyLanguage:fallback}
+function renderMeaning(id,data,draft){
+ const meaning=data?.replyMeaning;
+ $(id+"Box").hidden=!draft||typeof meaning!=="string"||!meaning.trim();
+ $(id).textContent=typeof meaning==="string"?meaning.slice(0,700):"";
+}
+
+let locale="ko",platform="other",relation="unknown",goal="understand",replyTone="natural",replyLength="normal",replyEmoji="none",persona="standard",autoExpert=true,feedbackSent=false,resultGoal="understand",resultLocale="ko",mode="image",lastResult=null,activeSession=null,followUpContext=null,situationLibrary=null,simEpoch=0,stylePreferences=null,usageMetrics=null;
 function langFromBrowser(){const requested=new URLSearchParams(location.search).get("lang");if(requested&&Object.prototype.hasOwnProperty.call(T,requested))return requested;const l=(navigator.language||"en").toLowerCase();if(l.startsWith("ko"))return"ko";if(l.startsWith("ja"))return"ja";if(l.startsWith("zh"))return l.includes("tw")||l.includes("hk")||l.includes("mo")?"zh-TW":"zh-CN";return"en"}
 function tx(k){return (T[locale]||T.en)[k]||T.en[k]||k}
 function setLocale(l){locale=T[l]?l:"en";$("locale").value=locale;document.documentElement.lang=locale;document.title=({"ko":"카톡 대화 분석 · AI 답장 추천 | SAYNUE","ja":"LINE会話分析・AI返信アドバイス | SAYNUE","en":"AI Text Message Analyzer & Reply Coach | SAYNUE","zh-CN":"微信聊天分析与AI回复建议 | SAYNUE","zh-TW":"聊天訊息分析與AI回覆建議 | SAYNUE"})[locale];document.querySelectorAll("[data-i]").forEach(el=>{el.textContent=tx(el.dataset.i)});$("chatText").placeholder=tx("placeholder");updatePersonaUI();updateSettingsSummary();shots.refresh();if(!lastResult&&!$("error").classList.contains("hidden"))hideError();if(lastResult)render(lastResult,false);updateFollowUpUI();updateSavedBar()}
@@ -26,9 +39,9 @@ const PLATFORM_NAMES={kakao:"KakaoTalk",line:"LINE",wechat:"WeChat",whatsapp:"Wh
 function updateSettingsSummary(){
  const rel=document.querySelector('#relations [data-rel="'+relation+'"]');
  const selected=rel?rel.textContent.trim():"";
- $("analysisOptionsSummary").textContent=(PLATFORM_NAMES[platform]||"Other")+(selected?" · "+selected:"");
+ $("analysisOptionsSummary").textContent=selected;
 }
-function choosePlatform(p){platform=p;choose("platforms","platform",p);updateSettingsSummary()}
+function choosePlatform(p){platform=p;updateSettingsSummary()}
 function chooseRelation(r){relation=r;choose("relations","rel",r);updateSettingsSummary()}
 function chooseGoal(g){goal=g;choose("goals","goal",g);updateSettingsSummary()}
 function chooseReplyTone(t){replyTone=t;choose("tones","tone",t)}
@@ -58,7 +71,7 @@ document.addEventListener("click",e=>{
  try{if(new URL(link.href,location.href).pathname==="/plans.html")usageEvent("plans_interest")}catch(_){}
 });
 const PERSONA_DEFAULTS={
- standard:{relation:"talking",goal:"understand"},
+ standard:{relation:"unknown",goal:"understand"},
  court:{relation:"dating",goal:"repair"},
  work:{relation:"work",goal:"reply"},
  romance:{relation:"talking",goal:"understand"},
@@ -66,16 +79,18 @@ const PERSONA_DEFAULTS={
 };
 function personaNameKey(mode){return "persona"+mode[0].toUpperCase()+mode.slice(1)}
 function updatePersonaUI(){
- choose("personas","persona",persona);
+ choose("personas","persona",autoExpert?"auto":persona);
  const special=persona!=="standard";
- $("personaContextBox").classList.toggle("hidden",!special);
+ $("personaContextBox").classList.remove("hidden");
  $("personaContextHint").textContent=special?tx("personaContext"+persona[0].toUpperCase()+persona.slice(1)):"";
  $("personaContext").placeholder=tx("personaContextPlaceholder");
  $("personaContext").setAttribute("aria-label",tx("personaContextHeading"));
 }
 function choosePersona(mode){
+ const nextAuto=mode==="auto";if(nextAuto)mode="standard";
  if(!Object.prototype.hasOwnProperty.call(PERSONA_DEFAULTS,mode))return;
- if(mode!==persona){
+ if(mode!==persona||nextAuto!==autoExpert){
+  autoExpert=nextAuto;
   persona=mode;
   $("personaContext").value="";
   $("personaContextBox").open=false;
@@ -95,7 +110,7 @@ $("personas").addEventListener("click",event=>{
  if(button)choosePersona(button.dataset.persona);
 });
 
-$("platforms").addEventListener("click",e=>{const b=e.target.closest("[data-platform]");if(b)choosePlatform(b.dataset.platform)});
+
 $("relations").addEventListener("click",e=>{const b=e.target.closest("[data-rel]");if(b)chooseRelation(b.dataset.rel)});
 $("goals").addEventListener("click",e=>{const b=e.target.closest("[data-goal]");if(b)chooseGoal(b.dataset.goal)});
 $("tones").addEventListener("click",e=>{const b=e.target.closest("[data-tone]");if(b)chooseReplyTone(b.dataset.tone)});
@@ -114,7 +129,7 @@ $("maskText").addEventListener("click",()=>{
   $("charCount").textContent=after.length+" / 12,000";
   $("maskStatus").textContent=before===after?tx("maskNone"):tx("maskDone");
 });
-$("locale").addEventListener("change",e=>{setLocale(e.target.value);if(e.target.value==="ja"&&platform==="kakao")choosePlatform("line");else if(e.target.value.startsWith("zh")&&platform==="kakao")choosePlatform("wechat")});
+$("locale").addEventListener("change",e=>{setLocale(e.target.value);updateCoachLabels()});
 function hideError(){$("error").classList.add("hidden");$("error").textContent=""}
 function showError(message){$("error").textContent=message;$("error").classList.remove("hidden");$("formCard").scrollIntoView({behavior:"smooth",block:"start"})}
 const shots=window.SaynueScreenshotEditor({t:tx,onError:()=>showError(tx("errImage"))});
@@ -124,22 +139,23 @@ const SESSION_TTL=30*24*60*60*1000;
 function buildSession(data,previous){
  const safe=(v,max)=>maskCommonInfo(typeof v==="string"?v:"").trim().slice(0,max);
  return {version:1,id:previous?.id||"s"+Date.now()+"-"+Math.random().toString(36).slice(2,8),
- at:Date.now(),persona,platform,relation,goal,replyTone,locale,turn:Math.min(12,(previous?.turn||0)+1),
+ at:Date.now(),persona,platform,relation,goal,replyTone,locale,replyLanguage:messageLanguage(data,selectedLanguage("replyLanguage")),turn:Math.min(12,(previous?.turn||0)+1),
  summary:safe(data.verdict||data.summary,240),signal:safe(data.keySignal||data.sectionOne,350),
- nextStep:safe(data.nextStep,350),title:safe(previous?.title||tx(personaNameKey(persona)),32)};
+ nextStep:safe(data.nextStep,350),title:safe(previous?.title||tx(personaNameKey(persona)),32),history:previous?[{at:previous.at,summary:previous.summary},...(previous.history||[])].slice(0,3):[]};
 }
 function validSession(s){
- return !!(s&&s.version===1&&typeof s.id==="string"&&s.id.length<40&&Number.isFinite(s.at)&&Date.now()-s.at>=0&&Date.now()-s.at<SESSION_TTL&&["standard","court","work","romance","mediator"].includes(s.persona)&&["kakao","line","wechat","whatsapp","imessage","instagram","other"].includes(s.platform)&&["crush","talking","dating","ex","friends","work"].includes(s.relation)&&["understand","reply","repair","boundary"].includes(s.goal)&&["natural","warm","direct","light"].includes(s.replyTone)&&Object.prototype.hasOwnProperty.call(T,s.locale)&&Number.isInteger(s.turn)&&s.turn>=1&&s.turn<=12&&["summary","signal","nextStep"].every(k=>typeof s[k]==="string"&&s[k].length>0&&s[k].length<=400));
+ return !!(s&&s.version===1&&typeof s.id==="string"&&s.id.length<40&&Number.isFinite(s.at)&&Date.now()-s.at>=0&&Date.now()-s.at<SESSION_TTL&&["standard","court","work","romance","mediator"].includes(s.persona)&&["kakao","line","wechat","whatsapp","imessage","instagram","other"].includes(s.platform)&&["crush","talking","dating","ex","friends","work","unknown","family"].includes(s.relation)&&["understand","reply","repair","boundary"].includes(s.goal)&&["natural","warm","direct","light"].includes(s.replyTone)&&Object.prototype.hasOwnProperty.call(T,s.locale)&&Number.isInteger(s.turn)&&s.turn>=1&&s.turn<=12&&["summary","signal","nextStep"].every(k=>typeof s[k]==="string"&&s[k].length>0&&s[k].length<=400));
 }
 function updateSavedBar(){
  const items=situationLibrary?situationLibrary.list():[];
- $("savedContextBar").classList.toggle("hidden",items.length===0);
+ $("savedContextBar").classList.toggle("hidden",items.length===0);$("libraryEmpty").hidden=items.length>0;
  $("libraryCount").textContent=items.length+" "+tx("libraryCount");
  const list=$("savedContextsList");list.replaceChildren();
  for(const item of items){
   const row=document.createElement("article");row.className="situation-item";row.dataset.situationId=item.id;
   const title=document.createElement("strong");title.textContent=item.title||tx(personaNameKey(item.persona));row.appendChild(title);
   const meta=document.createElement("p");meta.textContent=new Date(item.at).toLocaleDateString(locale)+" · "+tx(personaNameKey(item.persona));row.appendChild(meta);
+  const details=document.createElement("details");details.className="library-history";const heading=document.createElement("summary");heading.textContent=tx("historyTitle");details.appendChild(heading);for(const entry of [{at:item.at,summary:item.summary},...(item.history||[])]){const p=document.createElement("p");p.textContent=new Date(entry.at).toLocaleDateString(locale)+" · "+entry.summary;details.appendChild(p)}row.appendChild(details);
   const controls=document.createElement("div");controls.className="situation-controls";
   const action=(name,key)=>{const b=document.createElement("button");b.type="button";b.className="secondary";b.dataset.libraryAction=name;b.textContent=tx(key);return b};
   controls.appendChild(action("resume","libraryResume"));
@@ -180,8 +196,8 @@ function startFollowUp(context){
  if(!validSession(context))return;
  usageEvent("followup_started");
  simEpoch++;
- followUpContext=context;persona=context.persona;
- chooseRelation(context.relation);chooseGoal(context.goal);chooseReplyTone(context.replyTone);choosePlatform(context.platform);
+ navigate("analyze");$("formCard").hidden=false;followUpContext=context;persona=context.persona;autoExpert=false;
+ chooseRelation(context.relation);chooseGoal(context.goal);chooseReplyTone(context.replyTone);choosePlatform(context.platform);$("replyLanguage").value=messageLanguage(context,"auto");
  $("personaContext").value="";updatePersonaUI();$("chatText").value="";$("charCount").textContent="0 / 12,000";
  shots.clear();switchMode("image");$("consent").checked=false;hideError();
  $("results").classList.add("hidden");updateFollowUpUI();
@@ -207,7 +223,7 @@ $("savedContextsList").addEventListener("click",event=>{
 $("cancelFollowUp").addEventListener("click",()=>{
  followUpContext=null;shots.clear();$("chatText").value="";$("charCount").textContent="0 / 12,000";
  updateFollowUpUI();
- if(lastResult){$("results").classList.remove("hidden");$("results").scrollIntoView({behavior:"smooth",block:"start"})}
+ if(lastResult){$("formCard").hidden=true;$("results").classList.remove("hidden");$("results").scrollIntoView({behavior:"smooth",block:"start"})}
  else $("formCard").scrollIntoView({behavior:"smooth",block:"start"});
 });
 $("saveContext").addEventListener("click",()=>{
@@ -243,7 +259,7 @@ $("simRun").addEventListener("click",async()=>{
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),24000);
   let response;
   try{response=await fetch("/api/simulate",{method:"POST",headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({locale,persona,relation,draft,contextSummary}),signal:controller.signal,cache:"no-store"})}
+   body:JSON.stringify({locale,persona,relation,draft,contextSummary,replyLanguage:messageLanguage(lastResult,selectedLanguage("replyLanguage"))}),signal:controller.signal,cache:"no-store"})}
   finally{clearTimeout(timeout)}
   const data=await response.json().catch(()=>({}));
   if(!response.ok||!data.warm||!data.neutral||!data.reserved)throw Error("SIM_UNAVAILABLE");
@@ -320,14 +336,14 @@ function renderPersona(data,scroll){
  const showReply=!!data.shouldReply&&typeof data.replyDraft==="string"&&!!data.replyDraft.trim();
  $("personaReply").classList.toggle("hidden",!showReply);
  $("personaNoReply").classList.toggle("hidden",showReply);
- $("personaDraft").textContent=showReply?safeText(data.replyDraft,550):"";
+ $("personaDraft").textContent=showReply?safeText(data.replyDraft,550):"";$("personaDraft").lang=messageLanguage(data,resultLocale);renderMeaning("personaMeaning",data,showReply);
  $("personaDraftWhy").textContent=safeText(data.replyWhy,520);
  $("personaCopyStatus").textContent="";
  $("results").classList.remove("hidden");
- if(scroll)$("results").scrollIntoView({behavior:"smooth",block:"start"});
+ if(scroll){$("formCard").hidden=true;$("results").scrollIntoView({behavior:"smooth",block:"start"})};
 }
-function render(data,scroll){if(data&&data.persona&&data.persona!=="standard"){renderPersona(data,scroll);return} if(scroll)$("standardExplain").open=false; $("shareCard").classList.remove("hidden");$("personaReport").classList.add("hidden");lastResult=data;setupSimulator(data);$("samplePreview").classList.add("hidden");$("plusPeek").classList.add("hidden");$("reportPlatform").textContent=({kakao:"KakaoTalk",line:"LINE",wechat:"WeChat",whatsapp:"WhatsApp",imessage:"iMessage",instagram:"Instagram",other:"Other"})[platform];$("verdict").textContent=safeText(data.verdict,220);$("warmth").textContent=clamp(data.warmthScore)+"/100";$("balance").textContent=clamp(data.reciprocityScore)+"/100";$("confidence").textContent=tx(({low:"low",medium:"medium",high:"high"})[data.evidenceLevel]||"low");$("signal").textContent=safeText(data.keySignal,850);$("evidence").textContent=safeText(data.evidence,950);renderEvidenceCards(data.evidenceCards);$("alternative").textContent=safeText(data.alternative,700);$("nextStep").textContent=safeText(data.nextStep,750);$("replyDraft").textContent=safeText(data.replyDraft,480);$("replyWhy").textContent=safeText(data.replyWhy,520);$("replyCard").classList.toggle("hidden",!data.replyDraft);$("replyUnavailable").classList.toggle("hidden",!!data.replyDraft);$("copyStatus").textContent="";$("results").classList.remove("hidden");if(scroll)$("results").scrollIntoView({behavior:"smooth",block:"start"})}
-$("analyze").addEventListener("click",async()=>{hideError();if(!$("consent").checked){showError(tx("errConsent"));return}const chatText=$("chatText").value.trim();const prior=followUpContext;if(mode==="text"&&chatText.length<(prior?1:20)){showError(chatText?tx("errShort"):tx("errInput"));return}if(mode==="image"&&!shots.isReady()){showError(shots.isBusy()?tx("shotPreparing"):shots.hasImages()?tx("shotMustReview"):tx("errInput"));return}usageEvent("analysis_started");const btn=$("analyze");btn.disabled=true;$("loading").classList.remove("hidden");$("results").classList.add("hidden");try{const ctl=new AbortController();const timer=setTimeout(()=>ctl.abort(),33000);let response;try{response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({platform:platform,relation:relation,goal:goal,replyTone:replyTone,replyLength:replyLength,replyEmoji:replyEmoji,locale:locale,persona:persona,caseContext:persona==="standard"?undefined:$("personaContext").value.trim(),chatText:mode==="text"?chatText:"",images:mode==="image"?shots.getImages():undefined,priorAnalysis:prior?{summary:prior.summary,signal:prior.signal,nextStep:prior.nextStep,turn:prior.turn}:undefined}),signal:ctl.signal,cache:"no-store"})}finally{clearTimeout(timer)}const payload=await response.json().catch(()=>({}));if(!response.ok){const code=typeof payload.code==="string"&&/^[A-Z_]{3,50}$/.test(payload.code)?payload.code:"HTTP_"+response.status;const kind=code==="NOT_CONFIGURED"?"errMissing":response.status===429?"errLimit":"errOther";throw Error(((API_ERRORS[locale]||API_ERRORS.en)[code]||tx(kind))+" ["+code+"]")}if(!payload||(persona==="standard"?typeof payload.verdict!=="string":payload.persona!==persona||typeof payload.summary!=="string"))throw Error(tx("errOther"));feedbackSent=false;resultGoal=goal;resultLocale=locale;$("feedbackStatus").textContent="";document.querySelectorAll("#feedbackButtons [data-feedback]").forEach(b=>b.disabled=false);usageEvent("analysis_completed");if(prior)usageEvent("followup_completed");activeSession=buildSession(payload,prior);renderHistoryCompare(prior,activeSession);if(prior&&situationLibrary.contains(prior.id))saveCurrentSession();followUpContext=null;render(payload,true);updateFollowUpActions()}catch(err){usageEvent("analysis_failed");showError(err.name==="AbortError"?tx("errServer"):(err.message||tx("errOther")))}finally{btn.disabled=false;$("loading").classList.add("hidden")}});
+function render(data,scroll){if(data&&data.persona&&data.persona!=="standard"){renderPersona(data,scroll);return} if(scroll)$("standardExplain").open=false; $("shareCard").classList.remove("hidden");$("personaReport").classList.add("hidden");lastResult=data;setupSimulator(data);$("samplePreview").classList.add("hidden");$("plusPeek").classList.add("hidden");$("reportPlatform").classList.toggle("hidden",!data.recommendedExpert);$("reportPlatform").textContent=data.recommendedExpert?tx("autoApplied")+" · "+tx(personaNameKey(data.recommendedExpert)):"";$("verdict").textContent=safeText(data.verdict,220);$("warmth").textContent=clamp(data.warmthScore)+"/100";$("balance").textContent=clamp(data.reciprocityScore)+"/100";$("confidence").textContent=tx(({low:"low",medium:"medium",high:"high"})[data.evidenceLevel]||"low");$("signal").textContent=safeText(data.keySignal,850);$("evidence").textContent=safeText(data.evidence,950);renderEvidenceCards(data.evidenceCards);$("alternative").textContent=safeText(data.alternative,700);$("nextStep").textContent=safeText(data.nextStep,750);$("replyDraft").textContent=safeText(data.replyDraft,480);$("replyDraft").lang=messageLanguage(data,resultLocale);renderMeaning("replyMeaning",data,!!data.replyDraft);$("replyWhy").textContent=safeText(data.replyWhy,520);$("replyCard").classList.toggle("hidden",!data.replyDraft);$("replyUnavailable").classList.toggle("hidden",!!data.replyDraft);$("copyStatus").textContent="";$("results").classList.remove("hidden");if(scroll){$("formCard").hidden=true;$("results").scrollIntoView({behavior:"smooth",block:"start"})}}
+$("analyze").addEventListener("click",async()=>{hideError();if(!$("consent").checked){showError(tx("errConsent"));return}const chatText=$("chatText").value.trim();const prior=followUpContext;if(mode==="text"&&chatText.length<(prior?1:20)){showError(chatText?tx("errShort"):tx("errInput"));return}if(mode==="image"&&!shots.isReady()){showError(shots.isBusy()?tx("shotPreparing"):shots.hasImages()?tx("shotMustReview"):tx("errInput"));return}usageEvent("analysis_started");const btn=$("analyze");btn.disabled=true;$("loading").classList.remove("hidden");$("results").classList.add("hidden");try{const ctl=new AbortController();const timer=setTimeout(()=>ctl.abort(),33000);let response;try{response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({platform:platform,relation:relation,goal:goal,replyTone:replyTone,replyLength:replyLength,replyEmoji:replyEmoji,locale:locale,replyLanguage:selectedLanguage("replyLanguage"),persona:persona,autoExpert:autoExpert,caseContext:$("personaContext").value.trim(),chatText:mode==="text"?chatText:"",images:mode==="image"?shots.getImages():undefined,priorAnalysis:prior?{summary:prior.summary,signal:prior.signal,nextStep:prior.nextStep,turn:prior.turn}:undefined}),signal:ctl.signal,cache:"no-store"})}finally{clearTimeout(timer)}const payload=await response.json().catch(()=>({}));if(!response.ok){const code=typeof payload.code==="string"&&/^[A-Z_]{3,50}$/.test(payload.code)?payload.code:"HTTP_"+response.status;const kind=code==="NOT_CONFIGURED"?"errMissing":response.status===429?"errLimit":"errOther";throw Error(((API_ERRORS[locale]||API_ERRORS.en)[code]||tx(kind))+" ["+code+"]")}if(!payload||(persona==="standard"?typeof payload.verdict!=="string":payload.persona!==persona||typeof payload.summary!=="string"))throw Error(tx("errOther"));feedbackSent=false;resultGoal=goal;resultLocale=locale;$("feedbackStatus").textContent="";document.querySelectorAll("#feedbackButtons [data-feedback]").forEach(b=>b.disabled=false);usageEvent("analysis_completed");if(prior)usageEvent("followup_completed");activeSession=buildSession(payload,prior);renderHistoryCompare(prior,activeSession);if(prior&&situationLibrary.contains(prior.id))saveCurrentSession();followUpContext=null;render(payload,true);updateFollowUpActions()}catch(err){usageEvent("analysis_failed");showError(err.name==="AbortError"?tx("errServer"):(err.message||tx("errOther")))}finally{btn.disabled=false;$("loading").classList.add("hidden")}});
 $("feedbackButtons").addEventListener("click",async(event)=>{
   const btn=event.target.closest("[data-feedback]");
   if(!btn||feedbackSent||!lastResult)return;
@@ -361,15 +377,85 @@ $("copyReply").addEventListener("click",async()=>{
   catch(_){$("copyStatus").textContent=tx("replyCopyFail")}
 });
 $("share").addEventListener("click",async()=>{if(!lastResult)return;const text=tx("shareTitle")+"\n"+tx("sharePrompt");try{if(navigator.share){await navigator.share({title:tx("shareTitle"),text:text,url:location.origin+location.pathname})}else{await navigator.clipboard.writeText(text+"\n"+location.origin+location.pathname);alert(tx("copied"))}}catch(err){if(err.name!=="AbortError")alert(tx("errOther"))}});
-$("reset").addEventListener("click",()=>{$("results").classList.add("hidden");$("personaReport").classList.add("hidden");$("shareCard").classList.remove("hidden");$("samplePreview").classList.remove("hidden");$("plusPeek").classList.remove("hidden");lastResult=null;activeSession=null;followUpContext=null;renderHistoryCompare(null,null);$("consent").checked=false;simEpoch++;$("replySimulator").classList.add("hidden");shots.clear();switchMode("image");$("chatText").value="";$("charCount").textContent="0 / 12,000";updateFollowUpActions();feedbackSent=false;$("feedbackStatus").textContent="";$("formCard").scrollIntoView({behavior:"smooth",block:"start"})});
+$("reset").addEventListener("click",()=>{$("formCard").hidden=false;$("results").classList.add("hidden");$("personaReport").classList.add("hidden");$("shareCard").classList.remove("hidden");$("samplePreview").classList.remove("hidden");$("plusPeek").classList.remove("hidden");lastResult=null;activeSession=null;followUpContext=null;renderHistoryCompare(null,null);$("consent").checked=false;simEpoch++;$("replySimulator").classList.add("hidden");shots.clear();switchMode("image");$("chatText").value="";$("charCount").textContent="0 / 12,000";updateFollowUpActions();feedbackSent=false;$("feedbackStatus").textContent="";$("formCard").scrollIntoView({behavior:"smooth",block:"start"})});
 situationLibrary=window.SaynueSituationLibrary.create();
 stylePreferences=window.SaynueReplyStyle.create();
 usageMetrics=window.SaynueUsageMetrics.create({onDelivery:ok=>{if(!ok&&usageMetrics?.enabled())$("metricsStatus").textContent=tx("metricsUnavailable")}});
 updateFollowUpActions();
-setLocale(langFromBrowser());choosePlatform(locale==="ko"?"kakao":locale==="ja"?"line":locale.startsWith("zh")?"wechat":"whatsapp");chooseRelation("talking");chooseGoal("understand");chooseReplyTone("natural");chooseReplyLength("normal");chooseReplyEmoji("none");
+setLocale(langFromBrowser());choosePlatform("other");chooseRelation("unknown");chooseGoal("understand");chooseReplyTone("natural");chooseReplyLength("normal");chooseReplyEmoji("none");
 const rememberedStyle=stylePreferences.load();
 if(rememberedStyle){chooseReplyTone(rememberedStyle.tone);chooseReplyLength(rememberedStyle.length);chooseReplyEmoji(rememberedStyle.emoji)}
 $("metricsOptin").checked=usageMetrics.enabled();
 if(usageMetrics.enabled())usageEvent("visit");
 updatePersonaUI();
+
+let screen="home",coachMode="reply",coachEpoch=0,coachResult=null;
+const screens={home:"homeScreen",analyze:"analysisScreen",reply:"coachScreen",counsel:"coachScreen",library:"libraryScreen",settings:"settingsScreen"};
+function updateCoachLabels(){
+ const title={reply:"hubReply",counsel:"hubCounsel",prepare:"coachPrepare",reflect:"coachReflect"}[coachMode];
+ const desc={reply:"hubReplyDesc",counsel:"hubCounselDesc",prepare:"coachPrepareDesc",reflect:"coachReflectDesc"}[coachMode];
+ $("coachHeading").textContent=tx(title);$("coachIntro").textContent=tx(desc);
+ $("coachContext").placeholder=tx(coachMode==="reply"?"coachContextHint":coachMode==="reflect"?"coachReflectHint":"coachAdviceHint");$("coachDraft").placeholder=tx("coachDraftHint");$("coachDraftBox").hidden=coachMode!=="reply";choose("coachModes","coach",coachMode);
+}
+function setCoachMode(mode){
+ if(!["reply","counsel","prepare","reflect"].includes(mode))return;
+ if(mode!==coachMode){coachMode=mode;coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachStatus").textContent="";$("coachConsent").checked=false;$("coachRun").disabled=false}
+ updateCoachLabels();
+}
+function showScreen(target){
+ if(!screens[target])target="home";screen=target;
+ for(const id of new Set(Object.values(screens)))$(id).hidden=id!==screens[target];
+ if(target==="analyze")$("formCard").hidden=!$("results").classList.contains("hidden");
+ if(target==="library"){updateSavedBar();$("savedContextBar").open=true}
+ if(target==="reply"||target==="counsel")setCoachMode(target);
+ document.querySelectorAll("#workspaceNav [data-nav]").forEach(b=>b.setAttribute("aria-current",b.dataset.nav===(target==="counsel"?"reply":target)?"page":"false"));
+ window.scrollTo(0,0);
+}
+function navigate(target){const hash=target==="analyze"?"#formCard":target==="home"?"#home":"#"+target;if(location.hash!==hash)history.pushState(null,"",hash);showScreen(target)}
+function fromHash(){const hash=location.hash.slice(1);showScreen(hash==="formCard"?"analyze":hash)}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-nav]");if(b)navigate(b.dataset.nav)});
+window.addEventListener("popstate",fromHash);window.addEventListener("hashchange",fromHash);
+$("editAnalysis").addEventListener("click",()=>{$("results").classList.add("hidden");$("formCard").hidden=false;$("consent").checked=false;window.scrollTo(0,0)});
+$("coachModes").addEventListener("click",e=>{const b=e.target.closest("[data-coach]");if(b)setCoachMode(b.dataset.coach)});
+$("coachMask").addEventListener("click",()=>{for(const id of ["coachContext","coachDraft"])$(id).value=maskCommonInfo($(id).value);$("coachMaskStatus").textContent=tx("maskDone")});
+function loadCoachStyle(){const s=stylePreferences.load();$("coachTone").value=s?.tone||replyTone;$("coachLength").value=s?.length||replyLength;$("coachEmoji").value=s?.emoji||replyEmoji}
+$("coachSaveStyle").addEventListener("click",()=>{const ok=stylePreferences.save({tone:$("coachTone").value,length:$("coachLength").value,emoji:$("coachEmoji").value});if(ok){chooseReplyTone($("coachTone").value);chooseReplyLength($("coachLength").value);chooseReplyEmoji($("coachEmoji").value)}$("coachStatus").textContent=tx(ok?"styleStored":"styleError")});
+function openDraftCoach(){
+ if(!lastResult||lastResult.shouldReply===false||!lastResult.replyDraft)return;
+ navigate("reply");coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachRun").disabled=false;$("coachConsent").checked=false;
+ $("coachContext").value=maskCommonInfo([lastResult.verdict||lastResult.summary,lastResult.nextStep].filter(Boolean).join("\n")).slice(0,1800);$("coachDraft").value=lastResult.replyDraft.slice(0,600);$("coachRelation").value=relation;$("coachReplyLanguage").value=messageLanguage(lastResult,selectedLanguage("replyLanguage"));loadCoachStyle();
+}
+$("editPersonaDraft").addEventListener("click",openDraftCoach);$("editStandardDraft").addEventListener("click",openDraftCoach);
+async function coachRequest(path,data){
+ const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),33000);
+ try{const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data),cache:"no-store",signal:ctl.signal});const v=await r.json();if(!r.ok)throw Error(((API_ERRORS[locale]||API_ERRORS.en)[v.code]||tx(r.status===429?"errLimit":"errOther"))+" ["+(typeof v.code==="string"&&/^[A-Z_]+$/.test(v.code)?v.code:"ERROR")+"]");return v}finally{clearTimeout(timer)}
+}
+for(const id of ["coachContext","coachDraft"])$(id).addEventListener("input",()=>{$("coachConsent").checked=false});
+$("coachRun").addEventListener("click",async()=>{
+ const context=$("coachContext").value.trim(),draft=coachMode==="reply"?$("coachDraft").value.trim():"";
+ if(!($("coachConsent").checked&&(context.length>=3||draft.length>=3))){$("coachStatus").textContent=tx("coachMissing");return}
+ const epoch=++coachEpoch;coachResult=null;$("coachResult").hidden=true;$("coachRun").disabled=true;$("coachStatus").textContent=tx("coachWorking");
+ try{
+  const data=await coachRequest("/api/coach",{mode:coachMode,locale,replyLanguage:selectedLanguage("coachReplyLanguage"),relation:$("coachRelation").value,context,draft,tone:$("coachTone").value,length:$("coachLength").value,emoji:$("coachEmoji").value});
+  if(epoch!==coachEpoch)return;if(typeof data.summary!=="string"||!Array.isArray(data.steps)||typeof data.shouldReply!=="boolean")throw Error(tx("errOther"));
+  coachResult=data;$("coachSummary").textContent=data.summary;$("coachAdvice").textContent=data.advice;
+  $("coachSteps").replaceChildren(...data.steps.map(s=>{const el=document.createElement("li");el.textContent=s;return el}));
+  $("coachMessageBox").hidden=!data.shouldReply||!data.message;$("coachNoReply").hidden=data.shouldReply;$("coachMessage").value=data.shouldReply?data.message:"";$("coachMessage").lang=messageLanguage(data,locale);renderMeaning("coachMeaning",data,data.shouldReply&&data.message);$("coachWhy").textContent=data.why;$("coachCaution").textContent=data.caution;
+  $("coachCopyStatus").textContent="";$("coachRehearsal").hidden=true;$("coachResult").hidden=false;$("coachStatus").textContent=tx("coachDone");
+  if(screen==="reply"||screen==="counsel")$("coachResult").scrollIntoView({behavior:"smooth",block:"start"});
+ }catch(e){if(epoch===coachEpoch)$("coachStatus").textContent=e.name==="AbortError"?tx("errServer"):e.message}
+ finally{if(epoch===coachEpoch)$("coachRun").disabled=false}
+});
+$("coachCopy").addEventListener("click",async()=>{if(!coachResult?.shouldReply||!$("coachMessage").value.trim())return;try{await navigator.clipboard.writeText($("coachMessage").value);$("coachCopyStatus").textContent=tx("replyCopied");usageEvent("reply_copied")}catch{$("coachCopyStatus").textContent=tx("replyCopyFail")}});
+$("coachRevise").addEventListener("click",()=>{if(!coachResult?.shouldReply)return;const message=$("coachMessage").value;$("coachReplyLanguage").value=messageLanguage(coachResult,selectedLanguage("coachReplyLanguage"));setCoachMode("reply");coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachStatus").textContent="";$("coachRun").disabled=false;$("coachDraft").value=message;$("coachConsent").checked=false;$("coachStyle").open=true;$("coachDraft").focus();$("coachDraft").scrollIntoView({behavior:"smooth",block:"center"})});
+$("coachMessage").addEventListener("input",()=>{$("coachMeaningBox").hidden=true});
+$("coachRehearse").addEventListener("click",async()=>{
+ if(!coachResult?.shouldReply)return;if(!$("coachConsent").checked){$("coachCopyStatus").textContent=tx("errConsent");return}
+ const message=$("coachMessage").value.trim();if(message.length<4){$("coachCopyStatus").textContent=tx("simInputError");return}
+ const epoch=coachEpoch,btn=$("coachRehearse"),out=$("coachRehearsal");btn.disabled=true;out.hidden=false;out.textContent=tx("coachWorking");
+ try{const data=await coachRequest("/api/simulate",{locale,replyLanguage:messageLanguage(coachResult,selectedLanguage("coachReplyLanguage")),persona:"standard",relation:$("coachRelation").value,draft:message,contextSummary:[coachResult.summary,coachResult.advice].join("\n").slice(0,650)});if(epoch!==coachEpoch)return;out.replaceChildren();for(const key of ["warm","neutral","reserved"]){const el=document.createElement("p");el.textContent=tx("sim"+key[0].toUpperCase()+key.slice(1))+": "+data[key].example+" — "+data[key].reading;out.appendChild(el)}const note=document.createElement("p");note.textContent=tx("simNotice")+" "+data.caution;out.appendChild(note)}
+ catch(e){if(epoch===coachEpoch)out.textContent=e.message}finally{btn.disabled=false}
+});
+loadCoachStyle();updateCoachLabels();fromHash();
+
 })();

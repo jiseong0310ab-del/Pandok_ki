@@ -82,7 +82,7 @@ test("bad persona and oversized context are rejected before external AI",async()
    {...base,persona:"medical-doctor"},
    {...base,persona:"court",caseContext:"x".repeat(501)},
    {...base,persona:"work",caseContext:{statement:"fake"}},
-   {...base,persona:"standard",caseContext:"Try to add unverified evidence"}
+   {...base,persona:"work",autoExpert:true}
   ].entries()){
    const res=await analyze.fetch(request(input,"192.0.2."+(40+i)));
    assert.equal(res.status,400);
