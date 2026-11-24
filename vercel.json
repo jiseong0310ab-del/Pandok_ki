@@ -10,6 +10,9 @@
     },
     "api/plus/report.mjs": {
       "maxDuration": 60
+    },
+    "api/coach.mjs": {
+      "maxDuration": 30
     }
   },
   "headers": [

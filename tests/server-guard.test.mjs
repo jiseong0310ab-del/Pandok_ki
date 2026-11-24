@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {hasContactIdentifier,maskContactIdentifiers,serverSecret,pickGeminiModels,createMemoryLimiter,sameOriginOrAbsent} from "../lib/server-guard.mjs";
+import {hasContactIdentifier,maskContactIdentifiers,serverSecret,pickGeminiModels,createMemoryLimiter,sameOriginOrAbsent,createImageSlots} from "../lib/server-guard.mjs";
 import analyze,{textResult} from "../api/analyze.mjs";
 import {normalizePersonaResult} from "../lib/persona-analysis.mjs";
 import {generatePlusReport,validatePlusOutput,validatePlusInput,buildPlusRequest} from "../lib/plus-coach.mjs";
@@ -189,6 +189,7 @@ test("deployment config gives every Gemini route enough time and blocks framing"
  assert.ok(config.functions["api/analyze.mjs"].maxDuration>=35);
  assert.ok(config.functions["api/simulate.mjs"].maxDuration>=25);
  assert.ok(config.functions["api/plus/report.mjs"].maxDuration>=30);
+ assert.ok(config.functions["api/coach.mjs"].maxDuration>=28);
  const headers=Object.fromEntries(config.headers.find(h=>h.source==="/(.*)").headers.map(h=>[h.key,h.value]));
  assert.equal(headers["X-Frame-Options"],"DENY");
  assert.match(headers["Content-Security-Policy"],/frame-ancestors 'none'/);
@@ -212,3 +213,24 @@ test("email sign-in start is throttled per address and per client before Supabas
   });
  }finally{global.fetch=old}
 });
+
+test("image data is spliced into the Gemini request byte-for-byte like JSON.stringify",()=>{
+ const slots=createImageSlots();
+ const datas=["/9j/"+"A".repeat(5000),"/9j/"+"B+/".repeat(900)+"=","/9j/C"];
+ const value={text:"quote \"x\" \\ \u0000 한글",parts:datas.map((_,i)=>({inline_data:{mime_type:"image/jpeg",data:slots.slot(i)}}))};
+ const expected=JSON.stringify({...value,parts:datas.map(d=>({inline_data:{mime_type:"image/jpeg",data:d}}))});
+ assert.equal(slots.stringify(value,datas),expected);
+ assert.throws(()=>slots.stringify(value,datas.slice(0,2)),/IMAGE_SLOT_MISMATCH/);
+ assert.throws(()=>slots.stringify(value,['/9j/"}],"x":"',datas[1],datas[2]]),/IMAGE_SLOT_MISMATCH/);
+ // A user-typed look-alike marker cannot collide with the per-request nonce.
+ assert.equal(createImageSlots().stringify({note:"\u0000saynue-image-0"},[]),JSON.stringify({note:"\u0000saynue-image-0"}));
+});
+
+test("Cloudflare config builds the public folder itself before deploying",async()=>{
+ const fs=await import("node:fs");
+ const raw=fs.readFileSync(new URL("../wrangler.jsonc",import.meta.url),"utf8");
+ const config=JSON.parse(raw.replace(/^\s*\/\/.*$/gm,""));
+ assert.equal(config.build.command,"node scripts/build-cloudflare.mjs");
+ assert.equal(config.assets.directory,"./.cloudflare-public");
+});
+
