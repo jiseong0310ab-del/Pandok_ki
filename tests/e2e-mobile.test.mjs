@@ -295,3 +295,33 @@ test("editing a coach input during a request prevents old results from appearing
  try{const {page}=await openPage(browser,{delayCoach});await page.click("#workspaceNav [data-nav=reply]");await page.fill("#coachContext","상사에게 일정을 변경해 달라고 요청하고 싶어요");await page.check("#coachConsent");await page.click("#coachRun");await page.waitForFunction(()=>document.getElementById("coachRun").disabled);await page.fill("#coachContext","친구에게 약속을 취소하고 싶어요");release();await page.waitForTimeout(350);assert.equal(await page.isVisible("#coachResult"),false);assert.equal(await page.isDisabled("#coachRun"),false);assert.equal(await page.isChecked("#coachConsent"),false);
  }finally{release();await browser.close()}
 });
+
+test("a Japanese visit never paints the Korean defaults while the app script loads",{skip},async()=>{
+ const browser=await playwright.chromium.launch();
+ try{
+  for(const blockApp of [false,true]){
+   const context=await browser.newContext({...playwright.devices["iPhone 13"],locale:"ja-JP",serviceWorkers:"block"});
+   const page=await context.newPage();
+   await context.route("**/*",async route=>{
+    const url=new URL(route.request().url());
+    if(url.origin!==ORIGIN)return route.abort();
+    if(url.pathname==="/assets/app.js"){if(blockApp)return route.abort();await new Promise(r=>setTimeout(r,1200))}
+    const file=path.join(ROOT,url.pathname==="/"?"index.html":decodeURIComponent(url.pathname));
+    if(!fs.existsSync(file)||fs.statSync(file).isDirectory())return route.fulfill({status:404,body:""});
+    return route.fulfill({status:200,contentType:TYPES[path.extname(file)]||"application/octet-stream",body:fs.readFileSync(file)});
+   });
+   await page.goto(ORIGIN+"/",{waitUntil:"commit"});
+   await page.waitForTimeout(500);
+   assert.equal(await page.evaluate(()=>getComputedStyle(document.querySelector("main")).visibility),"hidden",blockApp?"blocked":"slow");
+   assert.equal(await page.evaluate(()=>document.documentElement.lang),"ja");
+   if(blockApp){
+    await page.waitForFunction(()=>!document.documentElement.hasAttribute("data-i18n"),null,{timeout:5000});
+    assert.equal(await page.isVisible("#homeScreen"),true,"fallback shows the page if the app script fails");
+   }else{
+    await page.waitForFunction(()=>document.querySelector(".hero-title").textContent.includes("会話"),null,{timeout:5000});
+    assert.equal(await page.evaluate(()=>getComputedStyle(document.querySelector("main")).visibility),"visible");
+   }
+   await context.close();
+  }
+ }finally{await browser.close()}
+});
