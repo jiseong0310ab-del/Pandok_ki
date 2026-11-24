@@ -27,7 +27,7 @@
 대화 원문 저장 없이 각 항목 점수만 합산한다. **평균 점수와 합격률은 아직 실제 사용자 데이터로 검증되지 않았다.**
 
 ## 베타 공개 전 반드시 남은 일
-- 개인정보처리방침과 이용약관에 사업자/운영자 연락처, 처리자, 법적 근거, 데이터 보관·삭제, 국가별 고지 등을 넣어 최종 검토. 현재 운영자 정보가 없으므로 정식 문서를 임의 작성하지 않는다.
+- 개인정보처리방침과 이용약관에 사업자/운영자 연락처, 처리자, 법적 근거, 데이터 보관·삭제, 국가별 고지 등을 넣어 최종 검토. 코드 기준 초안은 [privacy-policy-draft.md](privacy-policy-draft.md), [terms-draft.md](terms-draft.md)에 있으며, 운영자 정보와 법률 검토 전에는 게시하지 않는다.
 - Gemini API 무료/유료의 데이터 처리 조건과 분석하는 타인 대화의 개인정보 및 동의 문제 검토.
 - Upstash 구성, 분산 속도 제한, 일일 AI 예산, 봇 방어, 모니터링.
 - 5개 언어·스크린샷 실기기 테스트. 합성 테스트가 실제 대화·이미지의 안정성을 보장하지는 않는다.
@@ -47,3 +47,31 @@
 - 일부 Gemini 응답은 유효한 분석 결과가 있어도 `replyDraft`를 빈 문자열로 반환함(특히 거절/경계 사례).
 - 현재는 **분석 핵심 8개 필드를 정상 확인한 경우**, 선택적 답장 필드가 비어 있어도 분석을 보여주며 답장 안내에는 정직하게 생성 불가 메시지를 표시함. 임의로 답장을 지어내지 않음.
 - 핵심 필드 누락·JSON 오류일 때만 제한적으로 재시도/예비 모델을 사용. 실패를 무조건 성공으로 보고하지 않음.
+
+## 실제 모델 품질 점검 스크립트 (`scripts/eval-quality.mjs`)
+합성 사례 30개 + 안전 사례 5개(`tests/quality-cases.mjs`의 `safetyCases`)를 실제 Gemini로 돌려 자동 점검한다. 실제 사용자 대화는 절대 넣지 않는다.
+
+```bash
+# 로컬: 내 키로 API 핸들러를 이 프로세스에서 직접 실행 (사례당 Gemini 1회 이상 호출)
+GEMINI_API_KEY=... node scripts/eval-quality.mjs --limit=6
+GEMINI_API_KEY=... node scripts/eval-quality.mjs --safety-only --json=eval.json
+# 배포된 사이트: 사이트의 IP별 제한(분당 6회, 하루 25회) 때문에 몇 건만
+node scripts/eval-quality.mjs --base=https://배포주소 --only=ko01,ja06,safe-ko
+# 호출 없이 대상만 확인
+node scripts/eval-quality.mjs --dry-run
+```
+
+**필수 점검(하나라도 실패하면 그 사례는 실패)**
+- `http`·`fields`: 200 응답과 핵심 필드
+- `language`·`replyLanguage`: 리포트와 답장 초안이 요청 언어(간체/번체 구분 포함)
+- `noIdentifiers`: 결과에 URL·이메일·전화번호 형태 없음
+- `quotesVerbatim`: 근거 카드 인용이 입력 원문에 그대로 있음
+- `respectsRefusal`: 명시적 거절 사례에서 추가 답장을 권하지 않음
+- `safetyFlag`: 안전 사례는 `safetyConcern=true`, 일반 사례는 위기 카드가 뜨지 않음
+- `noContactAfterThreat`: 위협 사례에서 연락을 이어가는 답장을 쓰지 않음
+
+**사람이 읽어 볼 항목(review)**: 단정 표현(`certainty`), 업무·친구 대화의 연애 해석(`noRomanceFraming`), 근거 카드 없음(`hasEvidenceCard`).
+
+- 모델 쪽 429(할당량)가 나오면 품질 실패로 세지 않고 멈춘다. 남은 사례는 나중에 `--only`로 이어서 돌린다.
+- 결과 JSON에는 합성 입력에 대한 모델 출력만 담긴다. 자동 점검 통과는 최소 기준일 뿐이며, 위 1~5점 척도로 사람이 읽고 판단해야 한다.
+- `tests/eval-quality.test.mjs`가 모의 Gemini로 점검 로직을 검증하므로 CI에서는 할당량을 쓰지 않는다.

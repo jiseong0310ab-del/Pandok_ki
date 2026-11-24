@@ -148,6 +148,11 @@ test("home navigation and independent coaching modes work without a screenshot",
   await page.goto(ORIGIN+"/");
   assert.equal(await page.isVisible("#homeScreen"),true);
   assert.equal(await page.isVisible("#analysisScreen"),false);
+  // The example result is static: visible on arrival, no AI call, no overflow.
+  await page.locator(".home-demo").scrollIntoViewIfNeeded();
+  assert.equal(await page.isVisible(".home-demo .demo-verdict"),true);
+  assert.equal(requests.filter(x=>x.path.startsWith("/api/analyze")||x.path.startsWith("/api/coach")).length,0);
+  assert.ok(await page.evaluate(()=>[...document.querySelectorAll(".home-demo *")].every(el=>el.getBoundingClientRect().right<=innerWidth+1)));
   await page.click("#homeScreen [data-nav=reply]");
   await page.fill("#coachContext","상사에게 회의 일정을 바꾸고 싶어요.");
   await page.fill("#coachDraft","時間を変更してもよろしいでしょうか？");
@@ -188,25 +193,34 @@ test("Korean analysis can return a Japanese reply and Korean meaning separately"
  }finally{await browser.close()}
 });
 
-test("appearance follows the system and can be pinned to light or dark",{skip},async()=>{
+test("appearance is light by default, even on a dark device, and dark is opt-in",{skip},async()=>{
  const browser=await playwright.chromium.launch();
  try{
-  const {page,problems}=await openPage(browser,{colorScheme:"light"});
+  const {page,problems}=await openPage(browser,{colorScheme:"dark"});
   const theme=()=>page.evaluate(()=>document.documentElement.getAttribute("data-theme"));
   const bg=()=>page.evaluate(()=>getComputedStyle(document.body).backgroundColor);
+  const stored=()=>page.evaluate(()=>localStorage.getItem("saynue:theme:v1"));
   assert.equal(await theme(),null);
   assert.equal(await bg(),"rgb(246, 245, 250)");
   await page.click("#workspaceNav [data-nav=settings]");
+  assert.deepEqual(await page.$$eval("#themeChoice [data-theme-choice]",b=>b.map(x=>x.dataset.themeChoice+":"+x.getAttribute("aria-pressed"))),["light:true","dark:false","system:false"]);
   await page.click("[data-theme-choice=dark]");
   assert.equal(await theme(),"dark");
   assert.equal(await bg(),"rgb(15, 15, 20)");
   assert.equal(await page.getAttribute("[data-theme-choice=dark]","aria-pressed"),"true");
   await page.reload();
   assert.equal(await theme(),"dark","choice survives a reload");
+  assert.equal(await bg(),"rgb(15, 15, 20)");
   await page.click("#workspaceNav [data-nav=settings]");
   await page.click("[data-theme-choice=system]");
-  assert.equal(await theme(),null);
-  assert.equal(await page.evaluate(()=>localStorage.getItem("saynue:theme:v1")),null);
+  assert.equal(await theme(),"system");assert.equal(await stored(),"system");
+  assert.equal(await bg(),"rgb(15, 15, 20)","system follows this dark device");
+  await page.emulateMedia({colorScheme:"light"});
+  assert.equal(await bg(),"rgb(246, 245, 250)");
+  await page.emulateMedia({colorScheme:"dark"});
+  await page.click("[data-theme-choice=light]");
+  assert.equal(await theme(),null);assert.equal(await stored(),null);
+  assert.equal(await bg(),"rgb(246, 245, 250)");
   for(const nav of ["home","analyze","reply","library","settings"]){
    await page.click("#workspaceNav [data-nav="+nav+"]");
    assert.equal(await noHorizontalScroll(page),true,nav+" scrolls horizontally in light mode");
@@ -323,5 +337,35 @@ test("a Japanese visit never paints the Korean defaults while the app script loa
    }
    await context.close();
   }
+ }finally{await browser.close()}
+});
+
+test("a flagged safety concern shows local crisis lines above the result",{skip},async()=>{
+ const browser=await playwright.chromium.launch();
+ try{
+  const {page,problems}=await openPage(browser,{analyzeBody:{...report,safetyConcern:true,shouldReply:false,replyDraft:""}});
+  await page.click("#textTab");await page.fill("#chatText","나: 그만 연락해 줘.\n상대: 계속 찾아갈 거야. 가만두지 않을 거야.");
+  await page.check("#consent");await page.click("#analyze");await page.waitForSelector("#results:not(.hidden)");
+  assert.equal(await page.isVisible("#safetyCard"),true);
+  const links=await page.$$eval("#safetyCard .safety-lines a",as=>as.map(a=>a.getAttribute("href")));
+  assert.deepEqual(links,["tel:112","tel:109","tel:1366","tel:1388"]);
+  const order=await page.evaluate(()=>{const r=document.getElementById("results");return [...r.children].map(e=>e.id).filter(Boolean)});
+  assert.ok(order.indexOf("safetyCard")<order.indexOf("shareCard"),"card comes before the report");
+  await page.selectOption("#locale","ja");
+  assert.match(await page.textContent("#safetyCard"),/よりそいホットライン/);
+  // Always available from MY, in the page language.
+  await page.click("#workspaceNav [data-nav=settings]");await page.click("#safetyHelp summary");
+  assert.deepEqual(await page.$$eval("#safetyHelpBody a",as=>as.map(a=>a.getAttribute("href"))),["tel:110","tel:0120279338","tel:0570783556"]);
+  assert.deepEqual(problems,[]);
+ }finally{await browser.close()}
+});
+
+test("ordinary results show no crisis card",{skip},async()=>{
+ const browser=await playwright.chromium.launch();
+ try{
+  const {page}=await openPage(browser);
+  await page.click("#textTab");await page.fill("#chatText","나: 이번 주에 시간 있어?\n상대: 다음 주 되면 다시 말해줄게!");
+  await page.check("#consent");await page.click("#analyze");await page.waitForSelector("#results:not(.hidden)");
+  assert.equal(await page.isVisible("#safetyCard"),false);
  }finally{await browser.close()}
 });

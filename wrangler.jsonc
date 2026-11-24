@@ -13,6 +13,15 @@
   "build": {
     "command": "node scripts/build-cloudflare.mjs"
   },
+  // Per-IP burst limits enforced by Cloudflare before any Gemini call
+  // (counted per Cloudflare location; the per-day limits stay in the API).
+  "ratelimits": [
+    { "name": "AI_BURST_LIMITER", "namespace_id": "1001", "simple": { "limit": 6, "period": 60 } },
+    { "name": "API_BURST_LIMITER", "namespace_id": "1002", "simple": { "limit": 40, "period": 60 } }
+  ],
+  // Workers Logs: request outcomes and the API's content-free warnings,
+  // searchable in the dashboard. No chat text is ever logged.
+  "observability": { "enabled": true, "logs": { "invocation_logs": false } },
   "assets": {
     "directory": "./.cloudflare-public",
     "binding": "ASSETS",

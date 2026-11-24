@@ -46,7 +46,10 @@ test("every page loads the fonts before the stylesheet and only scriptable pages
   const html=read(page);
   const font=html.indexOf('/assets/fonts/pretendard-1.3.9/pretendard.css'),site=html.indexOf('/assets/site.css');
   assert.ok(font>0&&site>font,page);
-  assert.match(html,/<meta name="color-scheme" content="dark light">/,page);
+  // Light is the default everywhere; theme.js switches these when dark is chosen.
+  assert.match(html,/<meta name="color-scheme" content="light">/,page);
+  assert.match(html,/<meta name="theme-color" content="#f6f5fa">/,page);
+  assert.doesNotMatch(html,/content="dark|prefers-color-scheme/,page);
   const csp=(html.match(/Content-Security-Policy" content="([^"]+)"/)||[])[1]||"";
   const scriptsAllowed=!/script-src 'none'/.test(csp);
   assert.equal(html.includes('<script src="/assets/theme.js"></script>'),scriptsAllowed,page);
@@ -55,10 +58,14 @@ test("every page loads the fonts before the stylesheet and only scriptable pages
  }
 });
 
-test("light and dark themes define the same tokens; nothing is tiny or italic",()=>{
- const dark=css.slice(css.indexOf(":root{"),css.indexOf("@media (prefers-color-scheme:light)"));
- const light=css.slice(css.indexOf(':root[data-theme="light"]{'),css.indexOf("/* ---------- Base"));
- const media=css.slice(css.indexOf("@media (prefers-color-scheme:light)"),css.indexOf(':root[data-theme="light"]{'));
+test("light is the default theme; dark and system-dark define the same tokens; nothing is tiny or italic",()=>{
+ const light=css.slice(css.indexOf(":root{"),css.indexOf(':root[data-theme="dark"]{'));
+ const dark=css.slice(css.indexOf(':root[data-theme="dark"]{'),css.indexOf("@media (prefers-color-scheme:dark)"));
+ const media=css.slice(css.indexOf("@media (prefers-color-scheme:dark)"),css.indexOf("/* ---------- Base"));
+ assert.match(light,/^:root\{\n color-scheme:light;\n --bg:#f6f5fa;/);
+ assert.match(dark,/color-scheme:dark;\n --bg:#0f0f14;/);
+ assert.match(media,/:root\[data-theme="system"\]\{\n  color-scheme:dark;/);
+ assert.doesNotMatch(css,/prefers-color-scheme:light|data-theme="light"/);
  const names=block=>new Set([...block.matchAll(/(--[a-z0-9-]+):/g)].map(m=>m[1]).filter(n=>!n.startsWith("--font")&&!["--leading","--leading-tight","--tracking","--tracking-tight","--radius-sm","--radius","--radius-lg","--radius-xl","--radius-pill","--ease","--dur"].includes(n)));
  assert.deepEqual([...names(light)].sort(),[...names(dark)].sort());
  assert.deepEqual([...names(media)].sort(),[...names(light)].sort());
@@ -70,31 +77,40 @@ test("light and dark themes define the same tokens; nothing is tiny or italic",(
  assert.match(css,/@media \(prefers-reduced-motion:reduce\)/);
 });
 
-test("appearance script follows the system, persists only a light/dark choice and tolerates blocked storage",()=>{
+test("appearance script defaults to light, stores only an opt-in and tolerates blocked storage",()=>{
  const source=read("assets/theme.js");
- const make=({stored=null,light=false,blocked=false}={})=>{
+ const make=({stored=null,darkDevice=false,blocked=false}={})=>{
   const store=new Map(stored?[["saynue:theme:v1",stored]]:[]);
   const attrs=new Map();
-  const metas=[{attrs:new Map([["media","x"]]),setAttribute(k,v){this.attrs.set(k,v)},removeAttribute(k){this.attrs.delete(k)}}];
+  const meta=()=>({attrs:new Map(),setAttribute(k,v){this.attrs.set(k,v)}});
+  const themeColor=[meta()],scheme=[meta()];
+  let onChange=null;
   const ctx={
-   document:{documentElement:{setAttribute:(k,v)=>attrs.set(k,v),removeAttribute:k=>attrs.delete(k)},querySelectorAll:()=>metas},
-   window:{matchMedia:()=>({matches:light,addEventListener(){}})},
+   document:{documentElement:{setAttribute:(k,v)=>attrs.set(k,v),removeAttribute:k=>attrs.delete(k)},querySelectorAll:q=>q.includes("theme-color")?themeColor:scheme},
+   window:{matchMedia:q=>{assert.equal(q,"(prefers-color-scheme: dark)");return {get matches(){return darkDevice},addEventListener(_,fn){onChange=fn}}}},
    localStorage:blocked?{getItem(){throw Error("blocked")},setItem(){throw Error("blocked")},removeItem(){throw Error("blocked")}}:{getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,String(v)),removeItem:k=>store.delete(k)}
   };
   ctx.window.localStorage=ctx.localStorage;
   vm.runInNewContext(source,ctx);
-  return {api:ctx.window.SaynueTheme,attrs,store,metas};
+  const color=()=>themeColor[0].attrs.get("content"),mode=()=>scheme[0].attrs.get("content");
+  return {api:ctx.window.SaynueTheme,attrs,store,color,mode,flip:dark=>{darkDevice=dark;onChange&&onChange()}};
  };
- let t=make();
- assert.equal(t.api.get(),"system");assert.equal(t.attrs.has("data-theme"),false);
- assert.equal(t.metas[0].attrs.get("content"),"#0f0f14");
- assert.equal(t.api.set("light"),"light");assert.equal(t.attrs.get("data-theme"),"light");assert.equal(t.store.get("saynue:theme:v1"),"light");
- assert.equal(t.metas[0].attrs.get("content"),"#f6f5fa");
- assert.equal(t.api.set("system"),"system");assert.equal(t.attrs.has("data-theme"),false);assert.equal(t.store.size,0);
- assert.equal(t.api.set("<script>"),"system");
- t=make({stored:"neon"});assert.equal(t.api.get(),"system");assert.equal(t.attrs.has("data-theme"),false);
- t=make({stored:"dark",light:true});assert.equal(t.attrs.get("data-theme"),"dark");
- t=make({blocked:true});assert.equal(t.api.get(),"system");assert.equal(t.api.set("dark"),"dark");assert.equal(t.attrs.get("data-theme"),"dark");
+ // A dark device still opens in light until the viewer opts in.
+ let t=make({darkDevice:true});
+ assert.equal(t.api.get(),"light");assert.equal(t.attrs.has("data-theme"),false);
+ assert.equal(t.color(),"#f6f5fa");assert.equal(t.mode(),"light");
+ assert.equal(t.api.set("dark"),"dark");assert.equal(t.attrs.get("data-theme"),"dark");assert.equal(t.store.get("saynue:theme:v1"),"dark");
+ assert.equal(t.color(),"#0f0f14");assert.equal(t.mode(),"dark");
+ assert.equal(t.api.set("system"),"system");assert.equal(t.attrs.get("data-theme"),"system");assert.equal(t.color(),"#0f0f14");
+ t.flip(false);assert.equal(t.color(),"#f6f5fa");assert.equal(t.mode(),"light");
+ t.flip(true);assert.equal(t.color(),"#0f0f14");
+ assert.equal(t.api.set("light"),"light");assert.equal(t.attrs.has("data-theme"),false);assert.equal(t.store.size,0);
+ t.flip(true);assert.equal(t.color(),"#f6f5fa","light ignores the device once chosen");
+ assert.equal(t.api.set("<script>"),"light");
+ t=make({stored:"neon",darkDevice:true});assert.equal(t.api.get(),"light");assert.equal(t.attrs.has("data-theme"),false);
+ t=make({stored:"dark"});assert.equal(t.attrs.get("data-theme"),"dark");assert.equal(t.mode(),"dark");
+ t=make({stored:"system",darkDevice:false});assert.equal(t.attrs.get("data-theme"),"system");assert.equal(t.color(),"#f6f5fa");
+ t=make({blocked:true,darkDevice:true});assert.equal(t.api.get(),"light");assert.equal(t.api.set("dark"),"dark");assert.equal(t.attrs.get("data-theme"),"dark");
 });
 
 test("interface copy has no decorative glyphs, English eyebrow labels or headline periods",()=>{
@@ -120,4 +136,16 @@ test("interface copy has no decorative glyphs, English eyebrow labels or headlin
  assert.match(homeWithScript,/<ol class="loading-steps"><li data-i="loadingStep1">/);
  assert.match(homeWithScript,/id="themeChoice"[^>]*role="group"/);
  for(const id of ["replyMeaningLang","personaMeaningLang","coachMeaningLang"])assert.match(homeWithScript,new RegExp('class="lang-badge" id="'+id+'" hidden'));
+});
+
+test("public pages share a 1200x630 preview image that the build publishes",()=>{
+ const png=fs.readFileSync(new URL("../assets/og-image.png",import.meta.url));
+ assert.equal(png.readUInt32BE(16),1200);assert.equal(png.readUInt32BE(20),630);
+ assert.ok(png.length<200000,"keep the preview light for messenger crawlers");
+ for(const page of ["index.html","guide.html","plans.html",...pages.filter(p=>p.startsWith("learn/"))]){
+  const html=read(page);
+  assert.match(html,/<meta property="og:image" content="https:\/\/saynue\.vercel\.app\/assets\/og-image\.png">/,page);
+  assert.match(html,/<meta name="twitter:card" content="summary_large_image">/,page);
+ }
+ assert.match(read("scripts/build-cloudflare.mjs"),/js\|css\|svg\|png/);
 });

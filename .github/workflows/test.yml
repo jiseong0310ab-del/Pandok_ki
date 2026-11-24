@@ -57,6 +57,8 @@ jobs:
       - run: node --check api/plus/checkout.mjs
       - run: node --check assets/account.js
       - run: node --check tests/billing-auth.test.mjs
+      - run: node --check scripts/eval-quality.mjs
+      - run: node --check tests/eval-quality.test.mjs
       - name: Free analysis smoke tests
         run: node --test --test-reporter=spec tests/smoke.mjs
       - name: Mobile UX information hierarchy tests
@@ -87,6 +89,8 @@ jobs:
         run: node --test --test-reporter=spec tests/server-guard.test.mjs
       - name: Design system, typography and appearance tests
         run: node --test --test-reporter=spec tests/design-system.test.mjs
+      - name: Real-model evaluation script (mocked model, no quota)
+        run: node --test --test-reporter=spec tests/eval-quality.test.mjs
   e2e:
     # Real Chromium on a phone viewport. Files are served from the checkout and
     # every API is mocked: no secrets, no Gemini calls, no external requests.

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile,readdir} from "node:fs/promises";
 import {execFileSync} from "node:child_process";
-import worker,{normalizeClient} from "../cloudflare/worker.mjs";
+import worker,{normalizeClient,burstLimited} from "../cloudflare/worker.mjs";
 import {configuredOrigin,publicSiteOrigin} from "../lib/site-origin.mjs";
 test("trusted configuration cannot accept an arbitrary redirect URL",()=>{
  assert.equal(publicSiteOrigin({}),"https://saynue.vercel.app");
@@ -44,3 +44,31 @@ test("staging canonical points to Cloudflare without enabling indexing",async()=
  assert.ok((await readdir(".cloudflare-public/assets")).includes("locale.js"));
  assert.throws(()=>execFileSync(process.execPath,["scripts/build-cloudflare.mjs"],{env:{...env,SAYNUE_INDEXABLE:"true"},stdio:"pipe"}));
 });
+
+test("Cloudflare burst limits guard Gemini routes per IP and fail open",async()=>{
+ const seen=[];
+ const limiter=(allow)=>({limit:async({key})=>{seen.push(key);return {success:allow}}});
+ const env={AI_BURST_LIMITER:limiter(false),API_BURST_LIMITER:limiter(true),ASSETS:{fetch:()=>new Response("asset")}};
+ const req=(path,ip="192.0.2.7")=>new Request("https://saynue.example"+path,{method:"POST",headers:{"cf-connecting-ip":ip,"content-type":"application/json"},body:"{}"});
+ for(const path of ["/api/analyze","/api/coach","/api/simulate"]){
+  const r=await worker.fetch(req(path),env);
+  assert.equal(r.status,429,path);assert.equal(r.headers.get("retry-after"),"60");
+ }
+ // Plus is checked against the configured host first, then the same AI limiter.
+ assert.equal(await burstLimited(req("/api/plus/report"),env,"/api/plus/report"),true);
+ assert.ok(seen.length>0&&seen.every(k=>/^[0-9a-f]{32}$/.test(k)&&k===seen[0]),"one stable hashed key per client");
+ assert.ok(!seen.some(k=>k.includes("192.0.2.7")),"the raw IP is never a limiter key");
+ // Non-AI routes use the looser limiter (allowing here) and webhooks are exempt.
+ assert.equal(await burstLimited(req("/api/feedback"),env,"/api/feedback"),false);
+ assert.equal(await burstLimited(req("/api/webhooks/paddle"),{AI_BURST_LIMITER:limiter(false),API_BURST_LIMITER:limiter(false)},"/api/webhooks/paddle"),false);
+ // Missing binding, missing IP or a limiter error never blocks a request.
+ assert.equal(await burstLimited(req("/api/analyze"),{},"/api/analyze"),false);
+ assert.equal(await burstLimited(new Request("https://saynue.example/api/analyze",{method:"POST"}),env,"/api/analyze"),false);
+ assert.equal(await burstLimited(req("/api/analyze"),{AI_BURST_LIMITER:{limit:async()=>{throw Error("down")}}},"/api/analyze"),false);
+ const raw=await (await import("node:fs/promises")).readFile("wrangler.jsonc","utf8");
+ const config=JSON.parse(raw.replace(/^\s*\/\/.*$/gm,""));
+ assert.deepEqual(config.ratelimits.map(r=>[r.name,r.simple.period]),[["AI_BURST_LIMITER",60],["API_BURST_LIMITER",60]]);
+ assert.equal(config.observability.enabled,true);
+ assert.equal(config.observability.logs.invocation_logs,false,"request metadata such as client IPs stays out of Workers Logs");
+});
+

@@ -13,7 +13,7 @@ if(indexable&&!explicitOrigin)throw Error("Set SAYNUE_PUBLIC_ORIGIN before enabl
 const pages=["index.html","account.html","guide.html","plans.html","data-notice.html","metrics.html","sandbox-checkout.html","favicon.svg","robots.txt","sitemap.xml"];
 for(const folder of ["assets","learn"]){
  for(const item of await readdir(join(root,folder),{withFileTypes:true})){
-  if(item.isFile()&&(folder==="assets"?/^[a-z0-9-]+\.(?:js|css|svg)$/i:/^[a-z0-9-]+\.html$/i).test(item.name))pages.push(folder+"/"+item.name);
+  if(item.isFile()&&(folder==="assets"?/^[a-z0-9-]+\.(?:js|css|svg|png)$/i:/^[a-z0-9-]+\.html$/i).test(item.name))pages.push(folder+"/"+item.name);
  }
 }
 // Self-hosted fonts: each versioned family folder holds its stylesheet,
@@ -28,7 +28,7 @@ for(const item of await readdir(join(root,"assets/fonts"),{withFileTypes:true}))
 await rm(out,{recursive:true,force:true});
 await mkdir(out,{recursive:true});
 for(const name of pages){
- if(/\.woff2$/i.test(name)){
+ if(/\.(?:woff2|png)$/i.test(name)){
   await mkdir(join(out,name.slice(0,name.lastIndexOf("/"))),{recursive:true});
   await writeFile(join(out,name),await readFile(join(root,name)));
   continue;
