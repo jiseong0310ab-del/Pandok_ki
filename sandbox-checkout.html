@@ -3,46 +3,50 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b1020">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0f0f14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f5fa" media="(prefers-color-scheme: light)">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="description" content="SAYNUE Plus — Paddle Sandbox developer test only. No real money or access is granted.">
 <title>SAYNUE · Paddle Sandbox Checkout</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script src="/assets/theme.js"></script>
+<link rel="stylesheet" href="/assets/fonts/pretendard-1.3.9/pretendard.css">
 <link rel="stylesheet" href="/assets/site.css">
 <style>
-.lab-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:5px 0 44px}
-.lab-nav a{text-decoration:none;color:#d8caf8;font-size:12px}.lab-nav .wordmark{display:flex;align-items:center;gap:10px;font-weight:800;color:#f4f1ff;font-size:16px;letter-spacing:1.5px}
-.wordmark img{width:33px;height:33px}
-.lab-badge{display:inline-flex;gap:7px;align-items:center;color:#d9cafa;border:1px solid #665985;background:#2a2740;padding:7px 12px;border-radius:99px;font-size:11px;font-weight:750;letter-spacing:.4px}
-.lab-head{font:italic 500 clamp(35px,9vw,54px)/1.17 Georgia,serif;letter-spacing:-1px;margin:17px 0 17px}
-.lab-head em{color:#d0c2ff;font-style:italic}
-.lab-sub{font-size:13px;color:#b3b8ce;line-height:1.95;margin:0 0 30px}
-.lab-card{border-radius:21px;border:1px solid #47435d;background:linear-gradient(150deg,#252237,#141c2d);padding:24px;margin-bottom:18px}
-.lab-small{font-size:11px;color:#b9accf;margin:0 0 4px;font-weight:740;letter-spacing:1.1px;text-transform:uppercase}
-.lab-card h2{margin:5px 0;font-size:25px;font-weight:790}
-.lab-info{margin:7px 0 23px;color:#afb5c9;line-height:1.7;font-size:12px}
-.lab-button{display:block;text-align:center;width:100%;border-radius:14px;border:1px solid #e2d9ff;background:#d2c3f7;color:#1a1730;padding:14px 18px;font-weight:810;font-size:14px;min-height:53px}
-.lab-button:hover:not(:disabled){background:#e5dcff}
-.lab-button:disabled{cursor:not-allowed;opacity:.53}
-.lab-status{padding:14px 15px;line-height:1.75;border:1px solid #51546a;background:#171e30;border-radius:12px;font-size:12px;color:#d6d1e9;margin:17px 0}
-.lab-status[role=alert]{color:#ffbdc6;border-color:#aa536a}
-.lab-steps{color:#bfc3d6;font-size:12px;line-height:2;display:grid;gap:8px;padding:0;list-style:none}
-.lab-steps li{padding:0 0 10px 0;border-bottom:1px solid #393d55}
-.lab-steps b{color:#e7dfff}
-.lab-note{font-size:11px;line-height:1.9;color:#aab1c5;margin-top:19px}
-.lab-test-card{background:#1b2032;border:1px solid #434b61;border-radius:14px;padding:17px;margin-top:16px}
-.lab-test-card .number{font-size:19px;letter-spacing:1.1px;color:#e3dcff;font-weight:750;margin:6px 0}
-.lab-copy{margin-top:8px;padding:8px 12px;border:1px solid #6f648d;border-radius:9px;background:#2d2b41;color:#e8dcff;font-size:12px;font-weight:710}
-.lab-free{padding:14px 17px;border-left:2px solid #a895d6;font-size:12px;color:#c1b9d5;line-height:1.85}
-@media(max-width:420px){.lab-card{padding:19px}}
+.lab-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px;margin:0 0 24px}
+.lab-nav a{text-decoration:none;color:var(--accent-text);font-size:15px}
+.lab-nav .wordmark{display:flex;align-items:center;gap:9px;font-family:var(--font-en);font-weight:800;color:var(--text);font-size:17px;letter-spacing:.16em}
+.lab-badge{display:inline-flex;gap:6px;align-items:center;color:var(--accent-text);background:var(--accent-soft);padding:6px 12px;border-radius:var(--radius-pill);font-size:13px;font-weight:650}
+.lab-head{font-size:clamp(30px,8vw,42px);font-weight:760;line-height:var(--leading-tight);letter-spacing:var(--tracking-tight);margin:14px 0}
+.lab-head em{font-style:normal;color:var(--accent-text)}
+.lab-sub{font-size:16px;color:var(--text-2);margin:0 0 24px}
+.lab-card{border-radius:var(--radius-xl);border:1px solid var(--line);background:var(--bg-raised);padding:22px;margin-bottom:16px;box-shadow:var(--shadow-1)}
+.lab-small{font-size:13px;color:var(--text-3);margin:0 0 4px;font-weight:650}
+.lab-card h2{margin:4px 0;font-size:24px}
+.lab-info{margin:8px 0 20px;color:var(--text-2);font-size:15px}
+.lab-button{display:block;text-align:center;width:100%;border-radius:var(--radius);border:0;background:var(--accent);color:var(--on-accent);padding:14px 18px;font-weight:700;font-size:16px;min-height:54px}
+.lab-button:hover:not(:disabled){background:var(--accent-strong)}
+.lab-button:disabled{cursor:not-allowed;opacity:.45}
+.lab-status{padding:14px 16px;border-radius:var(--radius);background:var(--surface-2);font-size:14px;color:var(--text-2);margin:16px 0}
+.lab-status[role=alert]{color:var(--danger);background:var(--danger-soft)}
+.lab-steps{color:var(--text-2);font-size:15px;display:grid;gap:8px;padding:0;list-style:none}
+.lab-steps li{padding:0 0 10px;border-bottom:1px solid var(--line)}
+.lab-steps b{color:var(--text)}
+.lab-note{font-size:13px;color:var(--text-3);margin-top:18px}
+.lab-test-card{background:var(--bg-sunken);border-radius:var(--radius);padding:16px;margin-top:16px}
+.lab-test-card .number{font-size:19px;letter-spacing:.06em;color:var(--text);font-weight:700;margin:6px 0;font-variant-numeric:tabular-nums}
+.lab-copy{margin-top:8px;padding:8px 12px;border:1px solid var(--line-strong);border-radius:var(--radius-sm);background:transparent;color:var(--text);font-size:14px;font-weight:600}
+.lab-free{padding:12px 16px;border-left:3px solid var(--accent-line);font-size:14px;color:var(--text-2)}
+@media(max-width:420px){.lab-card{padding:18px}}
 </style>
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js" defer></script>
 </head>
 <body>
 <main class="wrap">
-<nav class="lab-nav" aria-label="Navigation"><a class="wordmark" href="/"><img src="/assets/saynue-mark.svg" alt="" width="33" height="33"> SAYNUE</a><a href="/plans.html">← Free / Plus</a></nav>
-<div class="lab-badge">● SANDBOX · 테스트 전용</div>
+<nav class="lab-nav" aria-label="Navigation"><a class="wordmark" href="/"><svg class="brand-mark" viewBox="0 0 80 80" width="30" height="30" aria-hidden="true" focusable="false"><g class="mark-bubble" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M56 25.5v19.3c0 8-6.4 14.4-14.4 14.4H25l-11 9V58a14.4 14.4 0 0 1-9-13.2V29.4C5 21.4 11.4 15 19.4 15H41" stroke-width="4.7"/><path d="M50 11c8.8 1.8 15.3 8.4 17.2 17.2M49 2.8C62.3 4.8 72.2 14.9 74.3 28" stroke-width="3.5"/></g><path class="mark-quote" d="M19 31c0-5.4 3-8.7 7.7-9.5l1.5 2.3c-3.2 1.2-4.7 2.8-4.9 5.3h4.5v10H19V31ZM34.2 31c0-5.4 3-8.7 7.7-9.5l1.5 2.3c-3.2 1.2-4.7 2.8-4.9 5.3H43v10h-8.8V31Z"/></svg> SAYNUE</a><a href="/plans.html">← Free / Plus</a></nav>
+<div class="lab-badge">Sandbox · 테스트 전용</div>
 <h1 class="lab-head"><em>Plus 구독</em><br>테스트 결제</h1>
 <p class="lab-sub">세이뉴 개발을 위한 Paddle 테스트 결제 페이지야. 실제 돈이 청구되지 않는 Sandbox 환경이며, 결제를 완료해도 세이뉴의 Plus 기능은 아직 활성화되지 않아.</p>
 <section class="lab-card">

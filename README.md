@@ -211,3 +211,13 @@ README에 빠져 있던 기능입니다. 자세한 내용은 각 문서를 참�
 2. Upstash Redis 연결 후 `SAYNUE_REQUIRE_DISTRIBUTED_LIMIT=true`, `SAYNUE_MAX_DAILY_AI_REQUESTS` 설정. 가능하면 지표용 Redis는 별도 DB로.
 3. `RATE_LIMIT_SALT`, `SAYNUE_ANALYTICS_SALT`를 각각 24자 이상 무작위 값으로 설정.
 4. 실제 사용자를 받기 전 유료 Gemini API 조건 적용, 운영자 정보가 들어간 정식 개인정보처리방침·이용약관 작성(현재 [data-notice.html](data-notice.html)은 사실 안내일 뿐).
+
+## 19. 디자인 시스템 개편 (2026-11-24)
+
+- **언어별 타이포그래피**: 한국어·영어는 Pretendard Variable(OFL, 자체 호스팅, 92개 분할 파일 중 필요한 것만 다운로드), 일본어·중국어는 기기 기본 CJK 글꼴(iPhone: Hiragino·PingFang, Android: Noto Sans CJK)을 사용. Pretendard에는 한국식 한자·가나가 들어 있어서 일본어·중국어에는 절대 쓰지 않음.
+- 한국어 결과 안의 일본어 답장처럼 **다른 언어 문장은 그 언어의 글꼴과 줄바꿈 규칙**으로 표시하고, 답장 카드에 `日本語` 같은 언어 배지를 붙임.
+- **라이트·다크 모드**: 기본은 기기 설정을 따르고, MY → 화면 모드에서 고정할 수 있음(이 브라우저에만 저장).
+- 홈은 차콜·라벤더 기반에 대화 분석(라벤더)·답장 코칭(피치)·관계 상담(세이지) 타일을 둠. 결과 화면은 한 줄 결론 → 설명 → 다음 행동 → 추천 문장 카드(복사·다듬기) → 근거 → 답장 연습 순서.
+- 분석 대기 화면은 단계형 진행 표시(가짜 퍼센트 없음). 본문 15~17px, 입력창 16px(iOS 확대 방지), 영어 장식 라벨·장식 기호·제목 끝 마침표 제거, 계정 화면 문구를 해요체로 통일.
+- 공유 버튼은 실제로 서비스 소개와 링크만 공유하므로 문구를 "친구에게 SAYNUE 알려주기"로 바로잡음. 분석 결과는 개인정보 위험 때문에 공유하지 않음.
+- 자세한 규칙: [docs/design-system.md](docs/design-system.md). 테스트: `tests/design-system.test.mjs`, `tests/e2e-mobile.test.mjs`.

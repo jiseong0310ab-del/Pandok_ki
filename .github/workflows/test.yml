@@ -17,6 +17,8 @@ jobs:
       - run: node --check lib/server-guard.mjs
       - run: node --check lib/coaching-rubric.mjs
       - run: node --check assets/app.js
+      - run: node --check assets/theme.js
+      - run: node --check tests/design-system.test.mjs
       - run: node --check tests/server-guard.test.mjs
       - run: node --check tests/e2e-mobile.test.mjs
       - run: node --check tests/page-source.mjs
@@ -81,6 +83,8 @@ jobs:
         run: node --test --test-reporter=spec tests/workspace.test.mjs
       - name: Shared server guards, Plus retries and abuse limits
         run: node --test --test-reporter=spec tests/server-guard.test.mjs
+      - name: Design system, typography and appearance tests
+        run: node --test --test-reporter=spec tests/design-system.test.mjs
   e2e:
     # Real Chromium on a phone viewport. Files are served from the checkout and
     # every API is mocked: no secrets, no Gemini calls, no external requests.

@@ -1,26 +1,32 @@
 <!doctype html><html lang="ko"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b1020"><meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0f0f14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f5fa" media="(prefers-color-scheme: light)"><meta name="referrer" content="no-referrer">
 <meta name="description" content="SAYNUE conversation guide: distinguish concrete replies from assumptions, respect boundaries and write thoughtful replies.">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'none'">
 <link rel="canonical" href="https://saynue.vercel.app/guide.html"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script src="/assets/theme.js"></script>
+<link rel="stylesheet" href="/assets/fonts/pretendard-1.3.9/pretendard.css">
 <link rel="stylesheet" href="/assets/site.css"><title>SAYNUE · Conversation guide</title>
 <style>
-.article-head{padding:0 0 20px;margin-bottom:27px;border-bottom:1px solid #40465e}
-.article-head h1{font:italic 500 clamp(33px,7.5vw,50px)/1.24 Georgia,serif;margin:16px 0;color:#f4f1ff}
-.article-head p{font-size:14px;color:#bcc0d4;line-height:1.95;max-width:560px}
-.article{max-width:645px;font-size:14px;color:#d5d5e2;line-height:2}
+.guide-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:60px;margin-bottom:20px}
+.guide-nav a{text-decoration:none;color:var(--accent-text);font-size:15px}
+.guide-nav .brand-lockup{color:var(--text)}
+.article-head{padding:0 0 24px;margin-bottom:28px;border-bottom:1px solid var(--line)}
+.article-head h1{font-size:clamp(28px,7.4vw,40px);font-weight:760;margin:12px 0}
+.article-head p{font-size:16px;color:var(--text-2);max-width:34em}
+.article{max-width:645px;font-size:16px;color:var(--text-2);line-height:var(--leading)}
 .article section{margin:0 0 36px}
-.article h2{font-size:19px;margin:0 0 10px;letter-spacing:-.25px;color:#e6dbff}
-.article p{margin:0 0 13px}.article em{color:#d0c2ff;font-style:normal;font-weight:650}
-.example{border-left:3px solid #a89bcf;background:#1b2033;padding:15px 17px;border-radius:0 12px 12px 0;margin:17px 0;font-size:13px;color:#f0eafb;line-height:1.8}
-.guide-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-bottom:35px}
-.guide-nav a{text-decoration:none;color:#d5c9fc;font-size:12px}.guide-nav img{width:30px;vertical-align:middle;margin-right:6px}
-.guide-end{border-top:1px solid #3b4158;padding-top:27px;margin-top:45px}
-.guide-end a{display:inline-block;text-decoration:none;border:1px solid #a699d5;padding:12px 20px;border-radius:12px;color:#efe8ff;font-size:13px;font-weight:740}
+.article h2{font-size:20px;margin:0 0 10px;color:var(--text)}
+.article p{margin:0 0 14px}
+.article em{color:var(--accent-text);font-style:normal;font-weight:650}
+.example{border-left:3px solid var(--accent-line);background:var(--bg-raised);padding:16px 18px;border-radius:0 var(--radius) var(--radius) 0;margin:16px 0;font-size:15px;color:var(--text)}
+.guide-end{border-top:1px solid var(--line);padding-top:28px;margin-top:44px}
+.guide-end a{display:inline-flex;align-items:center;justify-content:center;min-height:52px;text-decoration:none;padding:12px 22px;border-radius:var(--radius);background:var(--accent);color:var(--on-accent);font-size:16px;font-weight:700}
 </style></head><body><main class="wrap">
-<nav class="guide-nav"><a href="/" style="font-weight:790;letter-spacing:1.5px;color:#f4f1ff"><img src="/assets/saynue-mark.svg" alt="">SAYNUE</a><a href="/" data-i="back">분석으로 돌아가기</a></nav>
-<header class="article-head"><div class="eyebrow">SAYNUE JOURNAL · COMMUNICATION</div><h1 data-i="title">답장이 늦을 때,<br>무엇을 근거로 판단할까?</h1><p data-i="subtitle">대화는 한 문장보다 맥락이 중요해요. 애매한 메시지에 지나친 확신을 갖지 않으면서도 나에게 필요한 다음 행동을 찾는 방법을 소개합니다.</p></header>
+<nav class="guide-nav"><a href="/" class="brand-lockup"><svg class="brand-mark" viewBox="0 0 80 80" width="30" height="30" aria-hidden="true" focusable="false"><g class="mark-bubble" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M56 25.5v19.3c0 8-6.4 14.4-14.4 14.4H25l-11 9V58a14.4 14.4 0 0 1-9-13.2V29.4C5 21.4 11.4 15 19.4 15H41" stroke-width="4.7"/><path d="M50 11c8.8 1.8 15.3 8.4 17.2 17.2M49 2.8C62.3 4.8 72.2 14.9 74.3 28" stroke-width="3.5"/></g><path class="mark-quote" d="M19 31c0-5.4 3-8.7 7.7-9.5l1.5 2.3c-3.2 1.2-4.7 2.8-4.9 5.3h4.5v10H19V31ZM34.2 31c0-5.4 3-8.7 7.7-9.5l1.5 2.3c-3.2 1.2-4.7 2.8-4.9 5.3H43v10h-8.8V31Z"/></svg><span class="brand-name">SAYNUE</span></a><a href="/" data-i="back">분석으로 돌아가기</a></nav>
+<header class="article-head"><h1 data-i="title">답장이 늦을 때,<br>무엇을 근거로 판단할까?</h1><p data-i="subtitle">대화는 한 문장보다 맥락이 중요해요. 애매한 메시지에 지나친 확신을 갖지 않으면서도 나에게 필요한 다음 행동을 찾는 방법을 소개합니다.</p></header>
 <article class="article">
 <section><h2 data-i="h1">1. 짧은 메시지 하나로 마음을 결론내리지 않기</h2><p data-i="p1">“바빠서 나중에 알려줄게”라는 말은 거절일 수도 있고 정말 일정이 불확실하다는 뜻일 수도 있어요. 두 경우 모두 가능한 이유를 인정하는 것이 안전합니다. 단정 대신 실제로 확인할 수 있는 내용을 분리하세요. 구체적인 약속이 정해졌는지, 질문이 오가는지, 서로의 사정을 존중하는지가 훨씬 유용한 관찰 기준입니다.</p><div class="example" data-i="ex1">예시: “이번 주는 어려워. 다음 주 화요일은 괜찮아?”에는 명확한 대안이 있어요. “언젠가 보자”에는 아직 확정된 약속이 없어요. 그렇다고 후자가 반드시 거절이라는 뜻은 아닙니다.</div></section>
 <section><h2 data-i="h2">2. 속도보다 흐름과 행동을 보기</h2><p data-i="p2">답장 시간은 업무·가족·수면·알림 설정 등 여러 변수의 영향을 받아요. 캡처에 시간이 보이지 않거나 비교할 기간이 없다면, 응답 속도를 추측하면 안 됩니다. 대신 구체적인 질문, 상황에 맞는 답변, 실제 행동으로 이어지는 제안이 있는지 살펴보세요. 한두 번의 메시지로 관계를 평가하기보다 반복되는 상호작용을 보는 편이 유익합니다.</p></section>

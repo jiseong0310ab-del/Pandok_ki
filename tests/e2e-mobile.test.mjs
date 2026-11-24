@@ -14,7 +14,7 @@ try{playwright=createRequire(import.meta.url)("playwright")}catch(_){}
 const skip=playwright?false:"playwright is not installed";
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 const ORIGIN="https://saynue.test";
-const TYPES={".html":"text/html; charset=utf-8",".js":"text/javascript; charset=utf-8",".css":"text/css; charset=utf-8",".svg":"image/svg+xml",".json":"application/json",".txt":"text/plain",".xml":"application/xml"};
+const TYPES={".html":"text/html; charset=utf-8",".js":"text/javascript; charset=utf-8",".css":"text/css; charset=utf-8",".svg":"image/svg+xml",".json":"application/json",".txt":"text/plain",".xml":"application/xml",".woff2":"font/woff2"};
 
 const report={
  verdict:"<img src=x onerror=\"window.__xss=1\"> 일정 조율 중인 대화",
@@ -27,8 +27,8 @@ const report={
  evidenceCards:[{quote:"다음 주 되면 다시 말해줄게",reading:"다음 기회를 열어 둔 표현일 수 있어요.",otherExplanation:"예의상 미루는 표현일 수도 있어요.",sourceType:"text",screenshotIndex:0}]
 };
 
-async function openPage(browser,{analyzeBody=report,analyzeStatus=200}={}){
- const context=await browser.newContext({...playwright.devices["iPhone 13"],locale:"ko-KR",serviceWorkers:"block"});
+async function openPage(browser,{analyzeBody=report,analyzeStatus=200,colorScheme="dark",holdAnalyze=false}={}){
+ const context=await browser.newContext({...playwright.devices["iPhone 13"],locale:"ko-KR",serviceWorkers:"block",colorScheme});
  const page=await context.newPage();
  const problems=[],requests=[];
  page.on("pageerror",e=>problems.push("pageerror: "+e.message));
@@ -38,6 +38,7 @@ async function openPage(browser,{analyzeBody=report,analyzeStatus=200}={}){
   if(url.origin!==ORIGIN){problems.push("external request: "+url.href);return route.abort()}
   if(url.pathname.startsWith("/api/")){
    requests.push({path:url.pathname,body:route.request().postData()});
+   if(url.pathname==="/api/analyze"&&holdAnalyze)return;
    if(url.pathname==="/api/analyze")return route.fulfill({status:analyzeStatus,contentType:"application/json",body:JSON.stringify(analyzeBody)});
    if(url.pathname==="/api/coach")return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({summary:"말을 정리해 보세요",advice:"사실과 요청을 구분하세요.",steps:["원하는 결과를 정하세요."],shouldReply:true,message:"일정을 다시 확인해도 될까요?",why:"구체적으로 요청합니다.",caution:"결과는 보장되지 않아요."})});
    return route.fulfill({status:200,contentType:"application/json",body:"{\"ok\":true}"});
@@ -67,6 +68,7 @@ test("phone layout: text analysis renders the mocked report safely under the str
   assert.equal(await page.locator("#verdict img").count(),0);
   assert.match(await page.inputValue("#replyDraft").catch(()=>page.textContent("#replyDraft")),/다음 주에 편할 때/);
   assert.match(await page.textContent("#evidenceCardsList"),/다음 주 되면 다시 말해줄게/);
+  assert.equal(await page.isVisible("#replyMeaningLang"),false,"same-language replies carry no language badge");
   const sent=JSON.parse(requests.find(r=>r.path==="/api/analyze").body);
   assert.equal(sent.locale,"ko");
   assert.equal(sent.persona,"standard");
@@ -181,3 +183,62 @@ test("Korean analysis can return a Japanese reply and Korean meaning separately"
  await page.click("#editStandardDraft");assert.equal(await page.inputValue("#coachReplyLanguage"),"ja");assert.equal(await page.inputValue("#coachDraft"),"また会いましょう");assert.deepEqual(problems,[]);
  }finally{await browser.close()}
 });
+
+test("appearance follows the system and can be pinned to light or dark",{skip},async()=>{
+ const browser=await playwright.chromium.launch();
+ try{
+  const {page,problems}=await openPage(browser,{colorScheme:"light"});
+  const theme=()=>page.evaluate(()=>document.documentElement.getAttribute("data-theme"));
+  const bg=()=>page.evaluate(()=>getComputedStyle(document.body).backgroundColor);
+  assert.equal(await theme(),null);
+  assert.equal(await bg(),"rgb(246, 245, 250)");
+  await page.click("#workspaceNav [data-nav=settings]");
+  await page.click("[data-theme-choice=dark]");
+  assert.equal(await theme(),"dark");
+  assert.equal(await bg(),"rgb(15, 15, 20)");
+  assert.equal(await page.getAttribute("[data-theme-choice=dark]","aria-pressed"),"true");
+  await page.reload();
+  assert.equal(await theme(),"dark","choice survives a reload");
+  await page.click("#workspaceNav [data-nav=settings]");
+  await page.click("[data-theme-choice=system]");
+  assert.equal(await theme(),null);
+  assert.equal(await page.evaluate(()=>localStorage.getItem("saynue:theme:v1")),null);
+  for(const nav of ["home","analyze","reply","library","settings"]){
+   await page.click("#workspaceNav [data-nav="+nav+"]");
+   assert.equal(await noHorizontalScroll(page),true,nav+" scrolls horizontally in light mode");
+  }
+  assert.deepEqual(problems,[]);
+ }finally{await browser.close()}
+});
+
+test("a Japanese reply in a Korean report is labelled and set in a Japanese face",{skip},async()=>{
+ const browser=await playwright.chromium.launch();
+ try{
+  const {page,problems}=await openPage(browser,{analyzeBody:{...report,replyDraft:"また時間が合うときに会おうね！",replyMeaning:"다음에 시간이 맞을 때 만나자!",replyLanguage:"ja"}});
+  await page.click("#textTab");await page.fill("#chatText","私：今週会える？\n相手：今週は忙しいけど、また今度会おうね。");
+  await page.check("#consent");await page.click("#analyze");await page.waitForSelector("#results:not(.hidden)");
+  assert.equal(await page.isVisible("#replyMeaningLang"),true);
+  assert.equal(await page.textContent("#replyMeaningLang"),"日本語");
+  const fonts=await page.evaluate(()=>({draft:getComputedStyle(document.getElementById("replyDraft")).fontFamily,verdict:getComputedStyle(document.getElementById("verdict")).fontFamily,lang:document.getElementById("verdict").lang}));
+  assert.doesNotMatch(fonts.draft,/Pretendard/,"Japanese must not fall back to Korean-style Han glyphs");
+  assert.match(fonts.draft,/Hiragino Sans|Noto Sans JP/);
+  assert.match(fonts.verdict,/^"?Pretendard Variable/);
+  assert.equal(fonts.lang,"ko");
+  assert.deepEqual(problems,[]);
+ }finally{await browser.close()}
+});
+
+test("analysis shows staged progress while waiting and no spinner text ellipsis",{skip},async()=>{
+ const browser=await playwright.chromium.launch();
+ try{
+  const {page,problems}=await openPage(browser,{holdAnalyze:true});
+  await page.click("#textTab");await page.fill("#chatText","나: 이번 주에 시간 있어?\n상대: 다음 주 되면 다시 말해줄게!");
+  await page.check("#consent");await page.click("#analyze");
+  await page.waitForSelector("#loading:not(.hidden)");
+  assert.equal(await page.locator("#loading .loading-steps li").count(),3);
+  assert.doesNotMatch(await page.textContent("#loading"),/\.\.\.|…/);
+  assert.equal(await page.isDisabled("#analyze"),true);
+  assert.deepEqual(problems,[]);
+ }finally{await browser.close()}
+});
+
