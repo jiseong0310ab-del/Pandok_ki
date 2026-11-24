@@ -133,3 +133,11 @@ test("the interface keeps library collapsed and simulator under the result",()=>
  assert.equal(lib.upsert({...example("safe",now),summary:"Contact example@example.com",title:"010-1234-5678"}).ok,true);
  assert.doesNotMatch(storage.getItem("saynue:situations:v2"),/example\.com|010-1234-5678/);
  });
+
+test("history preserves only bounded unexpired masked summaries",()=>{
+ const now=Date.now(),storage=mkStorage(),library=mkLibrary(storage,now);
+ const history=[{at:now-1000,summary:"Please contact example@example.com",chatText:"DO NOT STORE"},{at:now-31*86400000,summary:"Expired"}];
+ assert.equal(library.upsert({...example("history",now),history}).ok,true);
+ const item=library.get("history");assert.equal(item.history.length,1);assert.equal(item.history[0].summary,"Please contact [email]");
+ assert.doesNotMatch(storage.getItem("saynue:situations:v2"),/DO NOT STORE|example\.com|Expired/);
+});

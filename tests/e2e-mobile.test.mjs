@@ -39,6 +39,7 @@ async function openPage(browser,{analyzeBody=report,analyzeStatus=200}={}){
   if(url.pathname.startsWith("/api/")){
    requests.push({path:url.pathname,body:route.request().postData()});
    if(url.pathname==="/api/analyze")return route.fulfill({status:analyzeStatus,contentType:"application/json",body:JSON.stringify(analyzeBody)});
+   if(url.pathname==="/api/coach")return route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({summary:"말을 정리해 보세요",advice:"사실과 요청을 구분하세요.",steps:["원하는 결과를 정하세요."],shouldReply:true,message:"일정을 다시 확인해도 될까요?",why:"구체적으로 요청합니다.",caution:"결과는 보장되지 않아요."})});
    return route.fulfill({status:200,contentType:"application/json",body:"{\"ok\":true}"});
   }
   const file=path.join(ROOT,url.pathname==="/"?"index.html":decodeURIComponent(url.pathname));
@@ -133,5 +134,37 @@ test("phone layout: API errors are shown to the user instead of a fake report",{
   assert.equal(await page.isVisible("#results"),false);
   // The browser itself logs failed (503) fetches; only page errors matter here.
   assert.deepEqual(problems.filter(p=>!/status of 503/.test(p)),[]);
+ }finally{await browser.close()}
+});
+
+test("home navigation and independent coaching modes work without a screenshot",{skip},async()=>{
+ const browser=await playwright.chromium.launch();
+ try{
+  const {page,requests,problems}=await openPage(browser);
+  await page.goto(ORIGIN+"/");
+  assert.equal(await page.isVisible("#homeScreen"),true);
+  assert.equal(await page.isVisible("#analysisScreen"),false);
+  await page.click("#homeScreen [data-nav=reply]");
+  await page.fill("#coachContext","상사에게 회의 일정을 바꾸고 싶어요.");
+  await page.fill("#coachDraft","시간 바꿔도 될까요?");
+  await page.click("#coachRun");
+  assert.equal(requests.filter(x=>x.path==="/api/coach").length,0);
+  await page.check("#coachConsent");
+  await page.click("#coachRun");
+  await page.waitForSelector("#coachResult:visible");
+  assert.equal(await page.inputValue("#coachMessage"),"일정을 다시 확인해도 될까요?");
+  let sent=JSON.parse(requests.find(x=>x.path==="/api/coach").body);
+  assert.equal(sent.mode,"reply");assert.equal(sent.relation,"unknown");
+  await page.click("#coachRevise");assert.equal(await page.inputValue("#coachDraft"),"일정을 다시 확인해도 될까요?");
+  assert.equal(await page.isChecked("#coachConsent"),false);
+  await page.click("[data-coach=reflect]");assert.equal(await page.isVisible("#coachDraftBox"),false);
+  await page.check("#coachConsent");await page.click("#coachRun");await page.waitForSelector("#coachResult:visible");
+  sent=JSON.parse(requests.filter(x=>x.path==="/api/coach").at(-1).body);assert.equal(sent.mode,"reflect");assert.equal(sent.draft,"");
+  await page.click("#workspaceNav [data-nav=library]");assert.equal(await page.isVisible("#libraryEmpty"),true);
+  await page.click("#workspaceNav [data-nav=analyze]");assert.equal(await page.isVisible("#formCard"),true);
+  assert.equal(await page.locator("#platforms").count(),0);
+  assert.equal(await page.getAttribute("[data-persona=auto]","aria-pressed"),"true");
+  for(const locale of ["ko","ja","en","zh-CN","zh-TW"]){await page.selectOption("#locale",locale);assert.equal(await noHorizontalScroll(page),true)}
+  assert.deepEqual(problems,[]);
  }finally{await browser.close()}
 });

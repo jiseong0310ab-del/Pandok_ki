@@ -419,6 +419,7 @@ async function coachRequest(path,data){
  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),33000);
  try{const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data),cache:"no-store",signal:ctl.signal});const v=await r.json();if(!r.ok)throw Error(((API_ERRORS[locale]||API_ERRORS.en)[v.code]||tx(r.status===429?"errLimit":"errOther"))+" ["+(typeof v.code==="string"&&/^[A-Z_]+$/.test(v.code)?v.code:"ERROR")+"]");return v}finally{clearTimeout(timer)}
 }
+for(const id of ["coachContext","coachDraft"])$(id).addEventListener("input",()=>{$("coachConsent").checked=false});
 $("coachRun").addEventListener("click",async()=>{
  const context=$("coachContext").value.trim(),draft=coachMode==="reply"?$("coachDraft").value.trim():"";
  if(!($("coachConsent").checked&&(context.length>=3||draft.length>=3))){$("coachStatus").textContent=tx("coachMissing");return}
@@ -435,10 +436,10 @@ $("coachRun").addEventListener("click",async()=>{
  finally{if(epoch===coachEpoch)$("coachRun").disabled=false}
 });
 $("coachCopy").addEventListener("click",async()=>{if(!coachResult?.shouldReply||!$("coachMessage").value.trim())return;try{await navigator.clipboard.writeText($("coachMessage").value);$("coachCopyStatus").textContent=tx("replyCopied");usageEvent("reply_copied")}catch{$("coachCopyStatus").textContent=tx("replyCopyFail")}});
-$("coachRevise").addEventListener("click",()=>{if(!coachResult?.shouldReply)return;const message=$("coachMessage").value;setCoachMode("reply");$("coachDraft").value=message;$("coachConsent").checked=false;$("coachStyle").open=true;$("coachDraft").focus();$("coachDraft").scrollIntoView({behavior:"smooth",block:"center"})});
+$("coachRevise").addEventListener("click",()=>{if(!coachResult?.shouldReply)return;const message=$("coachMessage").value;setCoachMode("reply");coachEpoch++;coachResult=null;$("coachResult").hidden=true;$("coachStatus").textContent="";$("coachRun").disabled=false;$("coachDraft").value=message;$("coachConsent").checked=false;$("coachStyle").open=true;$("coachDraft").focus();$("coachDraft").scrollIntoView({behavior:"smooth",block:"center"})});
 $("coachRehearse").addEventListener("click",async()=>{
- if(!coachResult?.shouldReply||!$("coachConsent").checked)return;
- const message=$("coachMessage").value.trim();if(message.length<4)return;
+ if(!coachResult?.shouldReply)return;if(!$("coachConsent").checked){$("coachCopyStatus").textContent=tx("errConsent");return}
+ const message=$("coachMessage").value.trim();if(message.length<4){$("coachCopyStatus").textContent=tx("simInputError");return}
  const epoch=coachEpoch,btn=$("coachRehearse"),out=$("coachRehearsal");btn.disabled=true;out.hidden=false;out.textContent=tx("coachWorking");
  try{const data=await coachRequest("/api/simulate",{locale,persona:"standard",relation:$("coachRelation").value,draft:message,contextSummary:[coachResult.summary,coachResult.advice].join("\n").slice(0,650)});if(epoch!==coachEpoch)return;out.replaceChildren();for(const key of ["warm","neutral","reserved"]){const el=document.createElement("p");el.textContent=tx("sim"+key[0].toUpperCase()+key.slice(1))+": "+data[key].example+" — "+data[key].reading;out.appendChild(el)}const note=document.createElement("p");note.textContent=tx("simNotice")+" "+data.caution;out.appendChild(note)}
  catch(e){if(epoch===coachEpoch)out.textContent=e.message}finally{btn.disabled=false}
