@@ -160,3 +160,10 @@ test("owner-only metrics page never stores a read token",()=>{
  assert.match(dashboard,/Authorization/);
  assert.doesNotMatch(dashboard,/localStorage|sessionStorage|_ptxn=/);
 });
+
+ test("copy and failure events carry only categorical signals, and sharing excludes report text",()=>{
+ assert.ok(EVENTS.includes("reply_copied"));assert.ok(EVENTS.includes("analysis_failed"));
+ assert.match(homepage,/usageEvent\("reply_copied"\)/);assert.match(homepage,/usageEvent\("analysis_failed"\)/);
+ const share=homepage.split('$("share").addEventListener')[1].split("\n")[0];
+ assert.doesNotMatch(share,/lastResult\.verdict|lastResult\.warmthScore/);
+ });

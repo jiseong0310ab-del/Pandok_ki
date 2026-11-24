@@ -12,3 +12,9 @@
 Use synthetic messages in five languages. Score observation accuracy, uncertainty, concrete next action, natural reply, boundary respect and privacy (0/1/2 each). Explicit refusal or fabricated quote is a blocking defect. Compare outputs against the prior version on the same cases; no real private conversations. Track latency and failures without conversation logging.
 ## Monetization
 Free: core report, one draft, basic rehearsal and follow-up. Planned Plus: strategic alternatives with tradeoffs, response scenarios and higher usage limits. Keep current checkout and engine disabled until provider approval, auth/DB migrations, signed webhook, entitlement, refund/cancel and privacy/legal review are verified. No prices, live payment or subscription promises in this patch.
+
+## Second hardening patch
+- Explicit standard-mode shouldReply flag suppresses drafts on no-reply outcomes; common contact identifiers masked in reports and saved summaries. No guarantee of complete anonymization. Sharing now includes only the service name/link, not report text or scores.
+- Expired saved summaries are removed on next browser access; reset clears follow-up comparison and consent. Browser storage cannot be cleaned while the site is closed.
+- Opt-in reply copy and analysis failure metrics added to the protected owner dashboard. Copy is not a sent message; failures can overlap with later successful attempts. Redis configuration still required.
+- Five localized conflict guides added. Existing billing gates remain closed.

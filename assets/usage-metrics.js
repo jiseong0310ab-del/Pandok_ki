@@ -2,7 +2,7 @@
 (function(root){
 "use strict";
 const KEY="saynue:metrics-optin:v1";
-const EVENTS=new Set(["visit","analysis_started","analysis_completed","followup_started","followup_completed","library_saved","simulation_started","simulation_completed","plans_interest"]);
+const EVENTS=new Set(["visit","analysis_started","analysis_completed","followup_started","followup_completed","library_saved","simulation_started","simulation_completed","plans_interest","reply_copied","analysis_failed"]);
 function create({storage,fetchFn,cryptoObj,now,onDelivery}={}){
  const getStore=()=>{try{return storage||root.localStorage}catch{return null}};
  const network=fetchFn||((...args)=>root.fetch(...args));

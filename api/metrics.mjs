@@ -1,6 +1,6 @@
 // SAYNUE opt-in aggregate metrics. No chat, draft, screenshot, email, IP or raw identifier is stored.
 import {createHmac,timingSafeEqual} from "node:crypto";
-export const EVENTS=Object.freeze(["visit","analysis_started","analysis_completed","followup_started","followup_completed","library_saved","simulation_started","simulation_completed","plans_interest"]);
+export const EVENTS=Object.freeze(["visit","analysis_started","analysis_completed","followup_started","followup_completed","library_saved","simulation_started","simulation_completed","plans_interest","reply_copied","analysis_failed"]);
 const eventSet=new Set(EVENTS);
 const RETENTION_SECONDS=45*86400,MAX_DAYS=30;
 const headers={"content-type":"application/json; charset=utf-8","cache-control":"no-store, max-age=0","x-content-type-options":"nosniff","referrer-policy":"no-referrer","x-robots-tag":"noindex"};
@@ -82,7 +82,7 @@ export function reportCommands(now=new Date(),days=14){
   entry.uniqueVisits=commands.length;commands.push(["PFCOUNT","saynue:usage:v1:"+date+":unique:visit"]);
   pointer.daily.push(entry);
  }
- for(const event of ["visit","analysis_completed","followup_completed","simulation_completed","plans_interest"]){
+ for(const event of ["visit","analysis_started","analysis_completed","followup_completed","simulation_completed","plans_interest","reply_copied","analysis_failed"]){
   pointer.totals[event]=commands.length;
   commands.push(["PFCOUNT",...dates.map(d=>"saynue:usage:v1:"+d+":unique:"+event)]);
  }

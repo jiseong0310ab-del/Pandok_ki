@@ -11,7 +11,7 @@ const TONES=["natural","warm","direct","light"];
 const LOCALES=["ko","ja","en","zh-CN","zh-TW"];
 
 function clean(value,max){
- return typeof value==="string"?value.trim().slice(0,max):"";
+ return typeof value==="string"?value.trim().replace(/\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/gi,"[email]").replace(/(?:https?:\/\/|www\.)[^\s<>]+/gi,"[link]").replace(/\+?\d[\d ().-]{7,}\d/g,s=>(s.match(/\d/g)||[]).length>=9?"[phone]":s).slice(0,max):"";
 }
 function normalize(raw,now){
  if(!raw||typeof raw!=="object"||Array.isArray(raw)||raw.version!==1)return null;
@@ -35,8 +35,9 @@ function create(options={}){
  const write=(items)=>{try{const s=access();if(!s)return false;s.setItem(KEY,JSON.stringify(items));return true}catch(_){return false}};
  function collect(){
   const now=clock();
+  const stored=read(KEY);
   let raw;
-  try{raw=JSON.parse(read(KEY)||"[]")}catch(_){raw=[]}
+  try{raw=JSON.parse(stored||"[]")}catch(_){raw=[]}
   if(!Array.isArray(raw))raw=[];
   const found=new Set(),list=[];
   for(const entry of raw){
@@ -45,13 +46,16 @@ function create(options={}){
    found.add(s.id);list.push(s);
   }
   list.sort((a,b)=>b.at-a.at);
-  return list.slice(0,MAX);
+  const cleanList=list.slice(0,MAX);
+  // Remove expired, malformed or excess summaries from physical storage on access.
+  if(stored!==null&&stored!==JSON.stringify(cleanList)){if(cleanList.length)write(cleanList);else try{access()?.removeItem(KEY)}catch(_){}}
+  return cleanList;
  }
  function migrate(){
   let previous=null;
   try{previous=JSON.parse(read(LEGACY_KEY)||"null")}catch(_){}
   const old=normalize(previous,clock());
-  if(!old)return;
+  if(!old){try{access()?.removeItem(LEGACY_KEY)}catch(_){}return;}
   const existing=collect();
   if(!existing.some(x=>x.id===old.id)&&existing.length<MAX)existing.push(old);
   existing.sort((a,b)=>b.at-a.at);
