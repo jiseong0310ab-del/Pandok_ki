@@ -45,6 +45,27 @@ test("staging canonical points to Cloudflare without enabling indexing",async()=
  assert.throws(()=>execFileSync(process.execPath,["scripts/build-cloudflare.mjs"],{env:{...env,SAYNUE_INDEXABLE:"true"},stdio:"pipe"}));
 });
 
+test("requests the burst limiter lets through still reach their route with the body intact",async()=>{
+ const allow={limit:async()=>({success:true})};
+ const env={AI_BURST_LIMITER:allow,API_BURST_LIMITER:allow,ASSETS:{fetch:()=>new Response("asset")}};
+ const old=process.env.GEMINI_API_KEY,oldFetch=global.fetch;
+ process.env.GEMINI_API_KEY="unit-test-only";
+ global.fetch=async()=>{throw Error("no model call for invalid input")};
+ try{
+  const post=(path,body)=>new Request("https://saynue.example"+path,{method:"POST",headers:{"cf-connecting-ip":"192.0.2.9","content-type":"application/json","origin":"https://saynue.example"},body});
+  // An invalid body must be read and rejected by the handler (400), never crash the Worker (500).
+  const analyze=await worker.fetch(post("/api/analyze","{}"),env);
+  assert.equal(analyze.status,400);assert.equal((await analyze.json()).code,"INVALID_INPUT");
+  const coach=await worker.fetch(post("/api/coach","{}"),env);
+  assert.notEqual(coach.status,500);
+  const feedback=await worker.fetch(post("/api/feedback",JSON.stringify({rating:"bad-value"})),env);
+  assert.equal(feedback.status,400);
+ }finally{
+  global.fetch=oldFetch;
+  if(old===undefined)delete process.env.GEMINI_API_KEY;else process.env.GEMINI_API_KEY=old;
+ }
+});
+
 test("Cloudflare burst limits guard Gemini routes per IP and fail open",async()=>{
  const seen=[];
  const limiter=(allow)=>({limit:async({key})=>{seen.push(key);return {success:allow}}});

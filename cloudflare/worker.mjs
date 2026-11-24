@@ -53,7 +53,10 @@ export async function burstLimited(request,env,pathname){
  if(!ip||!limiter||typeof limiter.limit!=="function")return false;
  // Count under a salted hash, like the per-day limits: the raw IP never
  // becomes a limiter key.
- try{const {success}=await limiter.limit({key:hashedClient(normalizeClient(request),"burst-limit",32,env)});return success===false}
+ // Hash from the header alone: copying the Request here would take over its
+ // body and break the route that reads it next.
+ const client={headers:new Headers([["x-vercel-forwarded-for",ip]])};
+ try{const {success}=await limiter.limit({key:hashedClient(client,"burst-limit",32,env)});return success===false}
  catch{return false}
 }
 export default {async fetch(request,env){
