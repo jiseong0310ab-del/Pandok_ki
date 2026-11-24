@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import app from "../api/analyze.mjs";
+import app,{textResult} from "../api/analyze.mjs";
 import { cases } from "./quality-cases.mjs";
 
 const mockReport={
@@ -113,3 +113,12 @@ test("strict distributed budget cannot silently fall back and caps aggregate req
  assert.equal((await checkLimit("test")).unavailable,true);
  }finally{global.fetch=old;for(const k of keys){if(original[k]===undefined)delete process.env[k];else process.env[k]=original[k]}}
 });
+
+ test("standard analysis enforces explicit no-reply and masks obvious identifiers",()=>{
+ const input={chat:"Example conversation",images:[]};
+ const refused=textResult({...mockReport,shouldReply:false,replyDraft:"Please reply anyway",replyWhy:"Respect the stated boundary."},input);
+ assert.equal(refused.shouldReply,false);assert.equal(refused.replyDraft,"");assert.equal(refused.replyWhy,"Respect the stated boundary.");
+ assert.equal(textResult({...mockReport,shouldReply:"false"},input),null);
+ const masked=textResult({...mockReport,verdict:"Contact me at example@example.com",nextStep:"See https://example.com/private",replyDraft:"Call 010-1234-5678"},input);
+ assert.doesNotMatch(JSON.stringify(masked),/example\.com|010-1234-5678/);
+ });

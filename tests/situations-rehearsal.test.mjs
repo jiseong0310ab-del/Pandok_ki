@@ -124,3 +124,11 @@ test("the interface keeps library collapsed and simulator under the result",()=>
  for(const lang of ["ko","ja","en","zh-CN","zh-TW"])for(const key of keys)assert.equal(typeof translations[lang][key],"string",lang+":"+key);
  new Function(script);
 });
+
+ test("expired summaries are physically removed on access and common identifiers are masked",()=>{
+ const now=1769990400000,storage=mkStorage();
+ storage.setItem("saynue:situations:v2",JSON.stringify([example("expired",now-31*86400000)]));
+ const lib=mkLibrary(storage,now);assert.equal(lib.list().length,0);assert.equal(storage.getItem("saynue:situations:v2"),null);
+ assert.equal(lib.upsert({...example("safe",now),summary:"Contact example@example.com",title:"010-1234-5678"}).ok,true);
+ assert.doesNotMatch(storage.getItem("saynue:situations:v2"),/example\.com|010-1234-5678/);
+ });

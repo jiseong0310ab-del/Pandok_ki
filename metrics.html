@@ -26,7 +26,7 @@ h1{font-size:clamp(24px,6vw,36px);margin:12px 0}.owner p{line-height:1.7;color:#
 <p id="state" role="status" aria-live="polite">조회 토큰은 이 화면에 저장되지 않아.</p>
 <section id="report" hidden>
 <div class="metrics" id="metrics"></div>
-<h2>일별 사용 흐름</h2><div class="scroller"><table><thead><tr><th>날짜(UTC)</th><th>동의한 방문자¹</th><th>분석 시작</th><th>분석 완료</th><th>대화 이어가기</th><th>시뮬레이터 완료</th><th>요금제 관심</th></tr></thead><tbody id="daily"></tbody></table></div>
+<h2>일별 사용 흐름</h2><div class="scroller"><table><thead><tr><th>날짜(UTC)</th><th>동의한 방문자¹</th><th>분석 시작</th><th>분석 완료</th><th>분석 실패</th><th>답장 복사</th><th>대화 이어가기</th><th>시뮬레이터 완료</th><th>요금제 관심</th></tr></thead><tbody id="daily"></tbody></table></div>
 <h2>재방문 코호트</h2><div class="scroller"><table><thead><tr><th>첫 동의일(UTC)</th><th>최초 방문자¹</th><th>D+1 재방문¹</th><th>D+7 재방문¹</th></tr></thead><tbody id="cohorts"></tbody></table></div>
 <p class="footnote">¹ 고유 방문자는 기기에서 동의 후 생성된 가명 ID 기준의 근삿값(HyperLogLog)이야. 개인정보를 수집하지 않는 대신 실제 이용자 전체를 대표하지 않아. ‘분석 완료 전환’은 조회 기간 중 서로 다른 동의 ID를 기준으로 계산되며 결제 전환이 아니야. 표의 '대화 이어가기'는 이어서 분석을 완료한 횟수야. 요금제 관심은 클릭일 뿐 매출·구매가 아니야.</p>
 </section></main>
@@ -53,8 +53,10 @@ function render(data){
  addCard("이어가기 완료 고유 이용자",number(unique.followup_completed),"반복 사용 지표");
  addCard("답장 시뮬레이터 고유 이용자",number(unique.simulation_completed),"완료 기준");
  addCard("요금제 관심 클릭 이용자",number(unique.plans_interest),"구매 아님");
+ addCard("답장 복사 고유 이용자",number(unique.reply_copied),"복사 성공 기준 · 실제 전송 여부 미측정");
+ addCard("분석 실패 고유 이용자",number(unique.analysis_failed),"실패 경험 · 재시도 성공과 중복 가능");
  addCard("결제 전환", "미측정", "실결제 활성화 전");
- for(const d of [...data.daily].reverse())appendRow("daily",[d.date,number(d.uniqueVisitors),number(d.events.analysis_started),number(d.events.analysis_completed),number(d.events.followup_completed),number(d.events.simulation_completed),number(d.events.plans_interest)]);
+ for(const d of [...data.daily].reverse())appendRow("daily",[d.date,number(d.uniqueVisitors),number(d.events.analysis_started),number(d.events.analysis_completed),number(d.events.analysis_failed),number(d.events.reply_copied),number(d.events.followup_completed),number(d.events.simulation_completed),number(d.events.plans_interest)]);
  for(const c of data.cohorts)appendRow("cohorts",[c.date,number(c.firstVisits),number(c.day1Visitors)+" ("+ratio(c.day1Visitors,c.firstVisits)+")",c.day7Visitors===null?"집계 시점 전":number(c.day7Visitors)+" ("+ratio(c.day7Visitors,c.firstVisits)+")"]);
  $("report").hidden=false;
 }

@@ -113,3 +113,8 @@ test("topic guides are crawlable, discoverable and self-canonical",()=>{
  assert.ok(hub.includes(`href="${path}"`));assert.ok(sitemap.includes(`<loc>https://saynue.vercel.app${path}</loc>`));assert.ok(page.includes(`rel="canonical" href="https://saynue.vercel.app${path}"`));assert.equal([...page.matchAll(/<h2>/g)].length,3);assert.doesNotMatch(page,/<script|noindex/);
  }
 });
+
+ test("conflict guides cover five locales and are internally linked",()=>{
+ const sitemap=fs.readFileSync(new URL("../sitemap.xml",import.meta.url),"utf8");
+ for(const lang of ["ko","ja","en","zh-CN","zh-TW"]){const path="/learn/"+lang+"-conflict.html";const page=fs.readFileSync(new URL(".."+path,import.meta.url),"utf8");const hub=fs.readFileSync(new URL("../learn/"+lang+".html",import.meta.url),"utf8");assert.ok(hub.includes(`href="${path}"`));assert.ok(sitemap.includes(path));assert.ok(page.includes(`rel="canonical" href="https://saynue.vercel.app${path}"`));assert.equal([...page.matchAll(/<h2>/g)].length,3);assert.doesNotMatch(page,/<script|noindex/);}
+ });
