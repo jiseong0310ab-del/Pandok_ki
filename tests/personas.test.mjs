@@ -66,7 +66,8 @@ test("specialized persona reports use the same rate-limited free endpoint, with 
    assert.match(seen.systemInstruction.parts[0].text,/SECTION ONE/);
    assert.match(seen.systemInstruction.parts[0].text,/SECTION TWO/);
    assert.match(seen.systemInstruction.parts[0].text,/SECTION THREE/);
-   assert.equal(seen.generationConfig.responseSchema.required.length,11);
+   assert.equal(seen.generationConfig.responseSchema.required.length,12);
+   assert.ok(seen.generationConfig.responseSchema.required.includes("safetyConcern"));
   }
  }finally{
   global.fetch=orig;

@@ -222,6 +222,15 @@ README에 빠져 있던 기능입니다. 자세한 내용은 각 문서를 참�
 - 공유 버튼은 실제로 서비스 소개와 링크만 공유하므로 문구를 "친구에게 SAYNUE 알려주기"로 바로잡음. 분석 결과는 개인정보 위험 때문에 공유하지 않음.
 - 자세한 규칙: [docs/design-system.md](docs/design-system.md). 테스트: `tests/design-system.test.mjs`, `tests/e2e-mobile.test.mjs`.
 
+## 20. 안전·운영 보강 (2026-11-24)
+
+- **위기 신호 안내**: 분석·전문가 분석·코칭 결과에 `safetyConcern`(위협·폭력·강요·스토킹·성적 학대·자해 위험일 때만 true)을 추가. true면 결과 위에 현재 화면 언어의 긴급·상담 번호(한국 112·109·1366·1388, 일본 110·よりそいホットライン·いのちの電話, 미국 911·988, 중국 110·12356, 대만 110·113·1925)를 전화 링크로 보여 주고, 상대에게 맞서거나 연락을 이어가라는 제안을 하지 않음. MY에도 항상 "위기 상황 도움받기"가 있음. 이 판단은 AI 출력값이라 저장하거나 전송하지 않음.
+- **Cloudflare 단기 요청 제한**: AI 경로(`/api/analyze`, `/api/coach`, `/api/simulate`, `/api/plus/report`)는 IP별 분당 6회, 나머지 API는 분당 40회. 키는 원래 IP가 아닌 비밀값 해시. 결제 Webhook은 제외. 제한 서비스가 없거나 오류면 막지 않고 기존 하루 한도가 그대로 적용됨. Workers 로그는 켜되 요청별 자동 기록(IP 등 포함)은 끔.
+- **공유 미리보기**: 1200×630 `assets/og-image.png`와 og:image·twitter 카드 메타를 공개 페이지에 추가.
+- **홈 예시 카드**: 업로드 없이 결과가 어떤 모습인지 보여 주는 정적 예시(API 호출 없음, 5개 언어).
+- **실제 모델 품질 점검**: `scripts/eval-quality.mjs` — 합성 30건 + 안전 5건을 실제 Gemini로 돌려 언어·인용·거절 존중·위기 판단·식별정보 노출을 자동 점검. 사용법은 [docs/quality-and-privacy.md](docs/quality-and-privacy.md).
+- **정책 초안(미게시)**: [개인정보처리방침 초안](docs/privacy-policy-draft.md), [이용약관 초안](docs/terms-draft.md). 운영자 정보와 법률 검토 전에는 사이트에 올리지 않음.
+
 ## Cloudflare stability checklist
 - Interface locale is stored as a five-value browser preference; raw chats/drafts/images are not persisted. The data notice remains script-free and links open at the chosen language section.
 - AI requests are scoped to input revisions; superseded requests are aborted and their results ignored. Screenshot resets discard pending decodes; editing input or rehearsal drafts requires fresh consent.

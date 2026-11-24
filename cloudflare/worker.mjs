@@ -12,6 +12,7 @@ import route10 from "../api/plus/report.mjs";
 import route11 from "../api/webhooks/paddle.mjs";
 import coach from "../api/coach.mjs";
 import {configuredOrigin} from "../lib/site-origin.mjs";
+import {hashedClient} from "../lib/server-guard.mjs";
 const ROUTES=new Map([
  ["/api/analyze",route0],
  ["/api/feedback",route1],
@@ -40,6 +41,21 @@ export function normalizeClient(request){
  if(ip)headers.set("x-vercel-forwarded-for",ip);
  return new Request(request,{headers});
 }
+// Routes that spend Gemini quota get a tight per-IP burst limit; other API
+// routes a looser one. Paddle webhooks are exempt (they come from Paddle).
+// Missing bindings (local tests, other hosts) or a limiter outage never block
+// requests: the APIs' own per-day limits still apply.
+const AI_ROUTES=new Set(["/api/analyze","/api/coach","/api/simulate","/api/plus/report"]);
+export async function burstLimited(request,env,pathname){
+ if(pathname.startsWith("/api/webhooks/"))return false;
+ const ip=request.headers.get("cf-connecting-ip");
+ const limiter=AI_ROUTES.has(pathname)?env?.AI_BURST_LIMITER:env?.API_BURST_LIMITER;
+ if(!ip||!limiter||typeof limiter.limit!=="function")return false;
+ // Count under a salted hash, like the per-day limits: the raw IP never
+ // becomes a limiter key.
+ try{const {success}=await limiter.limit({key:hashedClient(normalizeClient(request),"burst-limit",32,env)});return success===false}
+ catch{return false}
+}
 export default {async fetch(request,env){
  const url=new URL(request.url);
  if(url.pathname==="/"){
@@ -54,6 +70,9 @@ export default {async fetch(request,env){
   // callbacks to the old host. Configure the actual HTTPS origin first.
   if(/^\/api\/(?:auth|plus|webhooks)\//.test(url.pathname)){
    if(configuredOrigin(env.SAYNUE_PUBLIC_ORIGIN)!==url.origin)return reply(503,"HOST_NOT_CONFIGURED");
+  }
+  if(await burstLimited(request,env,url.pathname)){
+   const limited=reply(429,"RATE_LIMITED");limited.headers.set("retry-after","60");return limited;
   }
   try{return await route.fetch(normalizeClient(request))}
   catch{return reply(500,"INTERNAL_ERROR")}

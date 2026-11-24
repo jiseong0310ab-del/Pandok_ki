@@ -121,3 +121,15 @@ test("interface copy has no decorative glyphs, English eyebrow labels or headlin
  assert.match(homeWithScript,/id="themeChoice"[^>]*role="group"/);
  for(const id of ["replyMeaningLang","personaMeaningLang","coachMeaningLang"])assert.match(homeWithScript,new RegExp('class="lang-badge" id="'+id+'" hidden'));
 });
+
+test("public pages share a 1200x630 preview image that the build publishes",()=>{
+ const png=fs.readFileSync(new URL("../assets/og-image.png",import.meta.url));
+ assert.equal(png.readUInt32BE(16),1200);assert.equal(png.readUInt32BE(20),630);
+ assert.ok(png.length<200000,"keep the preview light for messenger crawlers");
+ for(const page of ["index.html","guide.html","plans.html",...pages.filter(p=>p.startsWith("learn/"))]){
+  const html=read(page);
+  assert.match(html,/<meta property="og:image" content="https:\/\/saynue\.vercel\.app\/assets\/og-image\.png">/,page);
+  assert.match(html,/<meta name="twitter:card" content="summary_large_image">/,page);
+ }
+ assert.match(read("scripts/build-cloudflare.mjs"),/js\|css\|svg\|png/);
+});

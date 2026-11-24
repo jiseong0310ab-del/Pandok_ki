@@ -34,7 +34,6 @@ test("report language and reply language are independent, with backward compatib
  const blocked=addMessageLanguage({replyDraft:"",shouldReply:false},{replyLanguage:"ja",replyMeaning:"연락해 봐"},{locale:"ko",replyLanguage:"ja"},"replyDraft");assert.equal(blocked.replyMeaning,"");
 });
 
-import {coachSchema} from "../api/coach.mjs";
 test("coach response schemas specialize each task",()=>{
  const fields={reply:["alternatives"],counsel:["perspectives","questions"],prepare:["agenda","contingency"],reflect:["pattern","experiment","checkIn"]};
  for(const [mode,expected] of Object.entries(fields)){const s=coachSchema(mode,true);for(const key of expected)assert.ok(s.required.includes(key));assert.ok(s.required.includes("replyLanguage"));for(const [other,foreign] of Object.entries(fields))if(other!==mode)for(const key of foreign)assert.equal(s.properties[key],undefined)}
@@ -44,4 +43,20 @@ test("reply variants are distinct and cannot bypass no-contact",()=>{
  const out=normalizeCoachResult(raw,{mode:"reply"});assert.equal(out.alternatives.length,2);assert.equal(out.alternatives[0].meaning,"다시 만나면 좋겠어");
  const blocked=normalizeCoachResult({...raw,shouldReply:false},{mode:"reply"});assert.equal(blocked.message,"");assert.deepEqual(blocked.alternatives,[]);
  const reflection=normalizeCoachResult({...raw,pattern:"A reported habit",experiment:"Ask one clarifying question",checkIn:"Review after three conversations"},{mode:"reflect"});assert.equal(reflection.shouldReply,false);assert.equal(reflection.message,"");assert.match(reflection.experiment,/clarifying/);assert.equal(reflection.alternatives,undefined);
+});
+
+import {coachSchema} from "../api/coach.mjs";
+import {SAFETY_FIELD,SAFETY_RULE} from "../lib/coaching-rubric.mjs";
+import {modeSchema,modePrompt,normalizePersonaResult} from "../lib/persona-analysis.mjs";
+test("every AI route asks for and returns only a boolean safety flag",()=>{
+ assert.equal(SAFETY_FIELD.type,"BOOLEAN");
+ for(const schema of [modeSchema("court"),coachSchema("reply"),coachSchema("reflect")]){assert.equal(schema.properties.safetyConcern,SAFETY_FIELD);assert.ok(schema.required.includes("safetyConcern"))}
+ assert.match(modePrompt({persona:"mediator"}),/safetyConcern=true only for threats/);
+ assert.match(SAFETY_RULE,/never suggest confronting/);
+ const persona={summary:"A summary long enough",evidenceLevel:"low",sectionOne:"Section one text",sectionTwo:"Section two text",sectionThree:"Section three text",nextStep:"Contact local emergency services",shouldReply:false,replyDraft:"",replyWhy:"Safety comes first here",sourceQuote:"",sourceScreenshotIndex:0};
+ const input={persona:"mediator",chat:"x".repeat(30),images:[]};
+ assert.equal(normalizePersonaResult({...persona,safetyConcern:true},input).safetyConcern,true);
+ assert.equal("safetyConcern" in normalizePersonaResult({...persona,safetyConcern:"yes"},input),false);
+ const coached=normalizeCoachResult({summary:"Stay safe",advice:"Call emergency services now",steps:["Go somewhere safe"],shouldReply:false,safetyConcern:true,message:"",why:"Safety first",caution:"No contact"},{mode:"counsel"});
+ assert.equal(coached.safetyConcern,true);
 });
