@@ -102,5 +102,6 @@ jobs:
         with:
           node-version: '22'
       - run: node --test tests/cloudflare.test.mjs
-      - run: node scripts/build-cloudflare.mjs
-      - run: npx --yes wrangler@4 deploy --dry-run --outdir .wrangler-build
+      # No separate build step: wrangler.jsonc must prepare .cloudflare-public
+      # itself, exactly as it has to when the dashboard build command is empty.
+      - run: rm -rf .cloudflare-public && npx --yes wrangler@4 deploy --dry-run --outdir .wrangler-build

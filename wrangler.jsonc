@@ -8,6 +8,11 @@
   "workers_dev": true,
   "preview_urls": false,
   "keep_vars": true,
+  // Always prepare the public asset folder, even when the dashboard
+  // build command is left empty (the folder is gitignored).
+  "build": {
+    "command": "node scripts/build-cloudflare.mjs"
+  },
   "assets": {
     "directory": "./.cloudflare-public",
     "binding": "ASSETS",
