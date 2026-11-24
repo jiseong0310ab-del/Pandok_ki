@@ -18,3 +18,18 @@ test("automatic expert request with optional situation context",()=>{
  assert.equal(p.autoExpert,true);assert.equal(p.platform,"other");assert.equal(p.caseContext,"family context");assert.equal(p.relation,"family");
  const r=textResult({verdict:"Clear message",warmthScore:50,reciprocityScore:50,evidenceLevel:"low",keySignal:"Not enough context",evidence:"A short exchange",alternative:"More context is needed",nextStep:"Ask for clarification",replyDraft:"",recommendedExpert:"work"},p);assert.equal(r.recommendedExpert,"work");
 });
+
+import {parseReplyLanguage,languageInstruction,withMessageLanguage,addMessageLanguage} from "../lib/message-language.mjs";
+import {parseSimulationInput} from "../api/simulate.mjs";
+test("report language and reply language are independent, with backward compatibility",()=>{
+ const v=parseInput({locale:"ko",replyLanguage:"ja",chatText:"今週は忙しいけど、また今度会おうね。"});
+ assert.equal(v.locale,"ko");assert.equal(v.replyLanguage,"ja");assert.match(languageInstruction(v),/explanations must be in ko/);assert.match(languageInstruction(v),/requested language ja/);
+ assert.equal(parseInput({locale:"ko",replyLanguage:"invalid",chatText:"This is long enough for the test"}),null);
+ assert.equal(parseReplyLanguage(undefined,"ko"),"ko");assert.equal(parseReplyLanguage("auto","ko"),"auto");
+ assert.equal(parseCoachInput({...base,replyLanguage:"ja"}).replyLanguage,"ja");
+ assert.equal(parseSimulationInput({locale:"ko",replyLanguage:"ja",persona:"standard",relation:"unknown",draft:"また会いましょう",contextSummary:"상대와 다시 만날 날짜를 정하고 싶음"}).replyLanguage,"ja");
+ const schema=withMessageLanguage({properties:{},required:[]});assert.ok(schema.required.includes("replyMeaning"));
+ const out=addMessageLanguage({replyDraft:"また会いましょう",shouldReply:true},{replyLanguage:"ja",replyMeaning:"다시 만나요"},{locale:"ko",replyLanguage:"auto"},"replyDraft");
+ assert.equal(out.replyLanguage,"ja");assert.equal(out.replyMeaning,"다시 만나요");
+ const blocked=addMessageLanguage({replyDraft:"",shouldReply:false},{replyLanguage:"ja",replyMeaning:"연락해 봐"},{locale:"ko",replyLanguage:"ja"},"replyDraft");assert.equal(blocked.replyMeaning,"");
+});

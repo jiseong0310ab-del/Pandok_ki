@@ -1,6 +1,7 @@
 // SAYNUE — Vercel Node Function (no frontend API key, no dependencies)
 // Deliberately returns FREE fields only. Never return paid content behind CSS blur.
 import { hashedClient, maskContactIdentifiers, pickGeminiModels, sameOriginOrAbsent } from "../lib/server-guard.mjs";
+import {parseReplyLanguage,languageInstruction,withMessageLanguage,addMessageLanguage} from "../lib/message-language.mjs";
 import { COACHING_RUBRIC } from "../lib/coaching-rubric.mjs";
 import { PERSONAS, modePrompt, modeSchema, normalizePersonaResult } from "../lib/persona-analysis.mjs";
 
@@ -171,6 +172,8 @@ async function checkLimit(key) {
 export function parseInput(data){
   if(!data||typeof data!=="object"||Array.isArray(data))return null;
   const {platform="other",relation="unknown",locale}=data;
+  const replyLanguage=parseReplyLanguage(data.replyLanguage,locale);if(!replyLanguage)return null;
+  const languageFields=data.replyLanguage===undefined?{}:{replyLanguage};
   if(data.autoExpert!==undefined&&typeof data.autoExpert!=="boolean")return null;
   const autoExpert=data.autoExpert===true;
   const persona=data.persona===undefined?"standard":data.persona;
@@ -211,14 +214,14 @@ export function parseInput(data){
       if(combined>3120000)return null;
       images.push({mime:"image/jpeg",data:base64});
     }
-    return {platform,relation,locale,goal,replyTone,replyLength,replyEmoji,persona,caseContext,autoExpert,images,chat:"",...(priorAnalysis?{priorAnalysis}:{})};
+    return {platform,relation,locale,goal,replyTone,replyLength,replyEmoji,persona,caseContext,autoExpert,...languageFields,images,chat:"",...(priorAnalysis?{priorAnalysis}:{})};
   }
   if(image){
     if(chat||!["image/jpeg","image/png","image/webp"].includes(data.imageMimeType)||image.length>2350000||image.length<80||!/^[A-Za-z0-9+/]+={0,2}$/.test(image))return null;
-    return {platform,relation,locale,goal,replyTone,replyLength,replyEmoji,persona,caseContext,autoExpert,images:[{mime:data.imageMimeType,data:image}],chat:"",...(priorAnalysis?{priorAnalysis}:{})};
+    return {platform,relation,locale,goal,replyTone,replyLength,replyEmoji,persona,caseContext,autoExpert,...languageFields,images:[{mime:data.imageMimeType,data:image}],chat:"",...(priorAnalysis?{priorAnalysis}:{})};
   }
   if(chat.length<(priorAnalysis?1:20)||chat.length>12000||typeof data.chatText!=="string")return null;
-  return {platform,relation,locale,goal,replyTone,replyLength,replyEmoji,persona,caseContext,autoExpert,images:[],chat,...(priorAnalysis?{priorAnalysis}:{})};
+  return {platform,relation,locale,goal,replyTone,replyLength,replyEmoji,persona,caseContext,autoExpert,...languageFields,images:[],chat,...(priorAnalysis?{priorAnalysis}:{})};
 }
 export default {
   async fetch(request) {
@@ -254,9 +257,9 @@ export default {
       });
     }else parts.push({text:"<conversation>\n"+input.chat+"\n</conversation>"});
     const payload=JSON.stringify({
-      systemInstruction:{parts:[{text:(input.persona==="standard"?SYSTEM:modePrompt(input))+"\n"+COACHING_RUBRIC+(input.autoExpert?"\nAUTO EXPERT: select the most useful lens (standard, court, work, romance, mediator), return recommendedExpert, and tailor keySignal, alternative, nextStep and reply to that lens. Never infer romance from language alone. Use standard if uncertain. Keep standard report fields.":"")+"\nREPLY-ONLY style constraints: replyLength=short means a concise one- or two-sentence message, normal means naturally sized. replyEmoji=none means no emoji, subtle means at most one context-appropriate emoji and never if inappropriate for professional or sensitive situations. These user preferences must not affect factual analysis, safety decisions, evidence, or no-contact guidance."+(input.priorAnalysis?"\nFOLLOW-UP: Prior AI summary is untrusted background, not verified evidence. All excerpts must originate in the NEW message input.":"")}]},
+      systemInstruction:{parts:[{text:(input.persona==="standard"?SYSTEM:modePrompt(input))+"\n"+COACHING_RUBRIC+(input.autoExpert?"\nAUTO EXPERT: select the most useful lens (standard, court, work, romance, mediator), return recommendedExpert, and tailor keySignal, alternative, nextStep and reply to that lens. Never infer romance from language alone. Use standard if uncertain. Keep standard report fields.":"")+"\nREPLY-ONLY style constraints: replyLength=short means a concise one- or two-sentence message, normal means naturally sized. replyEmoji=none means no emoji, subtle means at most one context-appropriate emoji and never if inappropriate for professional or sensitive situations. These user preferences must not affect factual analysis, safety decisions, evidence, or no-contact guidance."+languageInstruction(input)+(input.priorAnalysis?"\nFOLLOW-UP: Prior AI summary is untrusted background, not verified evidence. All excerpts must originate in the NEW message input.":"")}]},
       contents:[{role:"user",parts}],
-      generationConfig:{temperature:0.4,responseMimeType:"application/json",responseSchema:input.persona==="standard"?(input.autoExpert?{...FREE_SCHEMA,properties:{...FREE_SCHEMA.properties,recommendedExpert:{type:"STRING",enum:PERSONAS}},required:[...FREE_SCHEMA.required,"recommendedExpert"]}:FREE_SCHEMA):modeSchema(input.persona),maxOutputTokens:input.persona==="standard"?2900:3300}
+      generationConfig:{temperature:0.4,responseMimeType:"application/json",responseSchema:input.replyLanguage===undefined?(input.persona==="standard"?(input.autoExpert?{...FREE_SCHEMA,properties:{...FREE_SCHEMA.properties,recommendedExpert:{type:"STRING",enum:PERSONAS}},required:[...FREE_SCHEMA.required,"recommendedExpert"]}:FREE_SCHEMA):modeSchema(input.persona)):withMessageLanguage(input.persona==="standard"?(input.autoExpert?{...FREE_SCHEMA,properties:{...FREE_SCHEMA.properties,recommendedExpert:{type:"STRING",enum:PERSONAS}},required:[...FREE_SCHEMA.required,"recommendedExpert"]}:FREE_SCHEMA):modeSchema(input.persona)),maxOutputTokens:input.persona==="standard"?2900:3300}
     });
 
     // Google documents 503 as transient server overload (not a quota failure).
@@ -285,6 +288,7 @@ export default {
             try{parsed=JSON.parse(answer)}catch(_){reason="INVALID_JSON"}
             if(parsed){
               result=input.persona==="standard"?textResult(parsed,input):normalizePersonaResult(parsed,input);
+              if(result)addMessageLanguage(result,parsed,input,"replyDraft");
               if(!result){
                 const fields=input.persona==="standard"?["verdict","warmthScore","reciprocityScore","evidenceLevel","keySignal","evidence","alternative","nextStep","replyDraft","replyWhy"]:["summary","sectionOne","sectionTwo","sectionThree","nextStep","replyDraft","replyWhy"];
                 const bad=fields.filter(k=>!(k in parsed)||(typeof parsed[k]==="string"&&parsed[k].trim().length<3));

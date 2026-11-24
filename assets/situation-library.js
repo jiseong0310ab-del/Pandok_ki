@@ -25,7 +25,7 @@ function normalize(raw,now){
  return {
   version:1,id:raw.id,at:raw.at,persona:raw.persona,platform:raw.platform,
   relation:raw.relation,goal:raw.goal,replyTone:raw.replyTone,locale:raw.locale,turn:raw.turn,
-  summary,signal,nextStep,title:clean(raw.title,32),history:Array.isArray(raw.history)?raw.history.filter(x=>x&&Number.isFinite(x.at)&&x.at<=now+60000&&now-x.at<TTL&&typeof x.summary==="string").slice(0,3).map(x=>({at:x.at,summary:clean(x.summary,240)})).filter(x=>x.summary):[]
+  summary,signal,nextStep,title:clean(raw.title,32),...(LOCALES.includes(raw.replyLanguage)?{replyLanguage:raw.replyLanguage}:{}),history:Array.isArray(raw.history)?raw.history.filter(x=>x&&Number.isFinite(x.at)&&x.at<=now+60000&&now-x.at<TTL&&typeof x.summary==="string").slice(0,3).map(x=>({at:x.at,summary:clean(x.summary,240)})).filter(x=>x.summary):[]
  };
 }
 function create(options={}){

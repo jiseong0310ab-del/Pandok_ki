@@ -1,15 +1,17 @@
+import {parseReplyLanguage,languageInstruction,withMessageLanguage,addMessageLanguage} from "../lib/message-language.mjs";
 import {checkLimit,clientHash} from "./analyze.mjs";
 import {pickGeminiModels,sameOriginOrAbsent,maskContactIdentifiers} from "../lib/server-guard.mjs";
 import {COACHING_RUBRIC} from "../lib/coaching-rubric.mjs";
 const MODES=["reply","counsel","prepare","reflect"],LOCALES=["ko","ja","en","zh-CN","zh-TW"],RELATIONS=["unknown","crush","talking","dating","ex","friends","family","work"];
 const text=(s,n)=>typeof s==="string"?maskContactIdentifiers(s.trim().slice(0,n)):"";
 export function parseCoachInput(v){
- if(!v||typeof v!=="object"||Array.isArray(v)||Object.keys(v).some(k=>!["mode","locale","relation","context","draft","tone","length","emoji"].includes(k)))return null;
+ if(!v||typeof v!=="object"||Array.isArray(v)||Object.keys(v).some(k=>!["mode","locale","relation","context","draft","tone","length","emoji","replyLanguage"].includes(k)))return null;
  if(!MODES.includes(v.mode)||!LOCALES.includes(v.locale)||!RELATIONS.includes(v.relation)||!["natural","warm","direct","light"].includes(v.tone)||!["short","normal"].includes(v.length)||!["none","subtle"].includes(v.emoji))return null;
  if(typeof v.context!=="string"||typeof v.draft!=="string"||v.context.length>1800||v.draft.length>600||/[\u0000-\u0008\u000b\u000e-\u001f]/.test(v.context+v.draft))return null;
  if(v.mode!=="reply"&&v.draft.trim())return null;
  if(v.context.trim().length<3&&v.draft.trim().length<3)return null;
- return {...v,context:v.context.trim(),draft:v.draft.trim()};
+ const replyLanguage=parseReplyLanguage(v.replyLanguage,v.locale);if(!replyLanguage)return null;
+ return {...v,context:v.context.trim(),draft:v.draft.trim(),...(v.replyLanguage===undefined?{}:{replyLanguage})};
 }
 const SCHEMA={type:"OBJECT",properties:{summary:{type:"STRING"},advice:{type:"STRING"},steps:{type:"ARRAY",items:{type:"STRING"}},shouldReply:{type:"BOOLEAN"},message:{type:"STRING"},why:{type:"STRING"},caution:{type:"STRING"}},required:["summary","advice","steps","shouldReply","message","why","caution"]};
 export function normalizeCoachResult(v){
@@ -35,7 +37,7 @@ export default {async fetch(request){
  const key=process.env.GEMINI_API_KEY;if(!key)return response(503,{code:"NOT_CONFIGURED"});
  const limit=await checkLimit(clientHash(request));if(limit.unavailable)return response(503,{code:"RATE_LIMIT_UNAVAILABLE"});if(!limit.ok)return response(429,{code:"RATE_LIMITED"});
  const {primary,fallback}=pickGeminiModels();
- const body=JSON.stringify({systemInstruction:{parts:[{text:SYSTEM}]},contents:[{role:"user",parts:[{text:JSON.stringify(input)}]}],generationConfig:{temperature:0.4,responseMimeType:"application/json",responseSchema:SCHEMA,maxOutputTokens:2000}});
+ const body=JSON.stringify({systemInstruction:{parts:[{text:SYSTEM+languageInstruction(input,"coach")}]},contents:[{role:"user",parts:[{text:JSON.stringify(input)}]}],generationConfig:{temperature:0.4,responseMimeType:"application/json",responseSchema:input.replyLanguage===undefined?SCHEMA:withMessageLanguage(SCHEMA),maxOutputTokens:2000}});
  for(const model of [primary,fallback]){
   try{
    const upstream=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent",{method:"POST",headers:{"content-type":"application/json","x-goog-api-key":key},body,signal:AbortSignal.timeout(12500)});
@@ -43,7 +45,7 @@ export default {async fetch(request){
    if([400,401,403].includes(upstream.status))return response(502,{code:"AI_REQUEST_REJECTED"});
    if(!upstream.ok)continue;
    const v=await upstream.json();const raw=v?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
-   const normalized=normalizeCoachResult(JSON.parse(raw));if(normalized)return response(200,normalized);
+   const parsed=JSON.parse(raw),normalized=normalizeCoachResult(parsed);if(normalized)return response(200,addMessageLanguage(normalized,parsed,input,"message"));
   }catch{}
  }
  return response(503,{code:"AI_UNAVAILABLE"});

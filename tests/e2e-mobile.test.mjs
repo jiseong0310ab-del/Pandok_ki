@@ -146,7 +146,8 @@ test("home navigation and independent coaching modes work without a screenshot",
   assert.equal(await page.isVisible("#analysisScreen"),false);
   await page.click("#homeScreen [data-nav=reply]");
   await page.fill("#coachContext","상사에게 회의 일정을 바꾸고 싶어요.");
-  await page.fill("#coachDraft","시간 바꿔도 될까요?");
+  await page.fill("#coachDraft","時間を変更してもよろしいでしょうか？");
+  await page.selectOption("#coachReplyLanguage","ja");
   await page.click("#coachRun");
   assert.equal(requests.filter(x=>x.path==="/api/coach").length,0);
   await page.check("#coachConsent");
@@ -154,7 +155,7 @@ test("home navigation and independent coaching modes work without a screenshot",
   await page.waitForSelector("#coachResult:visible");
   assert.equal(await page.inputValue("#coachMessage"),"일정을 다시 확인해도 될까요?");
   let sent=JSON.parse(requests.find(x=>x.path==="/api/coach").body);
-  assert.equal(sent.mode,"reply");assert.equal(sent.relation,"unknown");
+  assert.equal(sent.mode,"reply");assert.equal(sent.relation,"unknown");assert.equal(sent.locale,"ko");assert.equal(sent.replyLanguage,"ja");
   await page.click("#coachRevise");assert.equal(await page.inputValue("#coachDraft"),"일정을 다시 확인해도 될까요?");
   assert.equal(await page.isChecked("#coachConsent"),false);
   await page.click("[data-coach=reflect]");assert.equal(await page.isVisible("#coachDraftBox"),false);
@@ -166,5 +167,17 @@ test("home navigation and independent coaching modes work without a screenshot",
   assert.equal(await page.getAttribute("[data-persona=auto]","aria-pressed"),"true");
   for(const locale of ["ko","ja","en","zh-CN","zh-TW"]){await page.selectOption("#locale",locale);assert.equal(await noHorizontalScroll(page),true)}
   assert.deepEqual(problems,[]);
+ }finally{await browser.close()}
+});
+
+test("Korean analysis can return a Japanese reply and Korean meaning separately",{skip},async()=>{
+ const browser=await playwright.chromium.launch();
+ try{
+ const {page,requests,problems}=await openPage(browser,{analyzeBody:{...report,replyDraft:"また会いましょう",replyMeaning:"다시 만나요",replyLanguage:"ja"}});
+ await page.click("#textTab");await page.fill("#chatText","私：今週会える？\n相手：今週は忙しいけど、また今度会おうね。");
+ assert.equal(await page.inputValue("#replyLanguage"),"auto");await page.selectOption("#replyLanguage","ja");await page.check("#consent");await page.click("#analyze");await page.waitForSelector("#results:visible");
+ const sent=JSON.parse(requests.find(x=>x.path==="/api/analyze").body);assert.equal(sent.locale,"ko");assert.equal(sent.replyLanguage,"ja");
+ assert.equal(await page.textContent("#replyDraft"),"また会いましょう");assert.equal(await page.textContent("#replyMeaning"),"다시 만나요");
+ await page.click("#editStandardDraft");assert.equal(await page.inputValue("#coachReplyLanguage"),"ja");assert.equal(await page.inputValue("#coachDraft"),"また会いましょう");assert.deepEqual(problems,[]);
  }finally{await browser.close()}
 });
